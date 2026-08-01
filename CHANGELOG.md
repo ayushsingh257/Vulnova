@@ -9,8 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
-- Phase 0.1 through Phase 0.18 complete setup.
-- Enterprise documentation foundation: `README.md`, `BRAIN.md`, `ROADMAP.md`, `ARCHITECTURE.md`, `TECH_STACK.md`, `SECURITY.md`, `THREAT_MODEL.md`, `DATABASE.md`, `API_SPEC.md`, `FRONTEND_GUIDELINES.md`, `BACKEND_GUIDELINES.md`, `TESTING.md`, `DEVSECOPS.md`, `DEPLOYMENT.md`, `STYLE_GUIDE.md`, `DECISIONS.md`, `CHANGELOG.md`, `CONTRIBUTING.md`.
+- **Era 1 Phase 1.1 (Monorepo Structure & Workspace Configuration)**:
+  - Physical monorepo directory layout (`frontend/`, `backend/`, `infrastructure/`, `docker/`, `deployment/`, `scripts/`, `testing/`, `plugins/`, `docs/`, `assets/`, `examples/`).
+  - Next.js 14 App Router + TypeScript + TailwindCSS frontend foundation with strict mode enabled.
+  - Python 3.12+ FastAPI Clean Architecture backend skeleton with `/health` and `/ready` endpoints.
+  - Tooling configurations: Ruff, Black, Mypy for backend; ESLint, Prettier for frontend.
+  - `.env.example` placeholder configuration and `docker-compose.yml` infrastructure setup.
+  - GitHub Actions CI workflow pipeline (`.github/workflows/ci.yml`).
 
 ---
 

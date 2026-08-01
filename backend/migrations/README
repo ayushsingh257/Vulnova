@@ -1,0 +1,2 @@
+# Alembic Database Migrations Directory
+This directory contains asynchronous Alembic schema migration scripts for Vulnova PostgreSQL database.
