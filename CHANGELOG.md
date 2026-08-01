@@ -12,6 +12,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **CI Dependency Installation**: Configured `.github/workflows/ci.yml` backend verification step to install directly from the authoritative `backend/requirements.txt` source, ensuring `sqlalchemy`, `asyncpg`, `alembic`, `black`, and all backend dependencies are available during CI execution.
 
 ### Added
+- **Era 1 Phase 1.6 (DevSecOps GitHub Actions Pipelines & Automated Scanners)**:
+  - Created `.github/workflows/security.yml` enforcing automated DevSecOps scanners.
+  - Integrated Gitleaks secret detection (`gitleaks/gitleaks-action@v2`).
+  - Integrated Semgrep SAST scanning (`semgrep/semgrep` OWASP Top 10 ruleset).
+  - Integrated `pip-audit` for backend dependency vulnerability checking.
+  - Integrated `npm audit` for frontend package vulnerability checking.
+  - Integrated Trivy container security scanning (`aquasecurity/trivy-action@master`).
+  - Added `pip-audit>=2.7.0` to `backend/requirements.txt` and `pyproject.toml`.
+  - Updated `DEVELOPMENT.md` with Section 8 local security verification tools and security gate enforcement rules.
 - **Era 1 Phase 1.5 (Backend Application Foundation & API Architecture)**:
   - Clean Architecture package layout (`api/v1/`, `application/`, `domain/`, `infrastructure/`, `security/`, `core/`).
   - Enhanced Pydantic `Settings` configuration (`app/core/config.py`).

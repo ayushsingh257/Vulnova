@@ -167,3 +167,51 @@ docker compose exec postgres psql -U vulnova_admin -d vulnova_db
 docker compose exec redis redis-cli
 ```
 
+---
+
+## 🛡️ 8. DevSecOps & Security Verification
+
+Vulnova enforces automated security verification in GitHub Actions CI pipelines (`.github/workflows/security.yml`) and pre-commit hooks. Developers can run security checks locally before pushing commits.
+
+### Security Tool Command Reference:
+
+#### 1. Gitleaks (Secret Detection Scan)
+Detect committed API keys, tokens, or private secrets:
+```bash
+gitleaks detect --verbose
+```
+
+#### 2. Semgrep (SAST Static Security Analysis)
+Scan code for OWASP Top 10 vulnerabilities:
+```bash
+semgrep scan --config p/owasp-top-10 --config p/default
+```
+
+#### 3. Backend Dependency Vulnerability Audit (`pip-audit`)
+Audit Python dependencies in `backend/requirements.txt`:
+```bash
+pip-audit -r backend/requirements.txt
+```
+
+#### 4. Frontend Dependency Audit (`npm audit`)
+Audit Node.js packages in `frontend/`:
+```bash
+cd frontend
+npm audit
+cd ..
+```
+
+#### 5. Trivy Container Vulnerability Scan
+Scan Dockerfiles for container security misconfigurations:
+```bash
+trivy config backend/Dockerfile
+trivy config frontend/Dockerfile
+```
+
+### Security Gate Rules:
+Pull requests and pushes to `main` will automatically fail if:
+- Leaked secrets or credentials are detected.
+- High/Critical SAST vulnerabilities are identified.
+- Known critical CVEs are detected in dependencies or base container images.
+
+

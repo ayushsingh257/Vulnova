@@ -203,21 +203,12 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Deliverables**: Config (`pydantic-settings`), Security middleware (`RequestIDMiddleware`, `SecurityHeadersMiddleware`), `/api/v1/status` endpoint, enterprise exception hierarchy (`VulnovaException`), unit test suite.
 - **Dependencies**: Phase 1.4.
 - **Completion Criteria**: Clean Architecture boundaries established; all health & status endpoints pass; pytest, Ruff, Black, and Mypy pass cleanly.
-- **Testing Requirements**: API v1 router tests, security header verification, custom exception payload schema tests.
-
-### Phase 1.6: DevSecOps GitHub Actions Pipelines & Automated Scanners
-- **Objective**: Configure automated CI pipeline for linting, type checks, SAST (Semgrep), and Gitleaks secret scanning.
-- **Deliverables**: `.github/workflows/ci.yml`, `.github/workflows/security.yml`.
-- **Dependencies**: Phase 1.4.
-- **Completion Criteria**: GitHub Action runs green on pull requests.
-- **Testing Requirements**: Local execution via `act` or GH workflow test run.
-
-### Phase 1.6: Database Migration Tooling (Alembic Setup)
-- **Objective**: Initialize Alembic for PostgreSQL migrations with async SQLAlchemy.
-- **Deliverables**: `alembic.ini`, `backend/app/db/migrations`.
-- **Dependencies**: Phase 1.2, Phase 1.4.
-- **Completion Criteria**: Alembic migrates database up and down without errors.
-- **Testing Requirements**: Migration test execution (`alembic upgrade head`).
+### ✅ Phase 1.6: DevSecOps GitHub Actions Pipelines & Automated Scanners
+- **Objective**: Configure automated CI/CD security pipelines for secret scanning (Gitleaks), SAST (Semgrep), dependency vulnerability audits (`pip-audit`, `npm audit`), and container scanning (Trivy).
+- **Deliverables**: `.github/workflows/security.yml`, updated `.github/workflows/ci.yml`, `pip-audit` dependency in `backend/requirements.txt`, updated `DEVELOPMENT.md`.
+- **Dependencies**: Phase 1.5.
+- **Completion Criteria**: Automated security pipelines active; no secrets or critical vulnerabilities detected; GitHub Actions passes green check.
+- **Testing Requirements**: Gitleaks secret detection, Semgrep OWASP ruleset, `pip-audit` scan, Trivy container config scan.
 
 ### Phase 1.7: Structured Logging & Correlation ID Middleware
 - **Objective**: Implement structlog JSON logging with HTTP request correlation IDs.

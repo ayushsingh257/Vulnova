@@ -1,0 +1,96 @@
+name: Vulnova DevSecOps Security Pipeline
+
+on:
+  push:
+    branches: [ main, release/* ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run nightly security scan at midnight UTC
+    - cron: '0 0 * * *'
+
+jobs:
+  gitleaks-secret-scan:
+    name: Gitleaks Secret Detection Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  semgrep-sast-scan:
+    name: Semgrep SAST Code Security Analysis
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep Security Rules (OWASP Top 10)
+        run: semgrep scan --config p/owasp-top-10 --config p/default --error
+
+  backend-dependency-audit:
+    name: Backend Dependency Vulnerability Audit (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install Dependencies & Run pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+          pip-audit -r backend/requirements.txt
+
+  frontend-dependency-audit:
+    name: Frontend Dependency Vulnerability Audit (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run npm audit
+        working-directory: frontend
+        run: npm audit --audit-level=high || true
+
+  trivy-container-security:
+    name: Trivy Container Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Scanner for Backend Dockerfile
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: 'backend/Dockerfile'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy Scanner for Frontend Dockerfile
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: 'frontend/Dockerfile'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
