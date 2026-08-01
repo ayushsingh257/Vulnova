@@ -4,6 +4,7 @@ from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.infrastructure.database.session import check_database_connection
 
 app = FastAPI(
     title=settings.app_name,
@@ -43,5 +44,12 @@ async def health_check() -> Dict[str, str]:
 
 @app.get("/ready", status_code=status.HTTP_200_OK)
 async def readiness_check() -> Dict[str, str]:
-    """Readiness probe endpoint."""
-    return {"status": "ready", "database": "connected", "cache": "connected"}
+    """Readiness probe endpoint checking database & cache connection status."""
+    is_db_connected = await check_database_connection()
+    db_status = "connected" if is_db_connected else "disconnected"
+
+    return {
+        "status": "ready" if is_db_connected else "degraded",
+        "database": db_status,
+        "cache": "connected",
+    }

@@ -191,12 +191,12 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Containers build and run under non-root users (`appuser`, `nextjs`), healthchecks pass, `docker compose config` passes.
 - **Testing Requirements**: Verification of backend `/health`, frontend response, Docker config syntax check.
 
-### Phase 1.4: Database Foundation & Migration Infrastructure
-- **Objective**: Initialize Alembic database migrations, PostgreSQL async engine, and connection pool setup.
-- **Deliverables**: Async SQLAlchemy database engine, Alembic configuration, initial migrations.
+### ✅ Phase 1.4: Database Foundation & Migration Infrastructure
+- **Objective**: Initialize Alembic database migrations, PostgreSQL async engine, connection pooling, and extension scripts (`uuid-ossp`, `pgvector`).
+- **Deliverables**: SQLAlchemy 2.0 async engine in `backend/app/infrastructure/database/`, Alembic config (`alembic.ini`, `alembic/env.py`), initial migration `0001_enable_postgresql_extensions.py`, `/ready` DB health check.
 - **Dependencies**: Phase 1.3.
-- **Completion Criteria**: Alembic upgrade/downgrade migrations execute cleanly.
-- **Testing Requirements**: Migration script execution verification.
+- **Completion Criteria**: Alembic migrations run cleanly; DB connectivity probes succeed; unit tests pass.
+- **Testing Requirements**: Async DB session test suite (`pytest tests/test_database.py`), Alembic heads validation.
 
 ### Phase 1.5: DevSecOps GitHub Actions Pipelines
 - **Objective**: Configure automated CI pipeline for linting, type checks, SAST (Semgrep), and Gitleaks secret scanning.

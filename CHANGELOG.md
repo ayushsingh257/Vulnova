@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- **Era 1 Phase 1.4 (Database Foundation & Migration Infrastructure)**:
+  - Created SQLAlchemy 2.0 Async engine, `async_sessionmaker` session factory (`backend/app/infrastructure/database/session.py`), and Declarative `Base` (`base.py`).
+  - Added Alembic database migration system (`alembic.ini`, `alembic/env.py`, `alembic/script.py.mako`).
+  - Implemented initial migration `0001_enable_postgresql_extensions.py` enabling PostgreSQL `uuid-ossp` and `vector` (`pgvector`) extensions.
+  - Extended `/ready` health probe in `backend/app/main.py` to test database connectivity (`SELECT 1`).
+  - Created database test suite (`backend/tests/test_database.py`) verifying DB session lifecycle and readiness probes.
 - **Era 1 Phase 1.3 (Containerization & Local Infrastructure Environment)**:
   - Hardened multi-stage `backend/Dockerfile` (`python:3.12-slim`, unprivileged `appuser` UID 10001, `/health` probe).
   - Hardened multi-stage `frontend/Dockerfile` (`node:20-alpine`, `output: 'standalone'`, unprivileged `nextjs` UID 10001).

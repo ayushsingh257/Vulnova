@@ -115,7 +115,7 @@ No undocumented repository structure changes are permitted.
 | :--- | :--- | :---: | :--- |
 | **Era 0** | Architecture & Enterprise Documentation Foundation | ✅ **COMPLETED** | Sprint 0 |
 | **Era 0.5**| Enterprise Architecture Refinement & Security Model Polish | ✅ **COMPLETED** | Sprint 0.5 |
-| **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | 🟡 **IN PROGRESS** (Phase 1.1 ✅, Phase 1.2 ✅, Phase 1.3 ✅) | Sprint 1 |
+| **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | 🟡 **IN PROGRESS** (Phase 1.1 ✅, Phase 1.2 ✅, Phase 1.3 ✅, Phase 1.4 ✅) | Sprint 1 |
 | **Era 2** | Core Platform & Tenant Management System | ⏳ Pending | Sprint 2 |
 | **Era 3** | Discovery Engine & Asset Surface Mapping | ⏳ Pending | Sprint 3 |
 | **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | ⏳ Pending | Sprint 4 |

@@ -1,4 +1,7 @@
+from unittest.mock import AsyncMock, patch
+
 from fastapi.testclient import TestClient
+
 from app.main import app
 
 client = TestClient(app)
@@ -22,9 +25,15 @@ def test_health_check_endpoint() -> None:
     assert data["service"] == "vulnova-backend-control-plane"
 
 
-def test_readiness_endpoint() -> None:
-    """Verify /ready endpoint returns HTTP 200 status."""
+@patch(
+    "app.main.check_database_connection",
+    new_callable=AsyncMock,
+    return_value=True,
+)
+def test_readiness_endpoint(mock_check_db: AsyncMock) -> None:
+    """Verify /ready endpoint returns HTTP 200 status when database connects."""
     response = client.get("/ready")
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ready"
+    assert data["database"] == "connected"
