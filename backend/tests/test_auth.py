@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import AsyncGenerator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -234,25 +234,24 @@ def test_api_register_endpoint(mock_register: AsyncMock) -> None:
         user_id = uuid4()
         now = datetime.now(timezone.utc)
 
-        dummy_user = UserModel(
-            id=user_id,
-            organization_id=org_id,
-            email="owner@acme.com",
-            password_hash="hash",
-            full_name="Alice Admin",
-            role="OWNER",
-            is_active=True,
-            is_mfa_enabled=False,
-            created_at=now,
-        )
-        dummy_org = OrganizationModel(
-            id=org_id,
-            name="Acme Security",
-            slug="acme-sec",
-            plan_tier="ENTERPRISE_TRIAL",
-            is_active=True,
-            created_at=now,
-        )
+        dummy_user = MagicMock(spec=UserModel)
+        dummy_user.id = user_id
+        dummy_user.organization_id = org_id
+        dummy_user.email = "owner@acme.com"
+        dummy_user.full_name = "Alice Admin"
+        dummy_user.role = "OWNER"
+        dummy_user.is_active = True
+        dummy_user.is_mfa_enabled = False
+        dummy_user.created_at = now
+
+        dummy_org = MagicMock(spec=OrganizationModel)
+        dummy_org.id = org_id
+        dummy_org.name = "Acme Security"
+        dummy_org.slug = "acme-sec"
+        dummy_org.plan_tier = "ENTERPRISE_TRIAL"
+        dummy_org.is_active = True
+        dummy_org.created_at = now
+
         mock_register.return_value = (dummy_user, dummy_org)
 
         payload = {
@@ -375,24 +374,19 @@ def test_api_get_me_endpoint_authenticated() -> None:
     org_id = uuid4()
     user_id = uuid4()
 
-    mock_user = UserModel(
-        id=user_id,
-        organization_id=org_id,
-        email="analyst@vulnova.com",
-        password_hash="hash",
-        full_name="Bob Analyst",
-        role="SECURITY_ANALYST",
-        is_active=True,
-        is_mfa_enabled=False,
-        created_at=datetime.now(timezone.utc),
-    )
-    mock_org = OrganizationModel(
-        id=org_id,
-        name="Vulnova Sec",
-        slug="vulnova-sec",
-        plan_tier="ENTERPRISE_TRIAL",
-        is_active=True,
-    )
+    mock_user = MagicMock(spec=UserModel)
+    mock_user.id = user_id
+    mock_user.organization_id = org_id
+    mock_user.email = "analyst@vulnova.com"
+    mock_user.full_name = "Bob Analyst"
+    mock_user.role = "SECURITY_ANALYST"
+    mock_user.is_active = True
+    mock_user.is_mfa_enabled = False
+    mock_user.created_at = datetime.now(timezone.utc)
+
+    mock_org = MagicMock(spec=OrganizationModel)
+    mock_org.name = "Vulnova Sec"
+    mock_org.slug = "vulnova-sec"
     mock_user.organization = mock_org
 
     app.dependency_overrides[get_current_active_user] = lambda: mock_user
