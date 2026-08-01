@@ -214,4 +214,12 @@ Pull requests and pushes to `main` will automatically fail if:
 - High/Critical SAST vulnerabilities are identified.
 - Known critical CVEs are detected in dependencies or base container images.
 
+### Supply Chain Security & GitHub Actions SHA Pinning:
+To mitigate software supply chain attacks (such as malicious tag mutation or compromised third-party Action releases), all GitHub Actions in `.github/workflows/` are pinned to immutable 40-character commit SHAs (e.g., `actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683`).
+
+When updating GitHub Actions dependencies:
+1. Verify the release release tag on GitHub.
+2. Obtain the full 40-character commit SHA associated with the release tag.
+3. Include the original tag name as an inline comment (`# vX.Y.Z`).
+
 
