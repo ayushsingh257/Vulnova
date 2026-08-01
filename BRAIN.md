@@ -82,6 +82,11 @@ After CI success:
 
 This workflow represents Vulnova's enterprise engineering lifecycle.
 
+### Axiom 8: Canonical Repository Blueprint Rule
+`PROJECT_STRUCTURE.md` is the canonical repository blueprint.
+Every future directory or architectural expansion must be reflected in `PROJECT_STRUCTURE.md` before implementation.
+No undocumented repository structure changes are permitted.
+
 ---
 
 ## 🏗️ 3. System Architecture & Tech Stack Rules

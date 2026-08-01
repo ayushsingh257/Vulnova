@@ -100,12 +100,13 @@ See [TECH_STACK.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/TEC
 
 ## 📚 Core Repository Documentation
 
-The repository is governed by 18 enterprise-grade specification documents:
+The repository is governed by 19 enterprise-grade specification documents:
 
 | Document | Description |
 | :--- | :--- |
 | 🧠 [BRAIN.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/BRAIN.md) | Permanent project memory, design axioms, and engineering rules |
 | 🗺️ [ROADMAP.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/ROADMAP.md) | 12-Era roadmap spanning 100+ implementation phases |
+| 📁 [PROJECT_STRUCTURE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/PROJECT_STRUCTURE.md) | Canonical repository layout blueprint & architectural boundaries |
 | 🏛️ [ARCHITECTURE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/ARCHITECTURE.md) | System architecture diagrams, scanner sandboxing, event bus, and plugins |
 | 🛡️ [SECURITY.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/SECURITY.md) | Security policy, ASVS standards, sandbox isolation, legal target authorization |
 | 🎯 [THREAT_MODEL.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/THREAT_MODEL.md) | Formal STRIDE threat analysis, sandbox escape risks, and mitigations |
