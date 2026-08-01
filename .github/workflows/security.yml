@@ -20,9 +20,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Gitleaks Secret Scanner
-        uses: gitleaks/gitleaks-action@89e02c63f10118bf5d706509f7a956bc559ee5cb # v2.3.7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: zricethezav/gitleaks-action@f0088924b1a4a4608c2a8435d8869c970425313d # v8.21.2
 
   semgrep-sast-scan:
     name: Semgrep SAST Code Security Analysis
@@ -53,6 +51,7 @@ jobs:
       - name: Install Dependencies & Run pip-audit
         run: |
           python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
           pip install pip-audit
           pip-audit -r backend/requirements.txt
 
@@ -70,7 +69,7 @@ jobs:
 
       - name: Run npm audit
         working-directory: frontend
-        run: npm audit --audit-level=high || true
+        run: npm audit --audit-level=critical
 
   trivy-container-security:
     name: Trivy Container Vulnerability Scan
@@ -79,18 +78,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Run Trivy Scanner for Backend Dockerfile
+      - name: Run Trivy Security Scanner for Repository Infrastructure Configs
         uses: aquasecurity/trivy-action@18f72960f252cf8a48b3c959d28db4e1d7168735 # v0.28.0
         with:
           scan-type: 'config'
-          scan-ref: 'backend/Dockerfile'
-          exit-code: '0'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Run Trivy Scanner for Frontend Dockerfile
-        uses: aquasecurity/trivy-action@18f72960f252cf8a48b3c959d28db4e1d7168735 # v0.28.0
-        with:
-          scan-type: 'config'
-          scan-ref: 'frontend/Dockerfile'
+          scan-ref: '.'
           exit-code: '0'
           severity: 'CRITICAL,HIGH'
