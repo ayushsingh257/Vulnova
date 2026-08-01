@@ -9,6 +9,9 @@ on:
     # Run nightly security scan at midnight UTC
     - cron: '0 0 * * *'
 
+permissions:
+  contents: read
+
 jobs:
   gitleaks-secret-scan:
     name: Gitleaks Secret Detection Scan
@@ -19,10 +22,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Gitleaks Secret Scanner
-        uses: zricethezav/gitleaks-action@f0088924b1a4a4608c2a8435d8869c970425313d # v8.21.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Gitleaks & Scan Secrets
+        run: |
+          echo "=== Gitleaks Secret Detection Scan ==="
+          wget -q https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz
+          tar -xzf gitleaks_8.21.2_linux_x64.tar.gz
+          ./gitleaks version
+          ./gitleaks detect --verbose --redact
 
   semgrep-sast-scan:
     name: Semgrep SAST Code Security Analysis
@@ -36,10 +42,12 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Semgrep & Run SAST Security Rules
+      - name: Install Semgrep & Run Security Analysis
         run: |
+          echo "=== Semgrep SAST Code Security Analysis ==="
           python -m pip install --upgrade pip
           pip install semgrep
+          semgrep --version
           semgrep scan --config p/default --config p/security-audit --error
 
   backend-dependency-audit:
@@ -53,12 +61,16 @@ jobs:
         uses: actions/setup-python@0b92645e8574fe3e551fb26b1fbe147f87f46399 # v5.3.0
         with:
           python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
 
-      - name: Install Dependencies & Run pip-audit
+      - name: Install Backend Dependencies & Run pip-audit
         run: |
+          echo "=== Backend Dependency Audit (pip-audit) ==="
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install pip-audit
+          pip-audit --version
           pip-audit -r backend/requirements.txt
 
   frontend-dependency-audit:
@@ -75,7 +87,10 @@ jobs:
 
       - name: Run npm audit
         working-directory: frontend
-        run: npm audit || true
+        run: |
+          echo "=== Frontend Dependency Audit (npm audit) ==="
+          npm --version
+          npm audit || true
 
   trivy-container-security:
     name: Trivy Container Vulnerability Scan
@@ -84,10 +99,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Run Trivy Security Scanner for Repository Infrastructure Configs
-        uses: aquasecurity/trivy-action@18f72960f252cf8a48b3c959d28db4e1d7168735 # v0.28.0
-        with:
-          scan-type: 'config'
-          scan-ref: '.'
-          exit-code: '0'
-          severity: 'CRITICAL,HIGH'
+      - name: Install Trivy & Scan Container Specs
+        run: |
+          echo "=== Trivy Container & IaC Security Scan ==="
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.50.1
+          trivy --version
+          trivy config --severity CRITICAL,HIGH --exit-code 0 .
