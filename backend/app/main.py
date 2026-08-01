@@ -1,3 +1,5 @@
+"""Vulnova Enterprise AI Application Security Platform — FastAPI Application."""
+
 from typing import Any, Dict
 
 from fastapi import FastAPI, Request, status
@@ -7,10 +9,13 @@ from fastapi.responses import JSONResponse
 from app.api.v1.api import api_v1_router
 from app.core.config import settings
 from app.core.exceptions import VulnovaException
-from app.core.logging import logger
+from app.core.logging import get_logger
 from app.infrastructure.database.session import check_database_connection
 from app.security.middleware.request_id import RequestIDMiddleware
+from app.security.middleware.request_logging import RequestLoggingMiddleware
 from app.security.middleware.security_headers import SecurityHeadersMiddleware
+
+logger = get_logger("vulnova.main")
 
 app = FastAPI(
     title=settings.app_name,
@@ -22,7 +27,9 @@ app = FastAPI(
 )
 
 # 1. Security & Traceability Middleware Stack
+# Order matters: RequestID first (outermost), then logging, then security headers
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -44,8 +51,10 @@ async def vulnova_exception_handler(
     """Global exception handler for custom Vulnova domain exceptions."""
     request_id = getattr(request.state, "request_id", "unknown")
     logger.warning(
-        f"VulnovaException [{exc.code}]: {exc.message}",
-        extra={"request_id": request_id, "status_code": exc.status_code},
+        "vulnova_exception",
+        code=exc.code,
+        message=exc.message,
+        status_code=exc.status_code,
     )
     return JSONResponse(
         status_code=exc.status_code,
@@ -64,9 +73,10 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     """Fallback exception handler for unhandled internal exceptions."""
     request_id = getattr(request.state, "request_id", "unknown")
     logger.error(
-        f"Unhandled Internal Error: {str(exc)}",
+        "unhandled_exception",
+        error_type=type(exc).__name__,
+        error_message=str(exc),
         exc_info=True,
-        extra={"request_id": request_id},
     )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -110,3 +120,11 @@ async def readiness_check() -> Dict[str, str]:
         "database": db_status,
         "cache": "connected",
     }
+
+
+logger.info(
+    "application_initialized",
+    app_name=settings.app_name,
+    environment=settings.environment,
+    api_prefix=settings.api_v1_prefix,
+)

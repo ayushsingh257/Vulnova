@@ -18,6 +18,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Installed Trivy via official APT repository instead of fragile `curl | sh` script.
 
 ### Added
+- **Era 1 Phase 1.7 (Structured Logging & Correlation ID Middleware)**:
+  - Replaced hand-rolled stdlib JSON logging with production-grade `structlog` configuration (`app/core/logging.py`).
+  - Added async-safe contextvars correlation ID module (`app/core/correlation.py`).
+  - Extended `RequestIDMiddleware` (`app/security/middleware/request_id.py`) to automatically bind `request_id` into structlog contextvars.
+  - Added HTTP request/response lifecycle logging middleware (`app/security/middleware/request_logging.py`) capturing method, path, status, and execution duration.
+  - Updated FastAPI application (`app/main.py`) to use `structlog` key-value logging and registered request logging middleware.
+  - Created comprehensive test suite (`tests/test_logging.py`) validating structlog BoundLogger factory, contextvars propagation, and request logging.
+  - Updated `DEVELOPMENT.md` with Section 9 structured logging conventions.
 - **Era 1 Phase 1.6 (DevSecOps GitHub Actions Pipelines & Automated Scanners)**:
   - Created `.github/workflows/security.yml` enforcing automated DevSecOps scanners.
   - Integrated Gitleaks secret detection (`gitleaks/gitleaks-action@v2`).

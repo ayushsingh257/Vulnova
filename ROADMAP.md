@@ -203,6 +203,8 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Deliverables**: Config (`pydantic-settings`), Security middleware (`RequestIDMiddleware`, `SecurityHeadersMiddleware`), `/api/v1/status` endpoint, enterprise exception hierarchy (`VulnovaException`), unit test suite.
 - **Dependencies**: Phase 1.4.
 - **Completion Criteria**: Clean Architecture boundaries established; all health & status endpoints pass; pytest, Ruff, Black, and Mypy pass cleanly.
+- **Testing Requirements**: Verification of API status endpoints, custom exceptions, and middleware stack.
+
 ### ✅ Phase 1.6: DevSecOps GitHub Actions Pipelines & Automated Scanners
 - **Objective**: Configure automated CI/CD security pipelines for secret scanning (Gitleaks), SAST (Semgrep), dependency vulnerability audits (`pip-audit`, `npm audit`), and container scanning (Trivy).
 - **Deliverables**: `.github/workflows/security.yml`, updated `.github/workflows/ci.yml`, `pip-audit` dependency in `backend/requirements.txt`, updated `DEVELOPMENT.md`.
@@ -210,12 +212,12 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Automated security pipelines active; no secrets or critical vulnerabilities detected; GitHub Actions passes green check.
 - **Testing Requirements**: Gitleaks secret detection, Semgrep OWASP ruleset, `pip-audit` scan, Trivy container config scan.
 
-### Phase 1.7: Structured Logging & Correlation ID Middleware
+### ✅ Phase 1.7: Structured Logging & Correlation ID Middleware
 - **Objective**: Implement structlog JSON logging with HTTP request correlation IDs.
-- **Deliverables**: Middleware for tracing requests across FastAPI and Celery tasks.
+- **Deliverables**: Structlog configuration (`app/core/logging.py`), contextvars correlation ID module (`app/core/correlation.py`), structlog-bound `RequestIDMiddleware`, HTTP `RequestLoggingMiddleware`, comprehensive unit tests (`tests/test_logging.py`).
 - **Dependencies**: Phase 1.2.
-- **Completion Criteria**: All logs emitted as structured JSON with trace IDs.
-- **Testing Requirements**: Test trace ID persistence across async contexts.
+- **Completion Criteria**: All logs emitted as structured JSON with trace IDs; correlation IDs auto-bound to structlog context; pytest, Ruff, Black, and Mypy pass cleanly.
+- **Testing Requirements**: Test trace ID persistence across async contexts, structlog BoundLogger factory, HTTP request lifecycle logging.
 
 ---
 

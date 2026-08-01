@@ -218,8 +218,33 @@ Pull requests and pushes to `main` will automatically fail if:
 To mitigate software supply chain attacks (such as malicious tag mutation or compromised third-party Action releases), all GitHub Actions in `.github/workflows/` are pinned to immutable 40-character commit SHAs (e.g., `actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683`).
 
 When updating GitHub Actions dependencies:
-1. Verify the release release tag on GitHub.
+1. Verify the release tag on GitHub.
 2. Obtain the full 40-character commit SHA associated with the release tag.
 3. Include the original tag name as an inline comment (`# vX.Y.Z`).
+
+---
+
+## 9. Structured Logging & Correlation ID Tracing
+
+Vulnova uses `structlog` for structured JSON logging with automatic HTTP request correlation ID binding across async contexts.
+
+### Key Practices:
+- Always obtain a logger instance via `get_logger(__name__)`:
+  ```python
+  from app.core.logging import get_logger
+
+  logger = get_logger(__name__)
+  ```
+- Use structured key-value arguments instead of string formatting or f-strings:
+  ```python
+  # Recommended
+  logger.info("scan_job_dispatched", scan_id=scan.id, target=scan.target)
+
+  # Avoid
+  logger.info(f"Dispatched scan job {scan.id} for {scan.target}")
+  ```
+- Correlation IDs (`X-Request-ID`) are automatically bound to all `structlog` calls made within an HTTP request lifecycle by `RequestIDMiddleware`.
+- Use `set_correlation_id(id)` from `app.core.correlation` when setting context manually in async tasks.
+
 
 
