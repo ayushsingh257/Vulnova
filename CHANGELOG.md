@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- **Era 1 Phase 1.2 (Development Toolchain & Dependency Management)**:
+  - Created `DEVELOPMENT.md` developer onboarding handbook and command reference guide.
+  - Added root `package.json` for monorepo script orchestration (`npm run dev`, `npm run build`, `npm run lint`, `npm run type-check`, `npm run test`, `npm run format`).
+  - Added `format` and `format:check` scripts to `frontend/package.json`.
+  - Configured `.pre-commit-config.yaml` for pre-commit verification (Black, Ruff, ESLint, Prettier, check-yaml).
+  - Enhanced `.github/workflows/ci.yml` CI pipeline with Black formatting check, ESLint, type checking, and Next.js build verification.
 - **Era 1 Phase 1.1 (Monorepo Structure & Workspace Configuration)**:
   - Physical monorepo directory layout (`frontend/`, `backend/`, `infrastructure/`, `docker/`, `deployment/`, `scripts/`, `testing/`, `plugins/`, `docs/`, `assets/`, `examples/`).
   - Next.js 14 App Router + TypeScript + TailwindCSS frontend foundation with strict mode enabled.

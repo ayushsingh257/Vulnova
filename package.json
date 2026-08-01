@@ -1,0 +1,18 @@
+{
+  "name": "vulnova-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vulnova Enterprise AI Application Security Platform Monorepo Root",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint && cd backend && ruff check .",
+    "type-check": "npm --prefix frontend run type-check && cd backend && mypy .",
+    "format": "npm --prefix frontend run format && cd backend && black .",
+    "format:check": "npm --prefix frontend run format:check && cd backend && black --check .",
+    "test": "cd backend && pytest"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}

@@ -177,15 +177,15 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Clean directory structure with package management configured.
 - **Testing Requirements**: Monorepo scripts initialization check.
 
-### Phase 1.2: FastAPI Backend Scaffolding & Health Check API
-- **Objective**: Bootstrapping FastAPI app with basic routing, configuration management, and health endpoints.
-- **Deliverables**: `backend/app/main.py`, `/health`, `/ready` endpoints.
+### ✅ Phase 1.2: Development Toolchain & Dependency Management
+- **Objective**: Establish professional dependency management, developer tooling (Ruff, Black, Mypy, ESLint, Prettier), DEVELOPMENT.md handbook, and pre-commit hooks.
+- **Deliverables**: `DEVELOPMENT.md`, root `package.json`, `.pre-commit-config.yaml`, updated `pyproject.toml`, updated `.github/workflows/ci.yml`.
 - **Dependencies**: Phase 1.1.
-- **Completion Criteria**: Server starts and responds to health checks.
-- **Testing Requirements**: Unit test for `/health` endpoint using pytest.
+- **Completion Criteria**: Tooling commands pass cleanly; pre-commit hooks validated; CI pipeline green.
+- **Testing Requirements**: Verification of `npm run build`, `pytest`, `mypy`, `ruff`, `black --check`.
 
-### Phase 1.3: Next.js 14 Frontend Scaffolding & Theme Engine
-- **Objective**: Initialize Next.js 14 App Router project with TailwindCSS and CSS variable themes.
+### Phase 1.3: Containerization & Local Infrastructure Environment
+- **Objective**: Docker Compose orchestration for local development stack (PostgreSQL, Redis, FastAPI, Next.js).
 - **Deliverables**: `frontend/app`, Tailwind configuration, theme switcher hook.
 - **Dependencies**: Phase 1.1.
 - **Completion Criteria**: Next.js app builds cleanly with Light/Dark theme support.
