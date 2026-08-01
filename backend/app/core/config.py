@@ -1,27 +1,48 @@
+from typing import List
+
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Vulnova Backend Application Settings."""
+    """Vulnova Enterprise AppSec Control Plane Configuration Settings."""
 
     app_name: str = "Vulnova Enterprise AppSec Control Plane"
+    api_v1_prefix: str = "/api/v1"
     environment: str = "development"
     log_level: str = "INFO"
     host: str = "0.0.0.0"  # noqa: S104
     port: int = 8000
 
+    # Database & Cache Connection Strings
     database_url: str = (
         "postgresql+asyncpg://vulnova_admin:vulnova_secure_password@localhost:5432/vulnova_db"
     )
     redis_url: str = "redis://localhost:6379/0"
 
+    # Security & JWT Token Configurations
     jwt_secret: str = "vulnova_dev_jwt_secret_key_32_characters_minimum"  # noqa: S105
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 15
+    cors_origins: List[str] = Field(default_factory=lambda: ["*"])
+
+    # AI Provider Key Placeholders
+    openai_api_key: str = ""
+    anthropic_api_key: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
+
+    @property
+    def is_development(self) -> bool:
+        """Return True if environment is development."""
+        return self.environment.lower() == "development"
+
+    @property
+    def is_production(self) -> bool:
+        """Return True if environment is production."""
+        return self.environment.lower() in ("production", "prod")
 
 
 settings = Settings()

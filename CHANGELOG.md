@@ -12,6 +12,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **CI Dependency Installation**: Configured `.github/workflows/ci.yml` backend verification step to install directly from the authoritative `backend/requirements.txt` source, ensuring `sqlalchemy`, `asyncpg`, `alembic`, `black`, and all backend dependencies are available during CI execution.
 
 ### Added
+- **Era 1 Phase 1.5 (Backend Application Foundation & API Architecture)**:
+  - Clean Architecture package layout (`api/v1/`, `application/`, `domain/`, `infrastructure/`, `security/`, `core/`).
+  - Enhanced Pydantic `Settings` configuration (`app/core/config.py`).
+  - Structured JSON logging module with request correlation ID tracking (`app/core/logging.py`).
+  - Enterprise exception hierarchy (`VulnovaException`, `ResourceNotFoundException`, `UnauthorizedException`, `ForbiddenException`, `ValidationException`).
+  - Security middleware: `RequestIDMiddleware` (`X-Request-ID`), `SecurityHeadersMiddleware` (OWASP security headers).
+  - API v1 router aggregator and system operational status endpoint (`GET /api/v1/status`).
+  - Unit & integration test suites (`test_api_v1.py`, `test_middleware.py`, `test_config.py`).
 - **Era 1 Phase 1.4 (Database Foundation & Migration Infrastructure)**:
   - Created SQLAlchemy 2.0 Async engine, `async_sessionmaker` session factory (`backend/app/infrastructure/database/session.py`), and Declarative `Base` (`base.py`).
   - Added Alembic database migration system (`alembic.ini`, `alembic/env.py`, `alembic/script.py.mako`).

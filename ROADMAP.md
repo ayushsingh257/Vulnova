@@ -198,7 +198,14 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Alembic migrations run cleanly; DB connectivity probes succeed; unit tests pass.
 - **Testing Requirements**: Async DB session test suite (`pytest tests/test_database.py`), Alembic heads validation.
 
-### Phase 1.5: DevSecOps GitHub Actions Pipelines
+### ✅ Phase 1.5: Backend Application Foundation & API Architecture
+- **Objective**: Establish production-grade FastAPI application foundation, Clean Architecture boundaries, `/api/v1` routers, structured JSON logging, security middleware, and global error handlers.
+- **Deliverables**: Config (`pydantic-settings`), Security middleware (`RequestIDMiddleware`, `SecurityHeadersMiddleware`), `/api/v1/status` endpoint, enterprise exception hierarchy (`VulnovaException`), unit test suite.
+- **Dependencies**: Phase 1.4.
+- **Completion Criteria**: Clean Architecture boundaries established; all health & status endpoints pass; pytest, Ruff, Black, and Mypy pass cleanly.
+- **Testing Requirements**: API v1 router tests, security header verification, custom exception payload schema tests.
+
+### Phase 1.6: DevSecOps GitHub Actions Pipelines & Automated Scanners
 - **Objective**: Configure automated CI pipeline for linting, type checks, SAST (Semgrep), and Gitleaks secret scanning.
 - **Deliverables**: `.github/workflows/ci.yml`, `.github/workflows/security.yml`.
 - **Dependencies**: Phase 1.4.
