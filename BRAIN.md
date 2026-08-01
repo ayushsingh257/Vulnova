@@ -43,6 +43,45 @@ The following axioms govern all software design, implementation, and code review
 ### Axiom 6: Visual Completion Tracking Rule
 - Every completed phase in `ROADMAP.md` must be marked with a green check emoji `✅`. Progress is updated synchronously in `BRAIN.md` and `ROADMAP.md` upon phase verification.
 
+### Axiom 7: GitHub Actions Verification Gate
+Vulnova development follows a CI/CD verification-first workflow.
+
+For every implementation phase after documentation foundation:
+1. Complete the planned implementation.
+2. Run local validation and testing.
+3. Ensure appropriate GitHub Actions workflows exist for the technology being implemented.
+4. Push changes to GitHub.
+5. Wait for GitHub Actions execution to complete.
+6. A phase cannot be marked completed unless the related GitHub Actions checks pass successfully.
+
+A successful phase requires:
+- Code implemented correctly.
+- Tests passing.
+- Security checks passing.
+- GitHub Actions showing successful green checks.
+
+Never mark a phase complete by only verifying local execution.
+
+If GitHub Actions fails:
+- Investigate the root cause.
+- Fix the actual issue.
+- Re-run validation.
+- Push again.
+- Wait for successful CI completion.
+
+Do not bypass failures by:
+- commenting out code,
+- disabling tests,
+- removing security checks,
+- ignoring workflow failures.
+
+After CI success:
+- Update ROADMAP.md completion status with ✅.
+- Update BRAIN.md project state if required.
+- Continue to the next phase only after verification.
+
+This workflow represents Vulnova's enterprise engineering lifecycle.
+
 ---
 
 ## 🏗️ 3. System Architecture & Tech Stack Rules
