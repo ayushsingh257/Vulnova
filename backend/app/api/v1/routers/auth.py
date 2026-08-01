@@ -3,7 +3,6 @@
 from typing import Dict, Optional
 
 from fastapi import APIRouter, Cookie, Depends, Request, Response, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies.auth import get_current_active_user
@@ -15,7 +14,7 @@ from app.application.auth.dto import (
     UserResponse,
 )
 from app.application.auth.services import AuthService
-from app.core.exceptions import UnauthorizedException
+from app.core.exceptions import UnauthorizedException, ValidationException
 from app.infrastructure.database.models.user import UserModel
 from app.infrastructure.database.session import get_async_session
 
@@ -73,25 +72,30 @@ async def register_organization_and_owner(
 
 @router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
 async def login(
-    response: Response,
     request: Request,
-    body_req: Optional[LoginRequest] = None,
-    form_data: Optional[OAuth2PasswordRequestForm] = Depends(OAuth2PasswordRequestForm),
+    response: Response,
     session: AsyncSession = Depends(get_async_session),
 ) -> TokenResponse:
     """Authenticate user credentials and issue access token & refresh token cookie.
 
-    Supports both JSON body payload and standard OAuth2 form-data logins.
+    Supports both JSON body payloads and standard OAuth2 form-data logins.
     """
+    content_type = request.headers.get("content-type", "")
     email: Optional[str] = None
     password: Optional[str] = None
 
-    if body_req and body_req.email:
-        email = body_req.email
-        password = body_req.password
-    elif form_data and form_data.username:
-        email = form_data.username
-        password = form_data.password
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            login_req = LoginRequest.model_validate(body)
+            email = login_req.email
+            password = login_req.password
+        except Exception as err:
+            raise ValidationException("Invalid login JSON payload") from err
+    else:
+        form = await request.form()
+        email = str(form.get("username") or form.get("email") or "")
+        password = str(form.get("password") or "")
 
     if not email or not password:
         raise UnauthorizedException("Email and password are required")

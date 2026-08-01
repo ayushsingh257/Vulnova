@@ -9,12 +9,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.v1.dependencies.auth import get_current_active_user
-from app.application.auth.dto import RegisterRequest
+from app.application.auth.dto import RegisterRequest, TokenResponse, UserResponse
 from app.application.auth.services import AuthService
 from app.core.exceptions import UnauthorizedException, ValidationException
 from app.infrastructure.database.models.organization import OrganizationModel
 from app.infrastructure.database.models.refresh_token import RefreshTokenModel
 from app.infrastructure.database.models.user import UserModel
+from app.infrastructure.database.session import get_async_session
 from app.main import app
 from app.security.jwt import create_access_token, decode_access_token, hash_token
 from app.security.password import hash_password, verify_password
@@ -220,43 +221,147 @@ def test_auth_service_register_and_login() -> None:
 @patch.object(AuthService, "register")
 def test_api_register_endpoint(mock_register: AsyncMock) -> None:
     """Test POST /api/v1/auth/register endpoint."""
-    org_id = uuid4()
-    user_id = uuid4()
+    app.dependency_overrides[get_async_session] = lambda: AsyncMock()
 
-    now = datetime.now(timezone.utc)
-    dummy_user = UserModel(
-        id=user_id,
-        organization_id=org_id,
-        email="owner@acme.com",
-        password_hash="hash",
-        full_name="Alice Admin",
-        role="OWNER",
-        is_active=True,
-        is_mfa_enabled=False,
-        created_at=now,
-    )
-    dummy_org = OrganizationModel(
-        id=org_id,
-        name="Acme Security",
-        slug="acme-sec",
-        plan_tier="ENTERPRISE_TRIAL",
-        is_active=True,
-        created_at=now,
-    )
-    mock_register.return_value = (dummy_user, dummy_org)
+    try:
+        org_id = uuid4()
+        user_id = uuid4()
+        now = datetime.now(timezone.utc)
 
-    payload = {
-        "email": "owner@acme.com",
-        "password": "Password123!",
-        "full_name": "Alice Admin",
-        "organization_name": "Acme Security",
-        "organization_slug": "acme-sec",
-    }
-    res = client.post("/api/v1/auth/register", json=payload)
-    assert res.status_code == 201
-    data = res.json()
-    assert data["email"] == "owner@acme.com"
-    assert data["role"] == "OWNER"
+        dummy_user = UserModel(
+            id=user_id,
+            organization_id=org_id,
+            email="owner@acme.com",
+            password_hash="hash",
+            full_name="Alice Admin",
+            role="OWNER",
+            is_active=True,
+            is_mfa_enabled=False,
+            created_at=now,
+        )
+        dummy_org = OrganizationModel(
+            id=org_id,
+            name="Acme Security",
+            slug="acme-sec",
+            plan_tier="ENTERPRISE_TRIAL",
+            is_active=True,
+            created_at=now,
+        )
+        mock_register.return_value = (dummy_user, dummy_org)
+
+        payload = {
+            "email": "owner@acme.com",
+            "password": "Password123!",
+            "full_name": "Alice Admin",
+            "organization_name": "Acme Security",
+            "organization_slug": "acme-sec",
+        }
+        res = client.post("/api/v1/auth/register", json=payload)
+        assert res.status_code == 201
+        data = res.json()
+        assert data["email"] == "owner@acme.com"
+        assert data["role"] == "OWNER"
+    finally:
+        app.dependency_overrides.clear()
+
+
+@patch.object(AuthService, "login")
+def test_api_login_endpoint(mock_login: AsyncMock) -> None:
+    """Test POST /api/v1/auth/login endpoint."""
+    app.dependency_overrides[get_async_session] = lambda: AsyncMock()
+
+    try:
+        org_id = uuid4()
+        user_id = uuid4()
+        now = datetime.now(timezone.utc)
+
+        user_resp = UserResponse(
+            id=user_id,
+            organization_id=org_id,
+            organization_name="Acme Sec",
+            organization_slug="acme-sec",
+            email="owner@acme.com",
+            full_name="Alice Admin",
+            role="OWNER",
+            is_active=True,
+            is_mfa_enabled=False,
+            created_at=now,
+        )
+        token_resp = TokenResponse(
+            access_token="mock_access_token_jwt",
+            token_type="bearer",
+            user=user_resp,
+        )
+        mock_login.return_value = (token_resp, "mock_raw_refresh_token")
+
+        res = client.post(
+            "/api/v1/auth/login",
+            json={"email": "owner@acme.com", "password": "Password123!"},
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["access_token"] == "mock_access_token_jwt"
+        assert "vulnova_refresh_token" in res.cookies
+    finally:
+        app.dependency_overrides.clear()
+
+
+@patch.object(AuthService, "refresh")
+def test_api_refresh_endpoint(mock_refresh: AsyncMock) -> None:
+    """Test POST /api/v1/auth/refresh endpoint."""
+    app.dependency_overrides[get_async_session] = lambda: AsyncMock()
+
+    try:
+        org_id = uuid4()
+        user_id = uuid4()
+        now = datetime.now(timezone.utc)
+
+        user_resp = UserResponse(
+            id=user_id,
+            organization_id=org_id,
+            organization_name="Acme Sec",
+            organization_slug="acme-sec",
+            email="owner@acme.com",
+            full_name="Alice Admin",
+            role="OWNER",
+            is_active=True,
+            is_mfa_enabled=False,
+            created_at=now,
+        )
+        token_resp = TokenResponse(
+            access_token="new_mock_access_token_jwt",
+            token_type="bearer",
+            user=user_resp,
+        )
+        mock_refresh.return_value = (token_resp, "new_mock_raw_refresh_token")
+
+        res = client.post(
+            "/api/v1/auth/refresh",
+            cookies={"vulnova_refresh_token": "valid_old_cookie_token"},
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["access_token"] == "new_mock_access_token_jwt"
+        assert res.cookies["vulnova_refresh_token"] == "new_mock_raw_refresh_token"
+    finally:
+        app.dependency_overrides.clear()
+
+
+@patch.object(AuthService, "logout")
+def test_api_logout_endpoint(mock_logout: AsyncMock) -> None:
+    """Test POST /api/v1/auth/logout endpoint."""
+    app.dependency_overrides[get_async_session] = lambda: AsyncMock()
+
+    try:
+        mock_logout.return_value = None
+        res = client.post(
+            "/api/v1/auth/logout",
+            cookies={"vulnova_refresh_token": "cookie_token_to_logout"},
+        )
+        assert res.status_code == 200
+        assert res.json()["message"] == "Logged out successfully"
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_api_get_me_endpoint_authenticated() -> None:
@@ -284,7 +389,6 @@ def test_api_get_me_endpoint_authenticated() -> None:
     )
     mock_user.organization = mock_org
 
-    # Override get_current_active_user dependency
     app.dependency_overrides[get_current_active_user] = lambda: mock_user
 
     try:
