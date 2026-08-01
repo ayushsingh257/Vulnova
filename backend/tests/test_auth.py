@@ -216,7 +216,11 @@ def test_auth_service_register_and_login() -> None:
         with pytest.raises(UnauthorizedException, match="reuse detected"):
             await service.refresh(raw_refresh_token)
 
-    asyncio.run(_async_test())
+    loop = asyncio.new_event_loop()
+    try:
+        loop.run_until_complete(_async_test())
+    finally:
+        loop.close()
 
 
 # ───────────────────────────────────────────────
