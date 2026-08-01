@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta, timezone
+from typing import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 from uuid import UUID, uuid4
 
@@ -21,6 +22,11 @@ from app.security.jwt import create_access_token, decode_access_token, hash_toke
 from app.security.password import hash_password, verify_password
 
 client = TestClient(app)
+
+
+async def _mock_async_session() -> AsyncGenerator[AsyncMock, None]:
+    """Dependency override providing a mock AsyncSession generator."""
+    yield AsyncMock()
 
 
 # ───────────────────────────────────────────────
@@ -221,7 +227,7 @@ def test_auth_service_register_and_login() -> None:
 @patch.object(AuthService, "register")
 def test_api_register_endpoint(mock_register: AsyncMock) -> None:
     """Test POST /api/v1/auth/register endpoint."""
-    app.dependency_overrides[get_async_session] = lambda: AsyncMock()
+    app.dependency_overrides[get_async_session] = _mock_async_session
 
     try:
         org_id = uuid4()
@@ -268,7 +274,7 @@ def test_api_register_endpoint(mock_register: AsyncMock) -> None:
 @patch.object(AuthService, "login")
 def test_api_login_endpoint(mock_login: AsyncMock) -> None:
     """Test POST /api/v1/auth/login endpoint."""
-    app.dependency_overrides[get_async_session] = lambda: AsyncMock()
+    app.dependency_overrides[get_async_session] = _mock_async_session
 
     try:
         org_id = uuid4()
@@ -309,7 +315,7 @@ def test_api_login_endpoint(mock_login: AsyncMock) -> None:
 @patch.object(AuthService, "refresh")
 def test_api_refresh_endpoint(mock_refresh: AsyncMock) -> None:
     """Test POST /api/v1/auth/refresh endpoint."""
-    app.dependency_overrides[get_async_session] = lambda: AsyncMock()
+    app.dependency_overrides[get_async_session] = _mock_async_session
 
     try:
         org_id = uuid4()
@@ -350,7 +356,7 @@ def test_api_refresh_endpoint(mock_refresh: AsyncMock) -> None:
 @patch.object(AuthService, "logout")
 def test_api_logout_endpoint(mock_logout: AsyncMock) -> None:
     """Test POST /api/v1/auth/logout endpoint."""
-    app.dependency_overrides[get_async_session] = lambda: AsyncMock()
+    app.dependency_overrides[get_async_session] = _mock_async_session
 
     try:
         mock_logout.return_value = None
