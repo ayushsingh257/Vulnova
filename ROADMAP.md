@@ -223,12 +223,12 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 
 ## 🏢 Era 2: Core Platform & Tenant Management System
 
-### Phase 2.1: Database Entity Models & SQLAlchemy Mappings
-- **Objective**: Implement Users, Organizations, Memberships, Scan Profiles, Evidence, and Audit Logs models.
-- **Deliverables**: `backend/app/models/user.py`, `organization.py`, `scan_profile.py`, `evidence.py`.
+### ✅ Phase 2.1: Database Entity Models & SQLAlchemy Mappings
+- **Objective**: Implement Organizations, Users, RefreshTokens, APIKeys, and AuditLogs domain entities and SQLAlchemy 2.0 ORM models.
+- **Deliverables**: Domain entities (`app/domain/entities/`), ORM models (`app/infrastructure/database/models/`), Alembic migration `0002_create_core_platform_tables.py`, test suites (`tests/test_domain_entities.py`, `tests/test_models.py`).
 - **Dependencies**: Phase 1.6.
-- **Completion Criteria**: Database tables created with correct foreign keys and indexes.
-- **Testing Requirements**: Model unit tests and migration verification.
+- **Completion Criteria**: Core platform database tables created with foreign keys, cascading rules, and indexes; pytest, Ruff, Black, and Mypy pass cleanly; GitHub Actions green check.
+- **Testing Requirements**: Domain entity defaults verification, SQLAlchemy ORM metadata registration, Alembic revision chain validation.
 
 ### Phase 2.2: JWT & OAuth2 Authentication Framework
 - **Objective**: Build secure user registration, login, password hashing (Argon2id), and JWT access/refresh token rotation.

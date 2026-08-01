@@ -18,6 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Installed Trivy via official APT repository instead of fragile `curl | sh` script.
 
 ### Added
+- **Era 2 Phase 2.1 (Database Entity Models & Alembic Migration)**:
+  - Created pure domain entity dataclasses (`Organization`, `User`, `RefreshToken`, `APIKey`, `AuditLog`) in `app/domain/entities/`.
+  - Implemented SQLAlchemy 2.0 ORM models (`OrganizationModel`, `UserModel`, `RefreshTokenModel`, `APIKeyModel`, `AuditLogModel`) in `app/infrastructure/database/models/` with typed `Mapped` attributes and foreign keys.
+  - Created Alembic migration `0002_create_core_platform_tables.py` generating database tables, foreign keys, cascading rules, and indexes.
+  - Added unit test suites (`tests/test_domain_entities.py`, `tests/test_models.py`) verifying domain entity instantiation, ORM metadata registration, and Alembic revision chain integrity.
 - **Era 1 Phase 1.7 (Structured Logging & Correlation ID Middleware)**:
   - Replaced hand-rolled stdlib JSON logging with production-grade `structlog` configuration (`app/core/logging.py`).
   - Added async-safe contextvars correlation ID module (`app/core/correlation.py`).
