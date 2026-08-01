@@ -184,7 +184,7 @@ gitleaks detect --verbose
 #### 2. Semgrep (SAST Static Security Analysis)
 Scan code for OWASP Top 10 vulnerabilities:
 ```bash
-semgrep scan --config p/owasp-top-10 --config p/default
+semgrep scan --config p/default --config p/security-audit
 ```
 
 #### 3. Backend Dependency Vulnerability Audit (`pip-audit`)
