@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from app.core.correlation import get_correlation_id, set_correlation_id
 from app.core.logging import get_logger, setup_logging
 from app.main import app
+import tests.test_middleware  # noqa: F401
 
 client = TestClient(app)
 
