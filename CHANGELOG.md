@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- **Era 1 Phase 1.3 (Containerization & Local Infrastructure Environment)**:
+  - Hardened multi-stage `backend/Dockerfile` (`python:3.12-slim`, unprivileged `appuser` UID 10001, `/health` probe).
+  - Hardened multi-stage `frontend/Dockerfile` (`node:20-alpine`, `output: 'standalone'`, unprivileged `nextjs` UID 10001).
+  - Orchestrated `docker-compose.yml` with PostgreSQL 16 (`pgvector/pgvector:pg16`), Redis 7 (`redis:7.2-alpine`), `vulnova_net` bridge network, persistent volumes, and healthchecks.
+  - Canonical Docker build specs in `docker/Dockerfile.backend` and `docker/Dockerfile.frontend`.
+  - Updated `DEVELOPMENT.md` with Docker Compose lifecycle commands and database/cache CLI access.
+  - Added Docker Compose syntax validation job step to `.github/workflows/ci.yml`.
 - **Era 1 Phase 1.2 (Development Toolchain & Dependency Management)**:
   - Created `DEVELOPMENT.md` developer onboarding handbook and command reference guide.
   - Added root `package.json` for monorepo script orchestration (`npm run dev`, `npm run build`, `npm run lint`, `npm run type-check`, `npm run test`, `npm run format`).

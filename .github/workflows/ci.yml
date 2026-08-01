@@ -37,6 +37,16 @@ jobs:
           test -f DEVELOPMENT.md
           echo "All baseline documentation artifacts present."
 
+  docker-validation:
+    name: Docker Infrastructure Syntax Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Configuration Syntax
+        run: docker compose config
+
   backend-checks:
     name: Backend Lint, Black, Mypy & Pytest Verification
     runs-on: ubuntu-latest

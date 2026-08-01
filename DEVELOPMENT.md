@@ -112,14 +112,58 @@ If pre-commit detects unformatted files (e.g., Black or Prettier reformats a fil
 
 ---
 
-## 🐳 6. Local Docker Infrastructure
+## 🐳 6. Local Docker Infrastructure Management
 
-To run PostgreSQL (`pgvector`) and Redis containers locally:
+Vulnova provides a single-command Docker Compose stack hosting the Next.js frontend, FastAPI backend, PostgreSQL 16 (`pgvector`), and Redis 7 services under an isolated `vulnova_net` bridge network.
+
+### Docker Lifecycle Commands
+
+#### Start Complete Infrastructure:
 ```bash
-docker compose up -d postgres redis
+docker compose up -d
 ```
 
-Verify service health:
+#### Rebuild Containers After Code/Dependency Updates:
+```bash
+docker compose up --build -d
+```
+
+#### View Live Aggregated Logs:
+```bash
+docker compose logs -f
+```
+
+#### View Specific Service Logs (e.g., Backend):
+```bash
+docker compose logs -f backend
+```
+
+#### View Container Health Status:
 ```bash
 docker compose ps
 ```
+
+#### Stop & Remove Containers:
+```bash
+docker compose down
+```
+
+#### Stop Environment & Purge Persistent Volumes (Database Reset):
+```bash
+docker compose down -v
+```
+
+---
+
+## 🗄️ 7. Database & Cache Interactive Access
+
+### Connect to PostgreSQL (`psql` CLI inside container):
+```bash
+docker compose exec postgres psql -U vulnova_admin -d vulnova_db
+```
+
+### Connect to Redis (`redis-cli` inside container):
+```bash
+docker compose exec redis redis-cli
+```
+

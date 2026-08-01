@@ -184,19 +184,19 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Tooling commands pass cleanly; pre-commit hooks validated; CI pipeline green.
 - **Testing Requirements**: Verification of `npm run build`, `pytest`, `mypy`, `ruff`, `black --check`.
 
-### Phase 1.3: Containerization & Local Infrastructure Environment
-- **Objective**: Docker Compose orchestration for local development stack (PostgreSQL, Redis, FastAPI, Next.js).
-- **Deliverables**: `frontend/app`, Tailwind configuration, theme switcher hook.
-- **Dependencies**: Phase 1.1.
-- **Completion Criteria**: Next.js app builds cleanly with Light/Dark theme support.
-- **Testing Requirements**: Next.js build compilation test (`npm run build`).
+### ✅ Phase 1.3: Containerization & Local Infrastructure Environment
+- **Objective**: Docker Compose orchestration for local development stack (PostgreSQL 16 pgvector, Redis 7, FastAPI backend, Next.js frontend).
+- **Deliverables**: Multi-stage hardened `backend/Dockerfile` and `frontend/Dockerfile`, `docker-compose.yml` with healthchecks & `vulnova_net` bridge, `DEVELOPMENT.md` Docker commands.
+- **Dependencies**: Phase 1.2.
+- **Completion Criteria**: Containers build and run under non-root users (`appuser`, `nextjs`), healthchecks pass, `docker compose config` passes.
+- **Testing Requirements**: Verification of backend `/health`, frontend response, Docker config syntax check.
 
-### Phase 1.4: Docker Compose Local Environment Orchestration
-- **Objective**: Containerize FastAPI, Next.js, PostgreSQL, Redis, and Celery for local development.
-- **Deliverables**: `docker-compose.yml`, `docker-compose.dev.yml`, multi-stage Dockerfiles.
-- **Dependencies**: Phase 1.2, Phase 1.3.
-- **Completion Criteria**: `docker compose up` brings up all services without errors.
-- **Testing Requirements**: Container health verification script.
+### Phase 1.4: Database Foundation & Migration Infrastructure
+- **Objective**: Initialize Alembic database migrations, PostgreSQL async engine, and connection pool setup.
+- **Deliverables**: Async SQLAlchemy database engine, Alembic configuration, initial migrations.
+- **Dependencies**: Phase 1.3.
+- **Completion Criteria**: Alembic upgrade/downgrade migrations execute cleanly.
+- **Testing Requirements**: Migration script execution verification.
 
 ### Phase 1.5: DevSecOps GitHub Actions Pipelines
 - **Objective**: Configure automated CI pipeline for linting, type checks, SAST (Semgrep), and Gitleaks secret scanning.

@@ -1,4 +1,4 @@
-version: '3.8'
+name: vulnova
 
 services:
   postgres:
@@ -6,15 +6,17 @@ services:
     container_name: vulnova-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: vulnova_db
-      POSTGRES_USER: vulnova_admin
-      POSTGRES_PASSWORD: vulnova_secure_password
+      POSTGRES_DB: ${POSTGRES_DB:-vulnova_db}
+      POSTGRES_USER: ${POSTGRES_USER:-vulnova_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vulnova_secure_password}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - vulnova_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vulnova_admin -d vulnova_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vulnova_admin} -d ${POSTGRES_DB:-vulnova_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -28,6 +30,8 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - vulnova_net
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -37,34 +41,57 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: ../docker/Dockerfile.backend
+      dockerfile: Dockerfile
     container_name: vulnova-backend
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://vulnova_admin:vulnova_secure_password@postgres:5432/vulnova_db
-      REDIS_URL: redis://redis:6379/0
-      JWT_SECRET: vulnova_dev_jwt_secret_key_32_characters_minimum
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://vulnova_admin:vulnova_secure_password@postgres:5432/vulnova_db}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      JWT_SECRET: ${JWT_SECRET:-vulnova_dev_jwt_secret_key_32_characters_minimum}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    networks:
+      - vulnova_net
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: ../docker/Dockerfile.frontend
+      dockerfile: Dockerfile
     container_name: vulnova-frontend
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:8000/api/v1}
+    networks:
+      - vulnova_net
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  vulnova_net:
+    driver: bridge
+    name: vulnova_net
 
 volumes:
   postgres_data:
+    name: vulnova_postgres_data
   redis_data:
+    name: vulnova_redis_data
