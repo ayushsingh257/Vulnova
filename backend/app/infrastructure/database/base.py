@@ -1,4 +1,3 @@
-# ruff: noqa: E402, F401
 """Base Declarative Class for all Vulnova SQLAlchemy ORM Entities."""
 
 from sqlalchemy.orm import DeclarativeBase
@@ -8,11 +7,3 @@ class Base(DeclarativeBase):
     """Base Declarative Class for all Vulnova SQLAlchemy ORM Entities."""
 
     pass
-
-
-# Import all ORM models to register metadata with Base
-from app.infrastructure.database.models.api_key import APIKeyModel
-from app.infrastructure.database.models.audit_log import AuditLogModel
-from app.infrastructure.database.models.organization import OrganizationModel
-from app.infrastructure.database.models.refresh_token import RefreshTokenModel
-from app.infrastructure.database.models.user import UserModel
