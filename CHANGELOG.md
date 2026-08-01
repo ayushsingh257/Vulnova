@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - **CI Dependency Installation**: Configured `.github/workflows/ci.yml` backend verification step to install directly from the authoritative `backend/requirements.txt` source, ensuring `sqlalchemy`, `asyncpg`, `alembic`, `black`, and all backend dependencies are available during CI execution.
+- **DevSecOps Security Pipeline Stabilization (Phase 1.6)**:
+  - Replaced deprecated Semgrep `p/owasp-top-10` ruleset with active `p/default` and `p/security-audit` rulesets.
+  - Corrected invalid commit SHA references for `actions/setup-python` and `actions/setup-node` (verified via `git ls-remote`).
+  - Pinned all GitHub Actions to immutable 40-character commit SHAs for supply chain security.
+  - Replaced Gitleaks, Semgrep, and Trivy third-party action wrappers with direct CLI binary installations for reliability.
+  - Installed Trivy via official APT repository instead of fragile `curl | sh` script.
 
 ### Added
 - **Era 1 Phase 1.6 (DevSecOps GitHub Actions Pipelines & Automated Scanners)**:
