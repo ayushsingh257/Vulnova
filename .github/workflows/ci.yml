@@ -58,11 +58,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
 
-      - name: Install Backend Dependencies
+      - name: Install Backend Dependencies from Authoritative requirements.txt
         run: |
           python -m pip install --upgrade pip
-          pip install ruff black mypy pytest httpx pydantic pydantic-settings fastapi uvicorn
+          pip install -r backend/requirements.txt
 
       - name: Run Black Formatter Check
         run: black --check backend/app

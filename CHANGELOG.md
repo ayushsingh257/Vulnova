@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+- **CI Dependency Installation**: Configured `.github/workflows/ci.yml` backend verification step to install directly from the authoritative `backend/requirements.txt` source, ensuring `sqlalchemy`, `asyncpg`, `alembic`, `black`, and all backend dependencies are available during CI execution.
+
 ### Added
 - **Era 1 Phase 1.4 (Database Foundation & Migration Infrastructure)**:
   - Created SQLAlchemy 2.0 Async engine, `async_sessionmaker` session factory (`backend/app/infrastructure/database/session.py`), and Declarative `Base` (`base.py`).
