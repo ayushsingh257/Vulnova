@@ -19,6 +19,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 3 Phase 3.3 (Subdomain & DNS Intelligence Engine)** (`54190b3`):
+  - Extended domain entities (`app/domain/entities/discovery.py`) with `DNSRecordType` (`A`, `AAAA`, `CNAME`, `MX`, `NS`, `TXT`), `DNSRecord`, `DiscoveredIP` (`value`, `classification`, `is_internal`, `is_egress_safe`), `DiscoveredSubdomain`, and `SubdomainScanResult`.
+  - Created Enterprise IP Classifier (`app/infrastructure/discovery/ssrf_validator.py`) with `classify_ip` function classifying IPs into `PUBLIC`, `PRIVATE`, `LOOPBACK`, `LINK_LOCAL`, `RESERVED` so internal asset findings (`dev.company.local` -> `10.10.5.20`) are preserved for enterprise ASM without over-blocking.
+  - Implemented `AsyncDNSResolver` (`app/infrastructure/discovery/dns_resolver.py`) using `dnspython` querying A, AAAA, CNAME, MX, NS, and TXT DNS records.
+  - Implemented `CTLogsClient` (`app/infrastructure/discovery/ct_logs_client.py`) querying Certificate Transparency logs (`crt.sh`) for passive subdomain discovery matching target domain scope.
+  - Extended Discovery DTOs (`app/application/discovery/dto.py`) with `IPAddressInfoDTO`, `DNSRecordDTO`, `DiscoveredSubdomainDTO`, `SubdomainScanRequest`, and `SubdomainScanResponse`.
+  - Extended `DiscoveryService` (`app/application/discovery/services.py`) with `discover_subdomains` executing CT log search and DNS resolution, recording audit log events (`discovery.subdomain_scan_started`, `discovery.subdomain_scan_completed`).
+  - Added Discovery API endpoint (`app/api/v1/routers/discovery.py`) `POST /api/v1/discovery/subdomains` guarded by dual-mode auth (`get_current_user_or_api_key`), `targets:create` RBAC guard, and tenant isolation.
+  - Added `dnspython>=2.6.0` to `pyproject.toml` and `requirements.txt`.
+  - Added unit & integration test suite (`tests/test_dns_intelligence.py`) — 4 tests covering IP classification, `DNSRecordType` enum, CT log parsing, and service subdomain scanning. Total backend test suite now stands at **106 passing tests**.
 - **Era 3 Phase 3.2 (SPA Dynamic DOM Renderer with Playwright)** (`90d50f5`):
   - Extended domain entities (`app/domain/entities/discovery.py`) with `DiscoveredNetworkRequest` and `is_spa: bool` flag in `CrawlResult`.
   - Created `SPADynamicCrawler` (`app/infrastructure/discovery/playwright_renderer.py`) for headless Chromium SPA rendering, dynamic DOM evaluation, and background `fetch`/`XHR` network request interception with SSRF pre-validation.

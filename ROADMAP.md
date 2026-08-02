@@ -332,12 +332,20 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Playwright dynamic rendering functional; lazy import prevents startup crashes; background fetch/XHR network requests intercepted and SSRF validated; graceful fallback to static crawler operational; audit logs record `render_mode`; pytest (102 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`90d50f5`).
 - **Testing Requirements**: `render_js` flag validation, lazy import isolation, Playwright unavailability exception handling, service static crawler fallback execution, network request DTO serialization.
 
-### Phase 3.3: Endpoint & REST/GraphQL API Discovery
-- **Objective**: Extract API routes, URL parameters, headers, and GraphQL schemas from client scripts.
-- **Deliverables**: Regex and AST API route parser module.
+### ✅ Phase 3.3: Subdomain & DNS Intelligence Engine
+- **Objective**: Build an enterprise-grade Subdomain & DNS Intelligence Engine for passive Certificate Transparency discovery, comprehensive DNS record resolution (A, AAAA, CNAME, MX, NS, TXT), and enterprise IP classification (PUBLIC, PRIVATE, LOOPBACK, LINK_LOCAL).
+- **Deliverables**:
+  - Domain Entities Extension (`app/domain/entities/discovery.py`) — `DNSRecordType` (`A`, `AAAA`, `CNAME`, `MX`, `NS`, `TXT`), `DNSRecord`, `DiscoveredIP` (`value`, `classification`, `is_internal`, `is_egress_safe`), `DiscoveredSubdomain`, `SubdomainScanResult`.
+  - IP Classifier & SSRF Enhancement (`app/infrastructure/discovery/ssrf_validator.py`) — `classify_ip` classifying IPs into `PUBLIC`, `PRIVATE`, `LOOPBACK`, `LINK_LOCAL`, `RESERVED` so internal asset findings (`dev.company.local` -> `10.10.5.20`) are preserved for enterprise ASM without over-blocking.
+  - Async DNS Resolver (`app/infrastructure/discovery/dns_resolver.py`) — `AsyncDNSResolver` using `dnspython` querying A, AAAA, CNAME, MX, NS, and TXT records.
+  - Certificate Transparency Log Client (`app/infrastructure/discovery/ct_logs_client.py`) — `CTLogsClient` querying CT logs (`crt.sh`) for passive subdomain discovery under target domain scope.
+  - Discovery DTOs Extension (`app/application/discovery/dto.py`) — `IPAddressInfoDTO`, `DNSRecordDTO`, `DiscoveredSubdomainDTO`, `SubdomainScanRequest`, `SubdomainScanResponse`.
+  - Discovery Service Extension (`app/application/discovery/services.py`) — `DiscoveryService.discover_subdomains` executing CT log search and DNS resolution, recording audit events (`discovery.subdomain_scan_started`, `discovery.subdomain_scan_completed`).
+  - Discovery API Endpoint (`app/api/v1/routers/discovery.py`) — `POST /api/v1/discovery/subdomains` guarded by dual-mode auth (`get_current_user_or_api_key`), `targets:create` RBAC guard, and tenant isolation.
+  - Unit & Integration Test Suite (`tests/test_dns_intelligence.py`) — 4 tests covering IP classification, `DNSRecordType` enum, CT log parsing, and service subdomain scanning.
 - **Dependencies**: Phase 3.2.
-- **Completion Criteria**: Identifies hidden API endpoints and generates route parameter trees.
-- **Testing Requirements**: Test route extraction against sample JS bundles.
+- **Completion Criteria**: Subdomain discovery and DNS record resolution functional; enterprise IP classification active; CT log passive search operational; audit logs record subdomain scan events; pytest (106 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`54190b3`).
+- **Testing Requirements**: IP classification assertions (PUBLIC, PRIVATE, LOOPBACK), `DNSRecordType` enum verification, CT log parsing and scope filtering, service subdomain scanning integration.
 
 ### Phase 3.4: Technology Stack Fingerprinting Engine
 - **Objective**: Detect web server, CMS, frontend framework, and backend library versions.

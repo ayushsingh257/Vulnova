@@ -117,7 +117,7 @@ No undocumented repository structure changes are permitted.
 | **Era 0.5**| Enterprise Architecture Refinement & Security Model Polish | ✅ **COMPLETED** | Sprint 0.5 |
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
 | **Era 2** | Core Platform & Tenant Management System | ✅ **COMPLETED** (Phases 2.1–2.6 ✅) | Sprint 2 |
-| **Era 3** | Discovery Engine & Asset Surface Mapping | 🟡 **IN PROGRESS** (Phase 3.1 ✅, Phase 3.2 ✅) | Sprint 3 |
+| **Era 3** | Discovery Engine & Asset Surface Mapping | 🟡 **IN PROGRESS** (Phase 3.1 ✅, Phase 3.2 ✅, Phase 3.3 ✅) | Sprint 3 |
 | **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | ⏳ Pending | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
 | **Era 6** | Scanning Orchestration & Execution Pipeline | ⏳ Pending | Sprint 6 |
@@ -229,3 +229,6 @@ The following discovery engine architecture decisions were finalized during Phas
 8. **Lazy Playwright Import**: `playwright.async_api` is imported lazily inside `SPADynamicCrawler.crawl()`. Zero top-level Playwright imports exist in the module layer, ensuring API server startup never crashes if Playwright is uninstalled.
 9. **Graceful Static Fallback**: If Playwright package or Chromium binaries are missing (`PlaywrightUnavailableException`), `DiscoveryService` logs a warning (`discovery.playwright_unavailable_falling_back_to_static`) and executes `AsyncWebCrawler` (Phase 3.1).
 10. **Background AJAX/Fetch Interception**: `SPADynamicCrawler` listens to `page.on("request", ...)` events to capture dynamic `fetch` and `XHR` calls, running SSRF checks (`is_safe_target_url`) on every intercepted endpoint.
+11. **Enterprise IP Classification**: Rather than over-blocking and discarding internal IP findings, `classify_ip()` annotates IP addresses with `classification` (`PUBLIC`, `PRIVATE`, `LOOPBACK`, `LINK_LOCAL`, `RESERVED`), `is_internal`, and `is_egress_safe`. Enterprise ASM retains internal assets (e.g. `dev.company.local` -> `10.10.5.20`) for attack surface visibility while preventing SSRF during active HTTP scanning.
+12. **Non-Blocking Async DNS Resolution**: `AsyncDNSResolver` uses `dnspython` to asynchronously query `A`, `AAAA`, `CNAME`, `MX`, `NS`, and `TXT` records in parallel across discovered subdomains.
+13. **Passive Certificate Transparency Discovery**: `CTLogsClient` queries Certificate Transparency logs (`crt.sh`) via `httpx.AsyncClient` to discover active subdomains matching the target domain scope.
