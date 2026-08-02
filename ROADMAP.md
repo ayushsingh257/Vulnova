@@ -306,12 +306,19 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 
 ## 🔍 Era 3: Discovery Engine & Asset Surface Mapping
 
-### Phase 3.1: Async HTTP Web Crawler Core
-- **Objective**: Build high-performance async crawler for asset links, scripts, and forms.
-- **Deliverables**: `backend/app/services/discovery/crawler.py` using `httpx` & `BeautifulSoup`.
+### ✅ Phase 3.1: Async HTTP Web Crawler Core
+- **Objective**: Build an enterprise-grade, non-blocking Async HTTP Web Crawler Engine to recursively traverse HTML DOM structures, extract links, forms, scripts, and endpoints while enforcing strict domain boundary limits, SSRF egress firewalling, and audit logging.
+- **Deliverables**:
+  - Extensible Domain Entities (`app/domain/entities/discovery.py`) — `AssetType`, `DiscoveredAsset`, `DiscoveredURL`, `DiscoveredForm`, `DiscoveredScript`, `CrawlScope`, `CrawlResult`.
+  - SSRF Egress Filter (`app/infrastructure/discovery/ssrf_validator.py`) — Scheme whitelist (`http`/`https` only), IP range filtering (`127.0.0.1`, `169.254.169.254`, RFC 1918 private subnets, `0.0.0.0`), and domain scope matcher (`is_url_in_scope`).
+  - Async Crawler Engine (`app/infrastructure/discovery/crawler.py`) — `httpx` async client with concurrency limits, 5 MB body size caps, max 5 redirects, 10s timeout, and robust BeautifulSoup DOM parser.
+  - Discovery DTOs (`app/application/discovery/dto.py`) — `CrawlRequest`, `DiscoveredURLDTO`, `DiscoveredFormDTO`, `DiscoveredScriptDTO`, `CrawlResponse`.
+  - Discovery Service (`app/application/discovery/services.py`) — `DiscoveryService` with SSRF pre-validation and fail-safe audit event recording (`discovery.crawl_started`, `discovery.crawl_completed`, `discovery.crawl_rejected`).
+  - Discovery Router (`app/api/v1/routers/discovery.py`) — `POST /api/v1/discovery/crawl` guarded by dual-mode auth (`get_current_user_or_api_key`), `targets:create` RBAC guard, and tenant isolation.
+  - Comprehensive Test Suite (`tests/test_crawler.py`) — 7 unit & integration tests covering scheme filtering, SSRF IP blocking, DOM extraction, service error handling, and API endpoint authorization.
 - **Dependencies**: Era 2.
-- **Completion Criteria**: Crawler recursively traverses web pages up to configurable depth limits.
-- **Testing Requirements**: Unit tests with mock web targets.
+- **Completion Criteria**: Async web crawler operational; SSRF egress filtering active; domain scope boundaries strictly enforced; response body caps (5 MB) and redirect limits (5) active; audit logs recorded; pytest (98 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`2f5500b`, `455c127`).
+- **Testing Requirements**: Scheme whitelist verification, private IP & AWS metadata blocking assertions, HTML link/form/script extraction, service pre-validation rejection checks, API authorization and RBAC permission enforcement.
 
 ### Phase 3.2: SPA Dynamic DOM Renderer (Playwright Integration)
 - **Objective**: Integrate headless Chromium rendering for JavaScript-heavy single page applications.

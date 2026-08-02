@@ -19,6 +19,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 3 Phase 3.1 (Async HTTP Web Crawler Core)** (`2f5500b`, `455c127`):
+  - Created extensible domain entities (`app/domain/entities/discovery.py`) — `AssetType`, `DiscoveredAsset`, `DiscoveredURL`, `DiscoveredForm`, `DiscoveredScript`, `CrawlScope`, `CrawlResult`.
+  - Created SSRF Egress Firewall & Domain Scope Validator (`app/infrastructure/discovery/ssrf_validator.py`) — Scheme whitelist (`http`/`https` only), IP range filtering (`127.0.0.1`, `169.254.169.254`, RFC 1918 private subnets, `0.0.0.0`), and domain scope matcher (`is_url_in_scope`).
+  - Implemented `AsyncWebCrawler` (`app/infrastructure/discovery/crawler.py`) using `httpx` async client with concurrency limits, 5 MB body size caps, max 5 redirects, 10s timeout, and BeautifulSoup DOM parser.
+  - Created Discovery DTOs (`app/application/discovery/dto.py`) — `CrawlRequest`, `DiscoveredURLDTO`, `DiscoveredFormDTO`, `DiscoveredScriptDTO`, `CrawlResponse`.
+  - Implemented `DiscoveryService` (`app/application/discovery/services.py`) with SSRF pre-validation and fail-safe audit logging (`discovery.crawl_started`, `discovery.crawl_completed`, `discovery.crawl_rejected`).
+  - Created Discovery router (`app/api/v1/routers/discovery.py`) with `POST /api/v1/discovery/crawl` guarded by dual-mode auth (`get_current_user_or_api_key`), `targets:create` RBAC guard, and organization tenant isolation.
+  - Registered `discovery.router` in `app/api/v1/api.py`.
+  - Added `beautifulsoup4>=4.12.0` and `types-beautifulsoup4>=4.12.0` to `pyproject.toml` and `requirements.txt`.
+  - Added comprehensive test suite (`tests/test_crawler.py`) — 7 tests covering scheme filtering, SSRF IP blocking, DOM extraction, service error handling, and API endpoint authorization. Total backend test suite now stands at **98 passing tests**.
 - **Era 2 Phase 2.6 (Security Audit Logging System)** (`4e5795e`):
   - Created `AuditLogRepository` (`app/infrastructure/database/repositories/audit_log_repository.py`) with `create`, `list_by_organization` (paginated querying with `action`, `resource_type`, `actor_user_id` filtering), and `get_by_id_and_org`.
   - Created HTTP client information dependency helper (`app/api/v1/dependencies/client_info.py`) extracting `client_ip` (supporting `X-Forwarded-For`) and `user_agent`.

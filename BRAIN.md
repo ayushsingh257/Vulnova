@@ -117,7 +117,7 @@ No undocumented repository structure changes are permitted.
 | **Era 0.5**| Enterprise Architecture Refinement & Security Model Polish | ✅ **COMPLETED** | Sprint 0.5 |
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
 | **Era 2** | Core Platform & Tenant Management System | ✅ **COMPLETED** (Phases 2.1–2.6 ✅) | Sprint 2 |
-| **Era 3** | Discovery Engine & Asset Surface Mapping | ⏳ Pending | Sprint 3 |
+| **Era 3** | Discovery Engine & Asset Surface Mapping | 🟡 **IN PROGRESS** (Phase 3.1 ✅) | Sprint 3 |
 | **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | ⏳ Pending | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
 | **Era 6** | Scanning Orchestration & Execution Pipeline | ⏳ Pending | Sprint 6 |
@@ -212,3 +212,17 @@ The following security audit logging decisions were finalized during Phase 2.6 a
 5. **Client Context Extraction**: `get_client_info` dependency extracts `client_ip` (supporting `X-Forwarded-For` proxy headers) and `user_agent` headers for forensic attribution.
 6. **Zero Secret Storage**: Audit event `details` JSON payload is strictly sanitized. Passwords, token secrets, and raw API keys are NEVER stored in audit logs.
 7. **RBAC Guarding**: Audit log retrieval APIs require `audit_logs:read` permission (minimum `ADMIN` role).
+
+---
+
+## 🔍 12. Discovery Engine & Asset Surface Mapping Decisions (Phase 3.1)
+
+The following discovery engine architecture decisions were finalized during Phase 3.1 and are now immutable:
+
+1. **SSRF & Egress Firewalling**: Every crawl target URL and resolved IP address is pre-validated by `ssrf_validator.py`. Only `http` and `https` schemes are permitted. Loopback (`127.0.0.0/8`, `::1`), AWS Metadata (`169.254.169.254`), RFC 1918 private subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), and `0.0.0.0` IP addresses are strictly blocked, raising `ValidationException` (HTTP 422).
+2. **Domain Scope Boundary Enforcement**: Crawling is strictly restricted to the target base domain scope (`is_url_in_scope()`). Outbound off-site links are ignored unless `allow_subdomains` is explicitly enabled by an authorized caller.
+3. **Safety Caps & Timeout Handling**: Response body reading is capped at `MAX_BODY_BYTES = 5 MB` to prevent memory exhaustion / zip-bomb attacks. Redirects are capped at `MAX_REDIRECTS = 5`. Request timeouts are set to `10.0` seconds.
+4. **Non-Blocking Concurrency**: Crawling uses `httpx.AsyncClient` with `asyncio.Semaphore(concurrency_limit)` (1–20) to ensure non-blocking concurrent request execution.
+5. **Extensible Domain Asset Architecture**: Domain entities in `app/domain/entities/discovery.py` (`AssetType`, `DiscoveredAsset`, `DiscoveredURL`, `DiscoveredForm`, `DiscoveredScript`, `CrawlResult`) are designed as extensible base structures for future phases (subdomains, tech fingerprinting, API schemas).
+6. **Audit Traceability**: Every crawl request logs structured audit events (`discovery.crawl_started`, `discovery.crawl_completed`, or `discovery.crawl_rejected`) capturing actor user ID, organization ID, target domain, page count, duration, and rejection reason.
+7. **RBAC & Authorization**: `/api/v1/discovery/crawl` requires authentication (Bearer JWT or X-API-Key), valid organization context, and `targets:create` RBAC permission.
