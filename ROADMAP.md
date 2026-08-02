@@ -271,12 +271,22 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: API keys generated with `vn_live_` prefix; raw key returned once and unrecoverable; SHA-256 hash stored in DB; dual-mode auth dependency supports JWT priority with X-API-Key fallback; RBAC permission guards on all endpoints; pytest (67 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`9a66038`).
 - **Testing Requirements**: Key generation format and uniqueness, SHA-256 hash determinism, constant-time verification, service lifecycle (create → auth → list → expire → revoke), dual-mode auth priority, API-key-only auth, RBAC permission enforcement.
 
-### Phase 2.5: User & Organization Management Endpoints
-- **Objective**: CRUD endpoints for profiles, organization settings, and member invitations.
-- **Deliverables**: `/api/v1/users` and `/api/v1/organizations` routers.
+### ✅ Phase 2.5: User & Organization Management Endpoints
+- **Objective**: Build enterprise-grade User & Organization Management APIs for profile management, team invitations, role assignments, user status updates, and organization settings with tenant boundary isolation.
+- **Deliverables**:
+  - UserRepository extension (`app/infrastructure/database/repositories/user_repository.py`) — `list_by_organization`, `get_by_id_and_org`, `update`, `count_owners_in_org`, `delete` (using type-safe `DELETE ... RETURNING` pattern).
+  - OrganizationRepository extension (`app/infrastructure/database/repositories/organization_repository.py`) — `update`, `get_with_member_count`.
+  - User DTOs (`app/application/users/dto.py`) — `UpdateUserProfileRequest`, `InviteUserRequest`, `UpdateUserRoleRequest`, `UpdateUserStatusRequest`, `UserDetailResponse`, `UserListResponse`.
+  - User service (`app/application/users/services.py`) — `update_profile`, `list_organization_users`, `get_user_detail`, `invite_user` (duplicate email check, role validation), `update_user_role` (sole owner protection, role elevation checks), `update_user_status` (self-deactivation & sole owner protection), `remove_user`.
+  - Organization DTOs (`app/application/organizations/dto.py`) — `UpdateOrganizationRequest`, `OrganizationDetailResponse`.
+  - Organization service (`app/application/organizations/services.py`) — `get_organization`, `update_organization`, `deactivate_organization`.
+  - Users router (`app/api/v1/routers/users.py`) — `/api/v1/users/me` (GET/PATCH), `/api/v1/users` (GET/POST), `/api/v1/users/{user_id}` (GET), `/api/v1/users/{user_id}/role` (PATCH), `/api/v1/users/{user_id}/status` (PATCH), `/api/v1/users/{user_id}` (DELETE) with RBAC permission guards (`users:read`, `users:invite`, `users:update_role`, `users:remove`).
+  - Organizations router (`app/api/v1/routers/organizations.py`) — `/api/v1/organizations/me` (GET/PATCH/DELETE) with RBAC guards (`organization:read`, `organization:update`, `organization:delete`).
+  - Unit & Integration test suites (`tests/test_users.py`, `tests/test_organizations.py`) — 18 tests covering profile updates, invitations, role modifications, sole-owner protection, self-deactivation guards, organization settings, and RBAC endpoint guards.
+  - Exception hierarchy addition: `ConflictException` (HTTP 409) in `app/core/exceptions.py`.
 - **Dependencies**: Phase 2.3.
-- **Completion Criteria**: Organization owners can manage team members and settings.
-- **Testing Requirements**: Integration tests for tenant management.
+- **Completion Criteria**: User and Organization management APIs operational with Clean Architecture; sole owner demotion/deactivation/deletion protected; self-deactivation and self-deletion blocked; tenant boundary isolation strictly enforced; pytest (85 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`af6a0c4`).
+- **Testing Requirements**: Self-profile updates, tenant user listing, invitation role checks, sole-owner protection assertions, self-deactivation prevention, organization profile/settings updates, organization deactivation, RBAC authorization enforcement.
 
 ### Phase 2.6: Security Audit Logging System
 - **Objective**: Synchronous and asynchronous logging of critical security events to immutable database table.

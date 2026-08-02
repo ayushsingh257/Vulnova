@@ -116,7 +116,7 @@ No undocumented repository structure changes are permitted.
 | **Era 0** | Architecture & Enterprise Documentation Foundation | ✅ **COMPLETED** | Sprint 0 |
 | **Era 0.5**| Enterprise Architecture Refinement & Security Model Polish | ✅ **COMPLETED** | Sprint 0.5 |
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
-| **Era 2** | Core Platform & Tenant Management System | 🟡 **IN PROGRESS** (Phase 2.1 ✅, Phase 2.2 ✅, Phase 2.3 ✅, Phase 2.4 ✅) | Sprint 2 |
+| **Era 2** | Core Platform & Tenant Management System | 🟡 **IN PROGRESS** (Phase 2.1 ✅, Phase 2.2 ✅, Phase 2.3 ✅, Phase 2.4 ✅, Phase 2.5 ✅) | Sprint 2 |
 | **Era 3** | Discovery Engine & Asset Surface Mapping | ⏳ Pending | Sprint 3 |
 | **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | ⏳ Pending | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
@@ -184,3 +184,17 @@ The following API key management decisions were finalized during Phase 2.4 and a
 7. **Expiry & Revocation**: Optional `expires_in_days` (1–365 days) sets `expires_at` timestamp. Expired keys are rejected during authentication. Revocation uses `DELETE ... RETURNING` for type-safe SQLAlchemy 2.0 compatibility with tenant isolation enforcement.
 8. **RBAC Integration**: All API key endpoints (`create`, `list`, `revoke`) are protected by `require_permission()` guards (`api_keys:create`, `api_keys:read`, `api_keys:revoke`).
 9. **Type Safety**: `types-passlib` stubs are a dev dependency. Mypy strict mode enforced without `type: ignore` suppressions. `Callable[..., Any]` used for FastAPI dependency factories. `typing.Annotated` used for FastAPI Header parameter injection.
+
+---
+
+## 👥 10. User & Organization Management Architecture Decisions (Phase 2.5)
+
+The following user and organization management decisions were finalized during Phase 2.5 and are now immutable:
+
+1. **Clean Architecture Isolation**: User and organization domain entities (`UserModel`, `OrganizationModel`) are managed through isolated application services (`UserService`, `OrganizationService`) and repositories (`UserRepository`, `OrganizationRepository`).
+2. **Sole Owner Protection**: An organization MUST always maintain at least one active `OWNER`. Operations attempting to demote, deactivate, or remove the sole active `OWNER` of an organization raise a `ValidationException` (HTTP 422).
+3. **Self-Action Safeguards**: Users are prohibited from deactivating or removing their own account via administrative management endpoints (`/api/v1/users/{user_id}/status`, `/api/v1/users/{user_id}`).
+4. **Role Assignment Hierarchy**: Only `OWNER` users can update a team member's role (`users:update_role`). Non-owner callers attempting to assign the `OWNER` role during user invitation raise `ForbiddenException` (HTTP 403).
+5. **Tenant Boundary Enforcement**: `UserRepository` and `OrganizationRepository` enforce strict tenant isolation via `get_by_id_and_org()` and `list_by_organization()`. All endpoints filter and restrict mutations strictly to `current_user.organization_id`.
+6. **Exception Hierarchy Extension**: Added `ConflictException` (HTTP 409 `RESOURCE_CONFLICT`) to `app/core/exceptions.py` for handling duplicate resource creation attempts (e.g. duplicate email addresses).
+7. **Type-Safe Database Mutations**: All record deletions leverage SQLAlchemy 2.0 `DELETE ... RETURNING` pattern instead of untyped `rowcount` attributes to maintain Mypy strict mode compliance.

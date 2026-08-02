@@ -19,6 +19,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 2 Phase 2.5 (User & Organization Management System)** (`af6a0c4`):
+  - Extended `UserRepository` (`app/infrastructure/database/repositories/user_repository.py`) with `list_by_organization`, `get_by_id_and_org`, `update`, `count_owners_in_org`, and `delete` (type-safe `DELETE ... RETURNING`).
+  - Extended `OrganizationRepository` (`app/infrastructure/database/repositories/organization_repository.py`) with `update` and `get_with_member_count`.
+  - Created User DTOs (`app/application/users/dto.py`) — `UpdateUserProfileRequest`, `InviteUserRequest`, `UpdateUserRoleRequest`, `UpdateUserStatusRequest`, `UserDetailResponse`, `UserListResponse`.
+  - Created Organization DTOs (`app/application/organizations/dto.py`) — `UpdateOrganizationRequest`, `OrganizationDetailResponse`.
+  - Implemented `UserService` (`app/application/users/services.py`) with profile updates, organization member listing, user invitations (email conflict & role checks), role modifications (sole-owner protection), status toggling, and user deletion.
+  - Implemented `OrganizationService` (`app/application/organizations/services.py`) with org details, member count, settings updates, and organization deactivation.
+  - Created Users router (`app/api/v1/routers/users.py`) with `/api/v1/users/me` (GET/PATCH), `/api/v1/users` (GET/POST), `/api/v1/users/{user_id}` (GET), `/api/v1/users/{user_id}/role` (PATCH), `/api/v1/users/{user_id}/status` (PATCH), `/api/v1/users/{user_id}` (DELETE) guarded by RBAC permissions.
+  - Created Organizations router (`app/api/v1/routers/organizations.py`) with `/api/v1/organizations/me` (GET/PATCH/DELETE) guarded by RBAC permissions.
+  - Added `ConflictException` (HTTP 409 `RESOURCE_CONFLICT`) to `app/core/exceptions.py`.
+  - Registered users and organizations routers in `app/api/v1/api.py`.
+  - Added unit & integration test suites (`tests/test_users.py`, `tests/test_organizations.py`) — 18 new tests covering profile management, team invitations, role modifications, sole-owner protection, self-deactivation guards, organization settings, and RBAC endpoint guards.
 - **Era 2 Phase 2.4 (API Key Management System)** (`9a66038`):
   - Implemented API key security module (`app/security/api_key.py`) with `vn_live_` prefix generation, SHA-256 hashing (raw key never stored), and constant-time `hmac.compare_digest` verification.
   - Created API key repository (`app/infrastructure/database/repositories/api_key_repository.py`) with CRUD operations, tenant-scoped queries, `selectinload` relationship loading, and type-safe `DELETE ... RETURNING` SQLAlchemy 2.0 pattern.
