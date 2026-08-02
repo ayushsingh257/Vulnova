@@ -1,6 +1,10 @@
 """Vulnova Infrastructure Database ORM Models Package."""
 
 from app.infrastructure.database.models.api_key import APIKeyModel
+from app.infrastructure.database.models.assessment import (
+    AssessmentJobModel,
+    SecurityFindingModel,
+)
 from app.infrastructure.database.models.asset_graph import (
     AssetNodeModel,
     AssetRelationshipModel,
@@ -18,4 +22,6 @@ __all__ = [
     "AuditLogModel",
     "AssetNodeModel",
     "AssetRelationshipModel",
+    "AssessmentJobModel",
+    "SecurityFindingModel",
 ]
