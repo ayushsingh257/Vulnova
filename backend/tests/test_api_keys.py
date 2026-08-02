@@ -197,17 +197,20 @@ test_org_id = uuid4()
 test_user_id = uuid4()
 
 
+from typing import Any, Dict
+
+
 @api_key_test_app.get("/test/protected-dual-mode")
 async def dual_mode_protected_endpoint(
     user: UserModel = Depends(get_current_user_or_api_key),
-) -> dict:
+) -> Dict[str, Any]:
     return {"message": "auth success", "user_id": str(user.id)}
 
 
 @api_key_test_app.get("/test/protected-api-key-only")
 async def api_key_only_endpoint(
     user: UserModel = Depends(get_api_key_user),
-) -> dict:
+) -> Dict[str, Any]:
     return {"message": "api key success", "user_id": str(user.id)}
 
 

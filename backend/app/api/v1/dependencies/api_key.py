@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from fastapi import Depends, Header, Request
+from fastapi import Depends, Header
 from fastapi.security import APIKeyHeader
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,7 +37,6 @@ async def get_api_key_user(
 
 
 async def get_current_user_or_api_key(
-    request: Request,
     authorization: Optional[str] = Header(None, alias="Authorization"),
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     session: AsyncSession = Depends(get_async_session),
