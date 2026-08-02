@@ -221,7 +221,7 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 
 ---
 
-## 🏢 Era 2: Core Platform & Tenant Management System
+## 🏢 ✅ Era 2: Core Platform & Tenant Management System
 
 ### ✅ Phase 2.1: Database Entity Models & SQLAlchemy Mappings
 - **Objective**: Implement Organizations, Users, RefreshTokens, APIKeys, and AuditLogs domain entities and SQLAlchemy 2.0 ORM models.
@@ -288,12 +288,19 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: User and Organization management APIs operational with Clean Architecture; sole owner demotion/deactivation/deletion protected; self-deactivation and self-deletion blocked; tenant boundary isolation strictly enforced; pytest (85 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`af6a0c4`).
 - **Testing Requirements**: Self-profile updates, tenant user listing, invitation role checks, sole-owner protection assertions, self-deactivation prevention, organization profile/settings updates, organization deactivation, RBAC authorization enforcement.
 
-### Phase 2.6: Security Audit Logging System
-- **Objective**: Synchronous and asynchronous logging of critical security events to immutable database table.
-- **Deliverables**: Audit logger service, `/api/v1/audit-logs` endpoint.
+### ✅ Phase 2.6: Security Audit Logging System
+- **Objective**: Implement an enterprise-grade Security Audit Logging System to record and retrieve immutable security audit events across authentication, authorization, user management, organization settings, and API key lifecycles.
+- **Deliverables**:
+  - AuditLogRepository (`app/infrastructure/database/repositories/audit_log_repository.py`) — `create`, `list_by_organization` (with pagination, action, resource_type, actor_user_id filtering), `get_by_id_and_org`.
+  - Client Info dependency helper (`app/api/v1/dependencies/client_info.py`) — extracts `client_ip` (handling `X-Forwarded-For`) and `user_agent`.
+  - Audit log DTOs (`app/application/audit_logs/dto.py`) — `AuditLogResponse`, `AuditLogListResponse`.
+  - Audit log service (`app/application/audit_logs/services.py`) — `record_event` (fail-safe audit logging), `list_audit_logs`, `get_audit_log_detail`.
+  - Integrated audit event recording across `AuthService` (`auth.registered`, `auth.login_success`, `auth.login_failed`), `UserService` (`user.profile_updated`, `user.created`, `user.role_updated`, `user.status_updated`, `user.deleted`), `OrganizationService` (`organization.updated`, `organization.deactivated`), and `APIKeyService` (`api_key.created`, `api_key.revoked`).
+  - Audit logs router (`app/api/v1/routers/audit_logs.py`) — `GET /api/v1/audit-logs`, `GET /api/v1/audit-logs/{audit_log_id}` with RBAC `audit_logs:read` guards.
+  - Comprehensive test suite (`tests/test_audit_logs.py`) — 6 tests covering audit event recording, paginated list querying & filtering, detail lookup, client IP extraction, RBAC authorization enforcement, and tenant boundary protection.
 - **Dependencies**: Phase 2.5.
-- **Completion Criteria**: Administrative actions recorded in audit log with client metadata.
-- **Testing Requirements**: Audit log creation verification tests.
+- **Completion Criteria**: Security audit logging active across all security operations; immutable audit records persisted; tenant boundary isolation strictly enforced; fail-safe logging design prevents primary transaction failures; pytest (91 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`4e5795e`).
+- **Testing Requirements**: Audit event creation, paginated event querying, action/resource filtering, client context extraction, RBAC `audit_logs:read` authorization enforcement, cross-org access rejection.
 
 ---
 

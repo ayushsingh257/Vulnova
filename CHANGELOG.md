@@ -19,6 +19,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 2 Phase 2.6 (Security Audit Logging System)** (`4e5795e`):
+  - Created `AuditLogRepository` (`app/infrastructure/database/repositories/audit_log_repository.py`) with `create`, `list_by_organization` (paginated querying with `action`, `resource_type`, `actor_user_id` filtering), and `get_by_id_and_org`.
+  - Created HTTP client information dependency helper (`app/api/v1/dependencies/client_info.py`) extracting `client_ip` (supporting `X-Forwarded-For`) and `user_agent`.
+  - Created Audit log DTOs (`app/application/audit_logs/dto.py`) — `AuditLogResponse`, `AuditLogListResponse`.
+  - Implemented `AuditLogService` (`app/application/audit_logs/services.py`) providing fail-safe audit event recording, paginated list retrieval, and detailed record fetching.
+  - Integrated security audit event recording across `AuthService` (`auth.registered`, `auth.login_success`, `auth.login_failed`), `UserService` (`user.profile_updated`, `user.created`, `user.role_updated`, `user.status_updated`, `user.deleted`), `OrganizationService` (`organization.updated`, `organization.deactivated`), and `APIKeyService` (`api_key.created`, `api_key.revoked`).
+  - Created Audit Logs router (`app/api/v1/routers/audit_logs.py`) with `GET /api/v1/audit-logs` and `GET /api/v1/audit-logs/{audit_log_id}` guarded by `audit_logs:read` RBAC permissions.
+  - Registered `audit_logs.router` in `app/api/v1/api.py`.
+  - Added comprehensive test suite (`tests/test_audit_logs.py`) — 6 tests covering audit event recording, paginated list querying & filtering, detail lookup, client IP extraction, RBAC authorization enforcement, and tenant boundary protection. Total backend test suite now stands at 91 passing tests.
 - **Era 2 Phase 2.5 (User & Organization Management System)** (`af6a0c4`):
   - Extended `UserRepository` (`app/infrastructure/database/repositories/user_repository.py`) with `list_by_organization`, `get_by_id_and_org`, `update`, `count_owners_in_org`, and `delete` (type-safe `DELETE ... RETURNING`).
   - Extended `OrganizationRepository` (`app/infrastructure/database/repositories/organization_repository.py`) with `update` and `get_with_member_count`.

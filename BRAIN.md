@@ -116,7 +116,7 @@ No undocumented repository structure changes are permitted.
 | **Era 0** | Architecture & Enterprise Documentation Foundation | ✅ **COMPLETED** | Sprint 0 |
 | **Era 0.5**| Enterprise Architecture Refinement & Security Model Polish | ✅ **COMPLETED** | Sprint 0.5 |
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
-| **Era 2** | Core Platform & Tenant Management System | 🟡 **IN PROGRESS** (Phase 2.1 ✅, Phase 2.2 ✅, Phase 2.3 ✅, Phase 2.4 ✅, Phase 2.5 ✅) | Sprint 2 |
+| **Era 2** | Core Platform & Tenant Management System | ✅ **COMPLETED** (Phases 2.1–2.6 ✅) | Sprint 2 |
 | **Era 3** | Discovery Engine & Asset Surface Mapping | ⏳ Pending | Sprint 3 |
 | **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | ⏳ Pending | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
@@ -198,3 +198,17 @@ The following user and organization management decisions were finalized during P
 5. **Tenant Boundary Enforcement**: `UserRepository` and `OrganizationRepository` enforce strict tenant isolation via `get_by_id_and_org()` and `list_by_organization()`. All endpoints filter and restrict mutations strictly to `current_user.organization_id`.
 6. **Exception Hierarchy Extension**: Added `ConflictException` (HTTP 409 `RESOURCE_CONFLICT`) to `app/core/exceptions.py` for handling duplicate resource creation attempts (e.g. duplicate email addresses).
 7. **Type-Safe Database Mutations**: All record deletions leverage SQLAlchemy 2.0 `DELETE ... RETURNING` pattern instead of untyped `rowcount` attributes to maintain Mypy strict mode compliance.
+
+---
+
+## 📜 11. Security Audit Logging System Architecture Decisions (Phase 2.6)
+
+The following security audit logging decisions were finalized during Phase 2.6 and are now immutable:
+
+1. **Immutable Audit Trail**: Audit events are strictly append-only. No UPDATE or DELETE endpoints exist for `audit_logs` records.
+2. **Centralized Service Recording**: All security operations across Auth, User, Org, and API Key services invoke `AuditLogService.record_event()` with structured event names (`auth.login_success`, `auth.login_failed`, `user.created`, `user.role_updated`, `organization.updated`, `api_key.revoked`).
+3. **Fail-Safe Logging Design**: Errors inside `record_event()` log high-priority `structlog` warnings rather than crashing primary user-facing transactions.
+4. **Tenant Boundary Enforcement**: `AuditLogRepository` and `/api/v1/audit-logs` endpoints strictly enforce `organization_id` boundary checks. Admins can only view audit logs for their own organization.
+5. **Client Context Extraction**: `get_client_info` dependency extracts `client_ip` (supporting `X-Forwarded-For` proxy headers) and `user_agent` headers for forensic attribution.
+6. **Zero Secret Storage**: Audit event `details` JSON payload is strictly sanitized. Passwords, token secrets, and raw API keys are NEVER stored in audit logs.
+7. **RBAC Guarding**: Audit log retrieval APIs require `audit_logs:read` permission (minimum `ADMIN` role).
