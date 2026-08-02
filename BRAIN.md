@@ -116,7 +116,7 @@ No undocumented repository structure changes are permitted.
 | **Era 0** | Architecture & Enterprise Documentation Foundation | ✅ **COMPLETED** | Sprint 0 |
 | **Era 0.5**| Enterprise Architecture Refinement & Security Model Polish | ✅ **COMPLETED** | Sprint 0.5 |
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
-| **Era 2** | Core Platform & Tenant Management System | 🟡 **IN PROGRESS** (Phase 2.1 ✅, Phase 2.2 ✅, Phase 2.3 ✅) | Sprint 2 |
+| **Era 2** | Core Platform & Tenant Management System | 🟡 **IN PROGRESS** (Phase 2.1 ✅, Phase 2.2 ✅, Phase 2.3 ✅, Phase 2.4 ✅) | Sprint 2 |
 | **Era 3** | Discovery Engine & Asset Surface Mapping | ⏳ Pending | Sprint 3 |
 | **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | ⏳ Pending | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
@@ -168,3 +168,19 @@ The following authorization rules were finalized during Phase 2.3 and are now im
 4. **Centralized Permission Map**: Permissions follow `resource:action` syntax (`"scans:create"`, `"organization:delete"`, `"users:read"`). Mapped centrally in `PERMISSION_MAP` to minimum required roles. Avoids ad-hoc scattered `if user.role == ...` conditionals.
 5. **FastAPI Dependency Injectors**: `require_role(minimum_role)` and `require_permission("resource:action")` run strictly after `get_current_user` authentication. Unmet requirements raise `ForbiddenException` (HTTP 403) with `FORBIDDEN` code.
 6. **Tenant Isolation Enforcement**: `verify_organization_access(user, target_org_id)` and `require_same_organization` enforce organization boundary checks. Never trusts request payload `organization_id` alone; compares against authenticated `user.organization_id`. Cross-org access raises `ForbiddenException` (HTTP 403).
+
+---
+
+## 🔐 9. API Key Management Architecture Decisions (Phase 2.4)
+
+The following API key management decisions were finalized during Phase 2.4 and are now immutable:
+
+1. **Key Format**: `vn_live_` prefix (8 characters) + 32-byte URL-safe cryptographic secret via `secrets.token_urlsafe(32)`. Prefix enables visual identification without exposing the secret.
+2. **Storage Security**: Raw API keys are NEVER stored in the database. Only `key_prefix` (for lookup) and `key_hash` (SHA-256 hex digest) are persisted. The raw key is returned exactly once during creation and is unrecoverable thereafter.
+3. **Verification**: Constant-time comparison via `hmac.compare_digest()` to prevent timing side-channel attacks during key authentication.
+4. **Authentication Flow**: Prefix-based lookup (`key_prefix` index) → SHA-256 hash computation → constant-time hash comparison → expiry validation → `last_used_at` timestamp update.
+5. **Dual-Mode Authentication**: `get_current_user_or_api_key` dependency supports both JWT Bearer and X-API-Key authentication. Priority order: (1) Bearer JWT, (2) X-API-Key fallback. If both headers are present, JWT is preferred and the choice is logged.
+6. **Scope Management**: API keys carry `scopes` (JSON array, default `["read", "write"]`). Scope validation is checked during authentication against the requested operation.
+7. **Expiry & Revocation**: Optional `expires_in_days` (1–365 days) sets `expires_at` timestamp. Expired keys are rejected during authentication. Revocation uses `DELETE ... RETURNING` for type-safe SQLAlchemy 2.0 compatibility with tenant isolation enforcement.
+8. **RBAC Integration**: All API key endpoints (`create`, `list`, `revoke`) are protected by `require_permission()` guards (`api_keys:create`, `api_keys:read`, `api_keys:revoke`).
+9. **Type Safety**: `types-passlib` stubs are a dev dependency. Mypy strict mode enforced without `type: ignore` suppressions. `Callable[..., Any]` used for FastAPI dependency factories. `typing.Annotated` used for FastAPI Header parameter injection.

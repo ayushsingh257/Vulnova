@@ -256,12 +256,20 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Hierarchical RBAC enforced via `require_permission()` and `require_role()` FastAPI dependencies; tenant isolation blocks cross-org requests with HTTP 403 `ForbiddenException`; corrupt roles fail safely to VIEWER; pytest (63 passed), Ruff, Black, Mypy pass cleanly; GitHub Actions ci.yml and security.yml green (`1238faf`).
 - **Testing Requirements**: Role ordering verification, permission map inheritance, invalid role fail-safe default, tenant boundary enforcement, HTTP 401 unauthenticated and HTTP 403 unauthorized checks.
 
-### Phase 2.4: API Key Management System
-- **Objective**: Provision and validate hashed API keys for machine-to-machine integrations.
-- **Deliverables**: API key generation, revocation, and scope validation endpoints.
+### ✅ Phase 2.4: API Key Management System
+- **Objective**: Implement secure machine-to-machine API key lifecycle with SHA-256 hashing, prefix identification, scope management, expiry handling, revocation, and dual-mode JWT/API-Key authentication.
+- **Deliverables**:
+  - API key security module (`app/security/api_key.py`) — `vn_live_` prefix generation, SHA-256 hashing (raw key never stored), constant-time `hmac.compare_digest` verification.
+  - API key repository (`app/infrastructure/database/repositories/api_key_repository.py`) — CRUD with tenant isolation, `DELETE ... RETURNING` type-safe SQLAlchemy 2.0 pattern, `selectinload` relationship loading.
+  - Application DTOs (`app/application/api_keys/dto.py`) — `CreateAPIKeyRequest`, `APIKeyCreateResponse` (raw key returned once), `APIKeyResponse`, `APIKeyListResponse`.
+  - API key service (`app/application/api_keys/services.py`) — creation with SHA-256 hash storage, authentication with prefix lookup + constant-time verification, expiry checking, `last_used_at` tracking, listing, and revocation with structured audit logging.
+  - FastAPI dependencies (`app/api/v1/dependencies/api_key.py`) — `get_api_key_user` (X-API-Key only), `get_current_user_or_api_key` (dual-mode: JWT Bearer priority → X-API-Key fallback) using `typing.Annotated` for FastAPI Header injection.
+  - API key router (`app/api/v1/routers/api_keys.py`) — `POST /api/v1/api-keys` (create), `GET /api/v1/api-keys` (list), `DELETE /api/v1/api-keys/{key_id}` (revoke) with RBAC `require_permission()` guards.
+  - Comprehensive test suite (`tests/test_api_keys.py`) — 4 tests covering key generation/hashing/verification, full service lifecycle (create → authenticate → list → expire → revoke), dual-mode auth priority and fallback, and API-key-only authentication.
+  - Type safety fixes: removed redundant `cast()` in `password.py`, `types-passlib` stubs dependency, `Callable[..., Any]` in `rbac.py`.
 - **Dependencies**: Phase 2.3.
-- **Completion Criteria**: Service accounts can authenticate via `X-API-Key` headers.
-- **Testing Requirements**: API key authentication suite.
+- **Completion Criteria**: API keys generated with `vn_live_` prefix; raw key returned once and unrecoverable; SHA-256 hash stored in DB; dual-mode auth dependency supports JWT priority with X-API-Key fallback; RBAC permission guards on all endpoints; pytest (67 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`9a66038`).
+- **Testing Requirements**: Key generation format and uniqueness, SHA-256 hash determinism, constant-time verification, service lifecycle (create → auth → list → expire → revoke), dual-mode auth priority, API-key-only auth, RBAC permission enforcement.
 
 ### Phase 2.5: User & Organization Management Endpoints
 - **Objective**: CRUD endpoints for profiles, organization settings, and member invitations.

@@ -19,6 +19,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 2 Phase 2.4 (API Key Management System)** (`9a66038`):
+  - Implemented API key security module (`app/security/api_key.py`) with `vn_live_` prefix generation, SHA-256 hashing (raw key never stored), and constant-time `hmac.compare_digest` verification.
+  - Created API key repository (`app/infrastructure/database/repositories/api_key_repository.py`) with CRUD operations, tenant-scoped queries, `selectinload` relationship loading, and type-safe `DELETE ... RETURNING` SQLAlchemy 2.0 pattern.
+  - Created application DTOs (`app/application/api_keys/dto.py`) — `CreateAPIKeyRequest`, `APIKeyCreateResponse` (raw key returned once), `APIKeyResponse`, `APIKeyListResponse`.
+  - Implemented API key service (`app/application/api_keys/services.py`) with creation (SHA-256 hash storage), authentication (prefix lookup + constant-time verification + expiry check), `last_used_at` tracking, listing, and revocation with structured audit logging.
+  - Created dual-mode authentication dependency (`app/api/v1/dependencies/api_key.py`) — `get_api_key_user` (X-API-Key only) and `get_current_user_or_api_key` (JWT Bearer priority → X-API-Key fallback) using `typing.Annotated`.
+  - Created API key router (`app/api/v1/routers/api_keys.py`) — `POST /api/v1/api-keys`, `GET /api/v1/api-keys`, `DELETE /api/v1/api-keys/{key_id}` with RBAC `require_permission()` guards.
+  - Added comprehensive test suite (`tests/test_api_keys.py`) — 4 tests covering key generation/hashing/verification, full service lifecycle, dual-mode auth priority/fallback, and API-key-only authentication.
+  - Removed redundant `cast()` calls in `password.py` (replaced by `types-passlib` stubs).
+  - Added `types-passlib>=1.7.7.20240106` to dev dependencies.
+  - Fixed `Callable` type hints in `rbac.py` to use `Callable[..., Any]`.
+  - Fixed CI mypy step with `PYTHONPATH` env and removed `--config-file` flag.
 - **Era 2 Phase 2.3 (Multi-Tenant RBAC Security Layer)** (`1238faf`):
   - Implemented domain `Role` hierarchy (`OWNER > ADMIN > SECURITY_ANALYST > VIEWER`) and centralized `PERMISSION_MAP` in `app/domain/entities/role.py`.
   - Implemented security authorization dependencies (`require_role()`, `require_permission()`, `require_same_organization()`, `verify_organization_access()`) in `app/security/rbac.py`.
