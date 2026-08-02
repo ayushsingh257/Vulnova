@@ -116,7 +116,7 @@ No undocumented repository structure changes are permitted.
 | **Era 0** | Architecture & Enterprise Documentation Foundation | ✅ **COMPLETED** | Sprint 0 |
 | **Era 0.5**| Enterprise Architecture Refinement & Security Model Polish | ✅ **COMPLETED** | Sprint 0.5 |
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
-| **Era 2** | Core Platform & Tenant Management System | 🟡 **IN PROGRESS** (Phase 2.1 ✅, Phase 2.2 ✅) | Sprint 2 |
+| **Era 2** | Core Platform & Tenant Management System | 🟡 **IN PROGRESS** (Phase 2.1 ✅, Phase 2.2 ✅, Phase 2.3 ✅) | Sprint 2 |
 | **Era 3** | Discovery Engine & Asset Surface Mapping | ⏳ Pending | Sprint 3 |
 | **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | ⏳ Pending | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
@@ -155,3 +155,16 @@ The following security decisions were finalized during Phase 2.2 and are now imm
 6. **HTTP-Only Cookies**: Refresh tokens are delivered in `vulnova_refresh_token` HTTP-Only, Secure, SameSite=Lax cookies. Never exposed to JavaScript.
 7. **Email Validation**: `email-validator>=2.1.0` is a production dependency. Pydantic `EmailStr` requires it at import time. This was identified as a CI-breaking omission and resolved in commit `f9af674`.
 8. **Auth Endpoints**: `/api/v1/auth/register`, `/login`, `/refresh`, `/logout`, `/me` — all under OAuth2PasswordBearer FastAPI dependency injection.
+
+---
+
+## 🛡️ 8. Multi-Tenant RBAC & Tenant Isolation Decisions (Phase 2.3)
+
+The following authorization rules were finalized during Phase 2.3 and are now immutable:
+
+1. **Role Hierarchy**: Strict integer-ordered `Role(IntEnum)` hierarchy (`OWNER = 40 > ADMIN = 30 > SECURITY_ANALYST = 20 > VIEWER = 10`). Higher roles implicitly inherit all permissions of lower roles.
+2. **Database Schema Compatibility**: Operates directly on the existing `users.role` `VARCHAR(50)` column without database migrations. String labels map bi-directionally to `Role` enum values via `parse_role()`.
+3. **Fail-Closed Safe Fallback**: Unrecognized or corrupt role strings default safely to `Role.VIEWER` without escalating privilege or throwing uncaught internal server errors.
+4. **Centralized Permission Map**: Permissions follow `resource:action` syntax (`"scans:create"`, `"organization:delete"`, `"users:read"`). Mapped centrally in `PERMISSION_MAP` to minimum required roles. Avoids ad-hoc scattered `if user.role == ...` conditionals.
+5. **FastAPI Dependency Injectors**: `require_role(minimum_role)` and `require_permission("resource:action")` run strictly after `get_current_user` authentication. Unmet requirements raise `ForbiddenException` (HTTP 403) with `FORBIDDEN` code.
+6. **Tenant Isolation Enforcement**: `verify_organization_access(user, target_org_id)` and `require_same_organization` enforce organization boundary checks. Never trusts request payload `organization_id` alone; compares against authenticated `user.organization_id`. Cross-org access raises `ForbiddenException` (HTTP 403).

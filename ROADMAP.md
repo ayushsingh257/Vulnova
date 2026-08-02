@@ -245,12 +245,16 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Full authentication lifecycle functional; JWT access tokens (15-min expiry) with refresh token rotation (7-day expiry); reuse detection triggers family revocation; HTTP-Only secure cookies; pytest (48 passed), Ruff, Black, Mypy pass cleanly; GitHub Actions ci.yml and security.yml green (`6682970`, `f9af674`).
 - **Testing Requirements**: Argon2id hash/verify, JWT encode/decode round-trip, SHA-256 token hashing determinism, AuthService register/login/refresh/reuse-detection integration, API endpoint HTTP status codes and cookie handling.
 
-### Phase 2.3: Multi-Tenant RBAC Security Layer
-- **Objective**: Enforce organization-level role permissions (Owner, Admin, Security Analyst, Viewer).
-- **Deliverables**: RBAC dependency injectors (`require_permission`) in FastAPI.
+### ✅ Phase 2.3: Multi-Tenant RBAC Security Layer
+- **Objective**: Implement multi-tenant role-based access control (RBAC), hierarchical permission maps, and organization tenant isolation.
+- **Deliverables**:
+  - Domain Role entity (`app/domain/entities/role.py`) — `Role(IntEnum)` hierarchy (`OWNER > ADMIN > SECURITY_ANALYST > VIEWER`), string label parsing, and centralized `PERMISSION_MAP`.
+  - Security authorization module (`app/security/rbac.py`) — `require_role()`, `require_permission()`, `require_same_organization()`, and `verify_organization_access()`.
+  - API v1 dependency exporter (`app/api/v1/dependencies/rbac.py`).
+  - Comprehensive test suite (`tests/test_rbac.py`) — 15 tests covering role ordering, permission inheritance, invalid role fail-safe handling, FastAPI dependency injectors, and tenant isolation enforcement.
 - **Dependencies**: Phase 2.2.
-- **Completion Criteria**: Unauthorized tenant access blocked with HTTP 403.
-- **Testing Requirements**: Security tenant isolation tests.
+- **Completion Criteria**: Hierarchical RBAC enforced via `require_permission()` and `require_role()` FastAPI dependencies; tenant isolation blocks cross-org requests with HTTP 403 `ForbiddenException`; corrupt roles fail safely to VIEWER; pytest (63 passed), Ruff, Black, Mypy pass cleanly; GitHub Actions ci.yml and security.yml green (`1238faf`).
+- **Testing Requirements**: Role ordering verification, permission map inheritance, invalid role fail-safe default, tenant boundary enforcement, HTTP 401 unauthenticated and HTTP 403 unauthorized checks.
 
 ### Phase 2.4: API Key Management System
 - **Objective**: Provision and validate hashed API keys for machine-to-machine integrations.

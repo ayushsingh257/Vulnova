@@ -19,6 +19,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 2 Phase 2.3 (Multi-Tenant RBAC Security Layer)** (`1238faf`):
+  - Implemented domain `Role` hierarchy (`OWNER > ADMIN > SECURITY_ANALYST > VIEWER`) and centralized `PERMISSION_MAP` in `app/domain/entities/role.py`.
+  - Implemented security authorization dependencies (`require_role()`, `require_permission()`, `require_same_organization()`, `verify_organization_access()`) in `app/security/rbac.py`.
+  - Created API v1 dependency re-exporter `app/api/v1/dependencies/rbac.py`.
+  - Implemented fail-safe invalid role fallback to `Role.VIEWER` to prevent privilege escalation.
+  - Implemented tenant isolation enforcement blocking cross-organization resource access with HTTP 403 `ForbiddenException`.
+  - Added comprehensive test suite (`tests/test_rbac.py`) — 15 tests covering role ordering, permission map resolution, invalid role defaults, FastAPI dependency authorization checks, and tenant boundary enforcement.
 - **Era 2 Phase 2.2 (JWT & OAuth2 Authentication Framework)** (`6682970`, `f9af674`):
   - Implemented Argon2id password hashing adapter (`app/security/password.py`) via `passlib[argon2]`.
   - Implemented HS256 JWT access token creation and validation (`app/security/jwt.py`) with 15-minute expiry and claims (`sub`, `user_id`, `organization_id`, `role`, `token_type`, `exp`).
