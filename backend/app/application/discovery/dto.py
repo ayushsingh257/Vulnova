@@ -24,6 +24,10 @@ class CrawlRequest(BaseModel):
         default=False,
         description="True to allow crawling subdomains of target base domain",
     )
+    render_js: bool = Field(
+        default=False,
+        description="True to enable headless Chromium SPA dynamic DOM rendering",
+    )
 
 
 class DiscoveredURLDTO(BaseModel):
@@ -52,6 +56,14 @@ class DiscoveredScriptDTO(BaseModel):
     is_external: bool
 
 
+class DiscoveredNetworkRequestDTO(BaseModel):
+    """DTO representing an intercepted background fetch/XHR network request."""
+
+    url: str
+    method: str = "GET"
+    resource_type: str = "fetch"
+
+
 class CrawlResponse(BaseModel):
     """Result response model for a completed target web crawl job."""
 
@@ -60,4 +72,6 @@ class CrawlResponse(BaseModel):
     discovered_urls: List[DiscoveredURLDTO]
     discovered_forms: List[DiscoveredFormDTO]
     discovered_scripts: List[DiscoveredScriptDTO]
+    network_requests: List[DiscoveredNetworkRequestDTO] = Field(default_factory=list)
+    is_spa: bool = False
     duration_seconds: float

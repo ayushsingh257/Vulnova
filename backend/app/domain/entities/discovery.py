@@ -61,6 +61,15 @@ class DiscoveredScript:
 
 
 @dataclass
+class DiscoveredNetworkRequest:
+    """Interception representation for asynchronous fetch/XHR network requests."""
+
+    url: str
+    method: str = "GET"
+    resource_type: str = "fetch"
+
+
+@dataclass
 class CrawlScope:
     """Crawl boundary parameters and SSRF constraints."""
 
@@ -81,4 +90,6 @@ class CrawlResult:
     discovered_urls: List[DiscoveredURL] = field(default_factory=list)
     discovered_forms: List[DiscoveredForm] = field(default_factory=list)
     discovered_scripts: List[DiscoveredScript] = field(default_factory=list)
+    network_requests: List[DiscoveredNetworkRequest] = field(default_factory=list)
+    is_spa: bool = False
     duration_seconds: float = 0.0
