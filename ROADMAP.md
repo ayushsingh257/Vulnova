@@ -405,12 +405,17 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Web vulnerability plugins functional; safe non-destructive SQLi and XSS probing operational; auth cookie flags audited; findings persisted to DB; pytest (125 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`1db2c6bd`).
 - **Testing Requirements**: SQLi error pattern detection tests, XSS marker reflection assertions, auth cookie security flag evaluations, generic pipeline execution tests.
 
-### Phase 4.3: OWASP Injection Assessment (SQLi & Commandi)
-- **Objective**: Automated detection of error-based, time-based, and blind SQL injection flaws.
-- **Deliverables**: SQLi assessment plugin (`plugin.yaml` + payload engine).
-- **Dependencies**: Phase 4.1.
-- **Completion Criteria**: Safely detects injection points without destroying database integrity.
-- **Testing Requirements**: Verification against OWASP Juice Shop / DVWA injection endpoints.
+### ✅ Phase 4.3: API Security Assessment Plugin Suite
+- **Objective**: Implement specialized API security assessment plugins for API documentation discovery, JWT claims and signature security analysis, and Cross-Origin Resource Sharing (CORS) policy auditing.
+- **Deliverables**:
+  - API Discovery & Endpoint Analysis Plugin (`app/infrastructure/assessment/plugins/api_security_plugin.py`) — `APISecurityPlugin` probing target assets for exposed Swagger, OpenAPI, and GraphQL documentation or schema endpoints (`/swagger`, `/swagger-ui`, `/openapi.json`, `/api-docs`, `/graphql`) to emit `SeverityLevel.MEDIUM`, CWE-200 `Finding` objects.
+  - JWT Security Analysis Plugin (`app/infrastructure/assessment/plugins/jwt_security_plugin.py`) — `JWTSecurityPlugin` decoding JWT tokens in context options or Authorization headers to detect unsigned tokens (`alg: none`), missing `exp` claims, excessive lifetime (> 24h), and missing `iss`/`aud` claims, emitting `SeverityLevel.CRITICAL` / `SeverityLevel.HIGH`, CWE-347 / CWE-613 `Finding` objects.
+  - CORS Security Plugin (`app/infrastructure/assessment/plugins/cors_plugin.py`) — `CORSPlugin` auditing CORS policies via custom `Origin` probes to detect wildcard origins with credentials (`Access-Control-Allow-Origin: *` + `Access-Control-Allow-Credentials: true`) and untrusted origin reflection, emitting `SeverityLevel.HIGH`, CWE-942 `Finding` objects.
+  - Plugin Registry Auto-Registration (`app/infrastructure/assessment/plugins/__init__.py`) — Auto-registers all 7 production security plugins into `PluginRegistry`.
+  - Comprehensive Test Suite (`tests/test_api_security_plugins.py`) — 5 tests covering plugin registration, API doc exposure detection, JWT unsigned token analysis, CORS misconfiguration detection, and generic `AssessmentService` 7-plugin pipeline integration.
+- **Dependencies**: Phase 4.1 & Phase 4.2.
+- **Completion Criteria**: API security plugins functional; exposed Swagger/OpenAPI/GraphQL endpoints detected; JWT algorithm/claim security audited; CORS wildcard credential risks flagged; pytest (130 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`1a8cf439`).
+- **Testing Requirements**: API doc path probe tests, JWT claim decoding and unsigned token checks, CORS origin reflection tests, 7-plugin pipeline orchestration integration.
 
 ### Phase 4.4: Cross-Site Scripting (XSS) Detection Plugin
 - **Objective**: Reflection and DOM-based XSS vulnerability scanner.

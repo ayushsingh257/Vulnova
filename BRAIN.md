@@ -118,7 +118,7 @@ No undocumented repository structure changes are permitted.
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
 | **Era 2** | Core Platform & Tenant Management System | ✅ **COMPLETED** (Phases 2.1–2.6 ✅) | Sprint 2 |
 | **Era 3** | Discovery Engine & Asset Surface Mapping | ✅ **COMPLETED** (Phases 3.1–3.5 ✅) | Sprint 3 |
-| **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | 🟡 **IN PROGRESS** (Phase 4.1 ✅, Phase 4.2 ✅) | Sprint 4 |
+| **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | 🟡 **IN PROGRESS** (Phase 4.1 ✅, Phase 4.2 ✅, Phase 4.3 ✅) | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
 | **Era 6** | Scanning Orchestration & Execution Pipeline | ⏳ Pending | Sprint 6 |
 | **Era 7** | Enterprise Web Application & Dashboard Interface | ⏳ Pending | Sprint 7 |
@@ -246,3 +246,6 @@ The following discovery engine architecture decisions were finalized during Phas
 4. **Safe Non-Destructive SQL Injection Probing**: `SQLInjectionPlugin` tests query parameters using safe SQL syntax markers (`'`, `''`, `' OR '1'='1`) and regex error pattern matching across 5 major database engines (PostgreSQL, MySQL, SQLite, Oracle, MSSQL) without performing destructive data modifications.
 5. **Marker-Based Reflected XSS Detection**: `XSSPlugin` injects unique, non-executing marker tags (`"><vlnv_xss_probe_<uuid>>`) to confirm unescaped HTML reflection in HTTP responses without executing malicious scripts.
 6. **Authentication & Session Flag Auditing**: `AuthSecurityPlugin` analyzes Set-Cookie directives for missing `HttpOnly`, `Secure`, or `SameSite` flags and flags unencrypted HTTP credential transmission.
+7. **Exposed API Documentation Probing**: `APISecurityPlugin` probes target assets for exposed Swagger/OpenAPI/GraphQL documentation or schema endpoints (`/swagger`, `/swagger-ui`, `/openapi.json`, `/api-docs`, `/graphql`) and alerts on information disclosure risks.
+8. **JWT Signature & Claims Analysis**: `JWTSecurityPlugin` inspects JSON Web Tokens for critical signing risks (`alg: none`), missing `exp` claims, excessive lifetime (> 24h), and missing `iss`/`aud` claims without requiring server secret keys.
+9. **CORS Misconfiguration Detection**: `CORSPlugin` evaluates `Access-Control-Allow-Origin` and `Access-Control-Allow-Credentials` headers via custom `Origin` probes to flag wildcard origin credentials and arbitrary origin reflection.
