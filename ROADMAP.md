@@ -230,12 +230,20 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Core platform database tables created with foreign keys, cascading rules, and indexes; pytest, Ruff, Black, and Mypy pass cleanly; GitHub Actions green check.
 - **Testing Requirements**: Domain entity defaults verification, SQLAlchemy ORM metadata registration, Alembic revision chain validation.
 
-### Phase 2.2: JWT & OAuth2 Authentication Framework
-- **Objective**: Build secure user registration, login, password hashing (Argon2id), and JWT access/refresh token rotation.
-- **Deliverables**: Auth router endpoints (`/api/v1/auth/login`, `/api/v1/auth/refresh`).
+### ✅ Phase 2.2: JWT & OAuth2 Authentication Framework
+- **Objective**: Build production-grade authentication infrastructure with secure user registration, login, Argon2id password hashing, HS256 JWT access tokens, and refresh token rotation with reuse detection.
+- **Deliverables**:
+  - Password security adapter (`app/security/password.py`) — Argon2id hashing via `passlib`.
+  - JWT provider (`app/security/jwt.py`) — HS256 access token creation/validation, SHA-256 refresh token hashing.
+  - Auth repositories (`UserRepository`, `OrganizationRepository`, `RefreshTokenRepository`) with family-based revocation.
+  - Application DTOs (`app/application/auth/dto.py`) — `RegisterRequest`, `LoginRequest`, `RefreshRequest`, `TokenResponse`, `UserResponse`.
+  - Auth service layer (`app/application/auth/services.py`) — register, login, refresh (rotation + reuse detection), logout, get_me.
+  - FastAPI dependencies (`app/api/v1/dependencies/auth.py`) — OAuth2PasswordBearer scheme, `get_current_user` dependency.
+  - Auth router (`app/api/v1/routers/auth.py`) — `/api/v1/auth/register`, `/login`, `/refresh`, `/logout`, `/me` endpoints with HTTP-Only refresh token cookies.
+  - Comprehensive test suite (`tests/test_auth.py`) — 48 tests covering password hashing, JWT encoding/decoding, token hashing, AuthService use cases, and all API endpoints.
 - **Dependencies**: Phase 2.1.
-- **Completion Criteria**: Users can register, log in, refresh tokens, and receive secure cookies.
-- **Testing Requirements**: Unit & API tests for auth endpoints.
+- **Completion Criteria**: Full authentication lifecycle functional; JWT access tokens (15-min expiry) with refresh token rotation (7-day expiry); reuse detection triggers family revocation; HTTP-Only secure cookies; pytest (48 passed), Ruff, Black, Mypy pass cleanly; GitHub Actions ci.yml and security.yml green (`6682970`, `f9af674`).
+- **Testing Requirements**: Argon2id hash/verify, JWT encode/decode round-trip, SHA-256 token hashing determinism, AuthService register/login/refresh/reuse-detection integration, API endpoint HTTP status codes and cookie handling.
 
 ### Phase 2.3: Multi-Tenant RBAC Security Layer
 - **Objective**: Enforce organization-level role permissions (Owner, Admin, Security Analyst, Viewer).

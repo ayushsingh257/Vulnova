@@ -116,7 +116,7 @@ No undocumented repository structure changes are permitted.
 | **Era 0** | Architecture & Enterprise Documentation Foundation | ✅ **COMPLETED** | Sprint 0 |
 | **Era 0.5**| Enterprise Architecture Refinement & Security Model Polish | ✅ **COMPLETED** | Sprint 0.5 |
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
-| **Era 2** | Core Platform & Tenant Management System | 🟡 **IN PROGRESS** (Phase 2.1 ✅) | Sprint 2 |
+| **Era 2** | Core Platform & Tenant Management System | 🟡 **IN PROGRESS** (Phase 2.1 ✅, Phase 2.2 ✅) | Sprint 2 |
 | **Era 3** | Discovery Engine & Asset Surface Mapping | ⏳ Pending | Sprint 3 |
 | **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | ⏳ Pending | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
@@ -140,3 +140,18 @@ No undocumented repository structure changes are permitted.
 
 1. **Security Event Logging**: Every authentication attempt, target authorization declaration, scan launch, report generation, and organization setting modification MUST produce a structured audit event.
 2. **Secret Hygiene**: Secrets must NEVER be hardcoded. They are loaded at runtime from environment variables using Pydantic `BaseSettings`.
+
+---
+
+## 🔑 7. Authentication Architecture Decisions (Phase 2.2)
+
+The following security decisions were finalized during Phase 2.2 and are now immutable:
+
+1. **Password Hashing**: Argon2id via `passlib[argon2]` adapter. No bcrypt, no scrypt. Argon2id is the OWASP-recommended memory-hard KDF.
+2. **JWT Access Tokens**: HS256 signing using `SECRET_KEY` from Pydantic Settings. 15-minute expiry. Claims: `sub`, `user_id`, `organization_id`, `role`, `token_type`, `exp`.
+3. **Refresh Token Strategy**: Cryptographically random tokens (64 bytes, `secrets.token_urlsafe`). Stored as SHA-256 hashes in `refresh_tokens` table. 7-day expiry.
+4. **Refresh Token Rotation**: Every refresh issues a new token and revokes the old one. Family-based tracking via `family_id` UUID.
+5. **Reuse Detection**: If a previously-revoked refresh token is presented, the entire token family is revoked immediately (compromised session defense).
+6. **HTTP-Only Cookies**: Refresh tokens are delivered in `vulnova_refresh_token` HTTP-Only, Secure, SameSite=Lax cookies. Never exposed to JavaScript.
+7. **Email Validation**: `email-validator>=2.1.0` is a production dependency. Pydantic `EmailStr` requires it at import time. This was identified as a CI-breaking omission and resolved in commit `f9af674`.
+8. **Auth Endpoints**: `/api/v1/auth/register`, `/login`, `/refresh`, `/logout`, `/me` — all under OAuth2PasswordBearer FastAPI dependency injection.

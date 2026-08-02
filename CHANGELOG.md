@@ -16,8 +16,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Pinned all GitHub Actions to immutable 40-character commit SHAs for supply chain security.
   - Replaced Gitleaks, Semgrep, and Trivy third-party action wrappers with direct CLI binary installations for reliability.
   - Installed Trivy via official APT repository instead of fragile `curl | sh` script.
+- **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 2 Phase 2.2 (JWT & OAuth2 Authentication Framework)** (`6682970`, `f9af674`):
+  - Implemented Argon2id password hashing adapter (`app/security/password.py`) via `passlib[argon2]`.
+  - Implemented HS256 JWT access token creation and validation (`app/security/jwt.py`) with 15-minute expiry and claims (`sub`, `user_id`, `organization_id`, `role`, `token_type`, `exp`).
+  - Implemented SHA-256 refresh token hashing for secure database storage.
+  - Created auth repositories (`UserRepository`, `OrganizationRepository`, `RefreshTokenRepository`) with family-based token revocation for reuse detection.
+  - Created application-layer DTOs (`RegisterRequest`, `LoginRequest`, `RefreshRequest`, `TokenResponse`, `UserResponse`) in `app/application/auth/dto.py`.
+  - Implemented `AuthService` (`app/application/auth/services.py`) with register, login, refresh (rotation + reuse detection), logout, and get_me use cases.
+  - Created FastAPI OAuth2PasswordBearer dependencies (`app/api/v1/dependencies/auth.py`) with `get_current_user` injection.
+  - Created auth router (`app/api/v1/routers/auth.py`) with `/api/v1/auth/register`, `/login`, `/refresh`, `/logout`, `/me` endpoints and HTTP-Only `vulnova_refresh_token` secure cookies.
+  - Added comprehensive test suite (`tests/test_auth.py`) — 48 tests covering password hashing, JWT round-trips, token hashing, AuthService integration, and API endpoint behavior.
+  - Added `email-validator>=2.1.0`, `pyjwt>=2.8.0`, `passlib[argon2]>=1.7.4`, `argon2-cffi>=23.1.0`, `python-multipart>=0.0.9` to production dependencies.
 - **Era 2 Phase 2.1 (Database Entity Models & Alembic Migration)**:
   - Created pure domain entity dataclasses (`Organization`, `User`, `RefreshToken`, `APIKey`, `AuditLog`) in `app/domain/entities/`.
   - Implemented SQLAlchemy 2.0 ORM models (`OrganizationModel`, `UserModel`, `RefreshTokenModel`, `APIKeyModel`, `AuditLogModel`) in `app/infrastructure/database/models/` with typed `Mapped` attributes and foreign keys.
