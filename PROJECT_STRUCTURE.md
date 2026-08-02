@@ -55,14 +55,17 @@ Vulnova/
 │   │   │   ├── dependencies/        # FastAPI Auth & RBAC dependency injectors
 │   │   │   └── schemas/             # Pydantic v2 request/response models
 │   │   ├── application/             # Use Cases & Application Service Coordinators
+│   │   │   ├── assessment/          # AssessmentService, RiskIntelligenceEngine, FindingDeduplicator, DTOs
 │   │   │   ├── use_cases/           # Scan launch, finding triage, report generation workflows
 │   │   │   └── services/            # Domain service orchestrators
 │   │   ├── domain/                  # Pure Business Logic (No external framework dependencies)
-│   │   │   ├── entities/            # User, Organization, Target, Finding, Evidence entities
+│   │   │   ├── entities/            # User, Organization, Target, Finding, CVSS, EPSS, Evidence entities
 │   │   │   ├── value_objects/       # CVSSScore, TargetURL, SeverityLabel value objects
 │   │   │   └── ports/               # Abstract Interfaces (ScannerPort, AIProviderPort, EventBusPort)
 │   │   ├── infrastructure/          # Adapters & External System Implementations
-│   │   │   ├── db/                  # Async SQLAlchemy models, Alembic migrations, pgvector
+│   │   │   ├── assessment/          # 10 DAST Security Plugins, PluginRegistry, EvidenceCollectionEngine
+│   │   │   ├── storage/             # EvidenceArtifactStorage (local filesystem & cloud object store adapter)
+│   │   │   ├── db/                  # Async SQLAlchemy models, Alembic migrations, pgvector, Repositories
 │   │   │   ├── cache/               # Redis caching client & token bucket rate limiter
 │   │   │   ├── messaging/           # Celery task definitions & Event Bus publisher
 │   │   │   ├── ai/                  # Multi-provider LLM gateway & RAG retrieval engine
@@ -71,7 +74,7 @@ Vulnova/
 │   │   └── workers/                 # Celery background worker task entrypoints
 │   ├── migrations/                  # Alembic database migration scripts
 │   ├── scripts/                     # Local seed scripts & DB maintenance utilities
-│   └── tests/                       # Pytest unit, integration, and security test suite
+│   └── tests/                       # Pytest unit, integration, and security test suite (148 passed)
 │
 ├── plugins/                         # Modular Security Assessment Plugins
 │   ├── sqli_assessment/             # SQL Injection Plugin (plugin.yaml, plugin.py, payloads.json)

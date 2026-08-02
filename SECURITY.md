@@ -76,6 +76,11 @@ Every target setup and scan creation request requires an explicit user confirmat
 - Sensitive database fields (API Keys, Integration Secrets, Target Auth Tokens) encrypted using `AES-256-GCM` via envelope key management.
 - PostgreSQL storage volumes encrypted at the infrastructure storage layer.
 
+### Evidence Artifact Sanitization & Integrity
+- **Sensitive Data Sanitization**: Prior to persisting HTTP exchanges, headers, or cookies in evidence storage, all sensitive credentials (`Authorization` headers, `Cookie`/`Set-Cookie` directives, session IDs, JWT tokens, API keys) are sanitized (`mask_sensitive_headers`, `mask_sensitive_cookies`).
+- **Integrity Checksums**: Every captured evidence artifact calculates a SHA-256 hash over raw byte content to guarantee proof integrity and non-repudiation.
+- **Tenant Isolation**: Evidence storage paths are strictly isolated per tenant (`uploads/evidence/<organization_id>/<finding_id>/`).
+
 ---
 
 ## 🌐 7. Secure HTTP Headers & Browser Protections

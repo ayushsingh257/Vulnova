@@ -69,14 +69,22 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
 - **Client Context Extraction**: Captures `client_ip` (supporting `X-Forwarded-For` proxy headers) and `user_agent` strings.
 - **Fail-Safe Audit Logging**: Async audit recording designed to log high-priority warnings without disrupting primary business transactions.
 
+### 🔍 Security Assessment & Evidence Intelligence Engine
+- **10 Production Assessment Plugins**: High-concurrency security plugins covering Web (SQLi, XSS, Security Headers, Cookie Auth Security), API (Exposed Docs, JWT Signatures & Claims, CORS Policies), and Infrastructure/Cloud (Open Administrative Ports, TLS/SSL Certs & Protocols, S3/Azure/GCP & IMDS Exposure).
+- **Risk Intelligence Engine**: CVSS v3.1/v4 vector parsing, EPSS (Exploit Prediction Scoring System) probability mapping, asset criticality multipliers (1.5x, 1.2x, 1.0x, 0.8x), normalized 0.0–100.0 risk scoring, and SLA assignment (24h Critical, 72h High, 14d Medium, 30d Low).
+- **Finding Deduplication**: SHA-256 signature hashing (`organization_id`, `plugin_id`, `cwe_id`, `target_endpoint`, `parameter_name`) merging duplicate finding instances into primary canonical findings.
+- **Multi-Modal Evidence Collection Engine**: Captures reproducible proof including masked HTTP request/response dumps, header/cookie profiles, Playwright HTML DOM snapshots, and visual PNG screenshots.
+- **Provider-Independent Evidence Storage**: Async `EvidenceArtifactStorage` with SHA-256 content checksum verification and tenant-isolated storage paths.
+
 ---
 
 ## ⚡ 4. Why Vulnova is Different
 
-1. **AI-Native AppSec Workflows**: Built specifically to integrate Large Language Models (LLMs) for intelligent vulnerability scoring (CVSS 4.0), false-positive mitigation, and automated patch generation.
-2. **Clean Architecture & Domain Isolation**: Strict separation of concerns (`api` → `application` → `domain` ← `infrastructure`) ensures core business logic remains independent of web frameworks and database drivers.
-3. **Enterprise Multi-Tenancy**: Built from day one for multi-organization SaaS deployments with zero cross-tenant data leakage.
-4. **Security-First Engineering**: OWASP ASVS v4.0 aligned, strict Python type annotations (`mypy --strict`), automated supply chain vulnerability scanning (Trivy, Semgrep, Gitleaks), and immutable audit trails.
+1. **Enterprise Assessment Intelligence Pipeline**: Rather than operating as a raw plugin scanner, Vulnova transforms scan outputs into normalized, deduplicated, and fully evidenced security intelligence.
+2. **AI-Native AppSec Workflows**: Built specifically to integrate Large Language Models (LLMs) for intelligent vulnerability scoring (CVSS 4.0), false-positive mitigation, attack path generation, and automated patch code fixes.
+3. **Clean Architecture & Domain Isolation**: Strict separation of concerns (`api` → `application` → `domain` ← `infrastructure`) ensures core business logic remains independent of web frameworks and database drivers.
+4. **Enterprise Multi-Tenancy**: Built from day one for multi-organization SaaS deployments with zero cross-tenant data leakage.
+5. **Security-First Engineering**: OWASP ASVS v4.0 aligned, strict Python type annotations (`mypy --strict`), automated supply chain vulnerability scanning (Trivy, Semgrep, Gitleaks), and immutable audit trails.
 
 ---
 
@@ -96,11 +104,14 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
                                                     │ Task Queue / Event Bus
                                                     ▼
                                ┌─────────────────────────────────────────┐
-                               │   Isolated Scanner Sandbox Workers      │
-                               │  (Unprivileged Worker Pool, Egress Rules)│
-                               │ ┌───────────┬──────────────┬──────────┐ │
-                               │ │ Crawler   │ DAST Plugins │ Browser  │ │
-                               │ └───────────┴──────────────┴──────────┘ │
+                               │   Assessment Intelligence Pipeline      │
+                               │ ┌───────────────┬─────────────────────┐ │
+                               │ │ Discovery     │ 10 Security Plugins │ │
+                               │ ├───────────────┼─────────────────────┤ │
+                               │ │ Risk Engine   │ Finding Deduplicator│ │
+                               │ ├───────────────┼─────────────────────┤ │
+                               │ │ Evidence      │ DOM/PNG Proof Store │ │
+                               │ └───────────────┴─────────────────────┘ │
                                └────────────────────┬────────────────────┘
                                                     │
                                                     ▼
@@ -120,6 +131,7 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
 | **Authentication & Security** | Argon2id (`passlib[argon2]`), PyJWT (HS256), HMAC SHA-256 |
 | **Database & ORM** | PostgreSQL 16+, SQLAlchemy 2.0 (Async), Alembic, `pgvector` |
 | **Cache & Task Queue** | Redis 7+, Celery |
+| **Browser Rendering** | Playwright Headless Chromium (DOM Snapshots & PNG Screenshots) |
 | **Code Quality & CI/CD** | Pytest 8.2+, Black, Ruff, Mypy (`strict = true`), GitHub Actions |
 | **DevSecOps Tools** | Trivy (SCA/Container), Semgrep (SAST), Gitleaks (Secret Detection) |
 
@@ -204,7 +216,7 @@ mypy app --config-file pyproject.toml
 python -m pytest -v
 ```
 
-**Current Backend Quality Metrics**: **91/91 Passed** (100% test pass rate).
+**Current Backend Quality Metrics**: **148/148 Passed** (100% test pass rate).
 
 ---
 
@@ -214,25 +226,28 @@ python -m pytest -v
 - ✅ **Era 0.5**: Enterprise Architecture Refinement & Security Model Polish
 - ✅ **Era 1**: Infrastructure, Monorepo & DevSecOps Foundation
 - ✅ **Era 2**: Core Platform & Tenant Management System
-  - ✅ Phase 2.1 — Database Entity Models & SQLAlchemy Mappings
-  - ✅ Phase 2.2 — JWT & OAuth2 Authentication Framework
-  - ✅ Phase 2.3 — Multi-Tenant RBAC Security Layer
-  - ✅ Phase 2.4 — API Key Management System
-  - ✅ Phase 2.5 — User & Organization Management Endpoints
-  - ✅ Phase 2.6 — Security Audit Logging System
-- 🚧 **Era 3**: Discovery Engine & Asset Surface Mapping *(IN PROGRESS)*
-  - ⏳ Phase 3.1 — Async HTTP Web Crawler Core
-  - ⏳ Phase 3.2 — SPA & Dynamic DOM Crawling System
-  - ⏳ Phase 3.3 — Target Asset Taxonomy & Fingerprinting
-  - ⏳ Phase 3.4 — API Schema Inference & Endpoint Discovery
-  - ⏳ Phase 3.5 — Attack Surface Mapping & Visual Graph Engine
-- ⏳ **Era 4**: Vulnerability Assessment Engine & Dynamic Testing
-- ⏳ **Era 5**: AI Security Analyst Engine & Vulnerability Intelligence
-- ⏳ **Era 6**: Scanning Orchestration & Execution Pipeline
-- ⏳ **Era 7**: Enterprise Web Application & Dashboard Interface
+- ✅ **Era 3**: Discovery Engine & Asset Surface Mapping
+  - ✅ Phase 3.1 — Async HTTP Web Crawler Core
+  - ✅ Phase 3.2 — SPA & Dynamic DOM Crawling System
+  - ✅ Phase 3.3 — Target Asset Taxonomy & Fingerprinting
+  - ✅ Phase 3.4 — API Schema Inference & Endpoint Discovery
+  - ✅ Phase 3.5 — Attack Surface Mapping & Visual Graph Engine
+- 🟡 **Era 4**: Vulnerability Assessment Engine & Dynamic Testing *(IN PROGRESS)*
+  - ✅ Phase 4.1 — Security Assessment Plugin Framework Core
+  - ✅ Phase 4.2 — Web Vulnerability Assessment Plugin Suite
+  - ✅ Phase 4.3 — API Security Assessment Plugin Suite
+  - ✅ Phase 4.4 — Infrastructure & Cloud Security Assessment Plugin Suite
+  - ✅ Phase 4.5 — Finding Normalization & Risk Intelligence Engine
+  - ✅ Phase 4.6 — Multi-Modal Evidence Collection & Capture Engine
+  - ⏳ Phase 4.7 — Enterprise Scan Profile & Execution Policy Engine
+  - ⏳ Phase 4.8 — Multi-Source Finding Correlation & Asset Inventory Engine
+  - ⏳ Phase 4.9 — Attack Surface Trend & Continuous Monitoring Engine
+- ⏳ **Era 5**: Enterprise AI Security Analyst & Copilot Engine
+- ⏳ **Era 6**: Distributed Scanning Orchestration & Worker Sandbox
+- ⏳ **Era 7**: Enterprise Web Application, Dashboard & Trust Center
 - ⏳ **Era 8**: Reporting, Executive Metrics & Export System
 - ⏳ **Era 9**: Enterprise Integration & Developer Workflows
-- ⏳ **Era 10**: Advanced Security Hardening & OWASP Compliance
+- ⏳ **Era 10**: Complete Security Validation Lifecycle & OWASP Verification
 - ⏳ **Era 11**: Enterprise Scale, Performance Tuning & Reliability
 - ⏳ **Era 12**: Final Security Audit, Production Deployment & Release
 

@@ -94,3 +94,11 @@ All logs are emitted using `structlog` as formatted JSON:
   "correlation_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
 }
 ```
+
+---
+
+## 🗄️ 5. Evidence Storage & Sensitive Data Sanitization
+
+1. **Storage Provider Independence**: Evidence files (HTTP text dumps, HTML DOM snapshots, PNG screenshots) must be stored via `EvidenceArtifactStorage` interface abstraction supporting local storage (`uploads/evidence/<org_id>/<finding_id>/`) and future S3/MinIO cloud providers.
+2. **Sensitive Data Sanitization**: Prior to persisting HTTP exchanges, headers, or cookies, all sensitive credentials (`Authorization` headers, `Cookie`/`Set-Cookie` directives, session IDs, JWT tokens, API keys) MUST be sanitized via `mask_sensitive_headers` and `mask_sensitive_cookies`.
+3. **Integrity Verification**: Every evidence artifact MUST generate a SHA-256 checksum calculated over byte content upon save.

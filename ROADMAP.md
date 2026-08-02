@@ -429,24 +429,30 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Infrastructure and cloud security plugins functional; exposed SSH/RDP/DB ports detected; TLS certificate expiration and weak ciphers audited; AWS S3/Azure Blob/IMDS cloud exposure flagged; pytest (134 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`7a3d13bc`).
 - **Testing Requirements**: Non-blocking TCP port probe tests, SSL socket certificate expiration checks, AWS S3 list bucket reflection tests, 10-plugin pipeline orchestration integration.
 
-### Phase 4.5: Finding Normalization & Risk Intelligence Engine
-- **Objective**: Build the core vulnerability finding normalization and risk calculation engine supporting CVSS v3.1/v4 vectors, EPSS (Exploit Prediction Scoring System) probability mapping, CWE/CVE/OWASP Top 10 taxonomy alignment, finding deduplication, and asset criticality risk weighting.
+### ✅ Phase 4.5: Finding Normalization & Risk Intelligence Engine
+- **Objective**: Build the core vulnerability finding normalization and risk calculation engine supporting CVSS v3.1/v4 vectors, EPSS (Exploit Prediction Scoring System) probability mapping, CWE/CVE/OWASP Top 10 taxonomy alignment, finding deduplication, and asset criticality risk weighting (0–100 risk score).
 - **Deliverables**:
-  - `RiskIntelligenceEngine` (`app/application/assessment/risk_engine.py`) calculating composite risk scores (0–100) based on CVSS severity, EPSS exploit likelihood, and asset criticality weighting.
-  - `FindingDeduplicator` (`app/application/assessment/deduplication.py`) merging duplicate findings across asset nodes, domains, and scan runs.
-  - Standardized risk metadata DTOs (`CVSSScore`, `EPSSScore`, `RiskMetrics`, `BusinessImpact`).
+  - `RiskIntelligenceEngine` (`app/application/assessment/risk_engine.py`) calculating CVSS v3.1/v4 vectors, EPSS exploit probability scores, asset criticality risk multipliers (1.5x, 1.2x, 1.0x, 0.8x), composite risk scores (0.0–100.0), business impact ratings, and remediation SLA hour thresholds (Critical: 24h, High: 72h, Medium: 336h, Low: 720h).
+  - `FindingDeduplicator` (`app/application/assessment/deduplication.py`) generating SHA-256 deduplication signature hashes based on tenant ID, plugin ID, CWE ID, target endpoint, and parameter name to link redundant findings across plugins/scans to primary canonical findings.
+  - Domain Entity Extensions (`app/domain/entities/assessment.py`) with `CVSSMetrics`, `EPSSMetrics`, `RiskMetrics`, `ConfidenceLevel`, `AssetCriticality`, and updated `Finding` entity.
+  - Database ORM & Repository (`app/infrastructure/database/models/assessment.py` & `assessment_repository.py`) with `cvss_json`, `epss_json`, `risk_score`, `confidence`, `is_duplicate`, `canonical_finding_id`, `deduplication_hash` columns and performance indexes.
+  - Comprehensive Test Suite (`tests/test_risk_intelligence_engine.py`) — 8 tests covering scoring factors, Critical/Medium SLAs, missing metric fallbacks, asset criticality multipliers, deduplication hashing, canonical selection, and end-to-end service integration.
 - **Dependencies**: Phase 4.1, Phase 4.2, Phase 4.3 & Phase 4.4.
-- **Completion Criteria**: Findings enriched with CVSS v3.1/v4 vectors, EPSS scores, OWASP mappings, and deduplicated risk scores; unit tests pass cleanly.
+- **Completion Criteria**: Findings enriched with CVSS v3.1/v4 vectors, EPSS scores, OWASP mappings, and deduplicated risk scores; pytest (142 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`c164d4b5`, `a0107d49`).
 - **Testing Requirements**: Risk calculation matrix tests, EPSS mapping accuracy tests, deduplication merge tests.
 
-### Phase 4.6: Multi-Modal Evidence Collection & Capture Engine
+### ✅ Phase 4.6: Multi-Modal Evidence Collection & Capture Engine
 - **Objective**: Build an automated evidence collection engine capturing rich contextual proof (Playwright headless DOM snapshots, full HTTP request/response text dumps, cookie/header timelines, and visual screenshots) for all discovered security findings.
 - **Deliverables**:
-  - `EvidenceCollectionEngine` (`app/infrastructure/assessment/evidence_engine.py`) integrating Playwright DOM/screenshot capture and HTTP network exchange recording.
-  - `EvidenceArtifactStorage` (`app/infrastructure/storage/evidence_store.py`) storing encrypted evidence payloads and linking `evidence_json` to `SecurityFindingModel`.
-  - Visual evidence rendering helpers for finding drawers and reporting.
+  - `EvidenceCollectionEngine` (`app/infrastructure/assessment/evidence_engine.py`) capturing HTTP request/response text dumps, header dumps, cookie profiles, Playwright DOM snapshots, and visual PNG screenshots.
+  - Sensitive Data Masking (`app/infrastructure/assessment/evidence_engine.py`) sanitizing Authorization headers (Bearer/Basic), session cookies, API keys, and JWT tokens before storage.
+  - `EvidenceArtifactStorage` (`app/infrastructure/storage/evidence_store.py`) providing a provider-independent storage layer calculating SHA-256 checksums and managing file paths.
+  - Extended Domain Entities (`app/domain/entities/assessment.py`) with `EvidenceType` (`SCREENSHOT`, `DOM_SNAPSHOT`, `HTTP_REQUEST`, `HTTP_RESPONSE`, `COOKIE_DATA`, `HEADER_DATA`, `REDIRECT_CHAIN`, `TIMELINE_EVENT`), `EvidenceArtifact`, and attached `artifacts` list to `Finding`.
+  - Database ORM & Repository (`app/infrastructure/database/models/assessment.py` & `evidence_repository.py`) with `EvidenceArtifactModel` and tenant-isolated database persistence.
+  - Extended DTOs (`app/application/assessment/dto.py`) with `EvidenceArtifactDTO` and enriched `FindingDTO` with `evidence_count`, `evidence_available`, and `artifacts`.
+  - Comprehensive Test Suite (`tests/test_evidence_engine.py`) — 6 tests covering header/cookie masking, storage checksums, Playwright DOM/screenshot capture, repository CRUD, and end-to-end service integration.
 - **Dependencies**: Phase 4.5, Phase 3.2.
-- **Completion Criteria**: Findings contain rich visual screenshots, raw HTTP request/response payloads, and DOM snapshots; evidence artifacts persisted securely.
+- **Completion Criteria**: Findings contain rich visual screenshots, raw HTTP request/response payloads, and DOM snapshots; evidence artifacts persisted securely; pytest (148 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`bc8ddea8`, `6dcf652b`).
 - **Testing Requirements**: Screenshot capture unit tests, HTTP Exchange dump tests, evidence storage security verification.
 
 ### Phase 4.7: Enterprise Scan Profile & Execution Policy Engine

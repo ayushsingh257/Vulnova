@@ -110,47 +110,46 @@ CREATE TABLE scan_jobs (
 );
 CREATE INDEX idx_scan_jobs_org_status ON scan_jobs(organization_id, status);
 
--- Findings
-CREATE TABLE findings (
+-- Security Findings (Normalized & Evidence Enriched - Phase 4.5 & 4.6)
+CREATE TABLE security_findings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    scan_job_id UUID NOT NULL REFERENCES scan_jobs(id) ON DELETE CASCADE,
+    assessment_job_id UUID NOT NULL REFERENCES assessment_jobs(id) ON DELETE CASCADE,
+    asset_node_id UUID REFERENCES asset_nodes(id) ON DELETE SET NULL,
     plugin_id VARCHAR(100) NOT NULL,
     title VARCHAR(255) NOT NULL,
-    severity VARCHAR(50) NOT NULL,
-    cvss_score NUMERIC(3, 1),
+    description TEXT NOT NULL,
+    severity VARCHAR(20) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    cve_id VARCHAR(50),
     cwe_id VARCHAR(50),
-    target_url TEXT NOT NULL,
-    status VARCHAR(50) DEFAULT 'OPEN', -- 'OPEN', 'TRIAGED', 'FALSE_POSITIVE', 'REMEDIATED'
+    remediation TEXT,
+    evidence_json JSONB,
+    cvss_json JSONB,
+    epss_json JSONB,
+    risk_score NUMERIC(5, 2),
+    confidence VARCHAR(20) DEFAULT 'HIGH',
+    is_duplicate BOOLEAN DEFAULT FALSE,
+    canonical_finding_id UUID REFERENCES security_findings(id) ON DELETE SET NULL,
+    deduplication_hash VARCHAR(64),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX idx_findings_scan_job ON findings(scan_job_id);
-CREATE INDEX idx_findings_org_severity ON findings(organization_id, severity);
+CREATE INDEX idx_security_findings_org_severity ON security_findings(organization_id, severity);
+CREATE INDEX idx_security_findings_org_category ON security_findings(organization_id, category);
+CREATE INDEX idx_security_findings_org_risk ON security_findings(organization_id, risk_score);
 
--- Vulnerability History Tracking
-CREATE TABLE vulnerability_history (
+-- Multi-Modal Evidence Artifacts (Phase 4.6)
+CREATE TABLE evidence_artifacts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    finding_id UUID NOT NULL REFERENCES findings(id) ON DELETE CASCADE,
-    previous_status VARCHAR(50) NOT NULL,
-    new_status VARCHAR(50) NOT NULL,
-    changed_by_user_id UUID REFERENCES users(id),
-    reason TEXT NOT NULL,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    finding_id UUID NOT NULL REFERENCES security_findings(id) ON DELETE CASCADE,
+    artifact_type VARCHAR(50) NOT NULL, -- 'SCREENSHOT', 'DOM_SNAPSHOT', 'HTTP_REQUEST', 'HTTP_RESPONSE', 'COOKIE_DATA', 'HEADER_DATA'
+    storage_path VARCHAR(1024) NOT NULL,
+    metadata_json JSONB,
+    checksum VARCHAR(64) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX idx_vuln_history_finding ON vulnerability_history(finding_id);
-
--- Decoupled Evidence Management System
-CREATE TABLE evidence_records (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    finding_id UUID NOT NULL REFERENCES findings(id) ON DELETE CASCADE,
-    evidence_type VARCHAR(50) NOT NULL, -- 'HTTP_REQUEST', 'HTTP_RESPONSE', 'SCREENSHOT', 'PROOF_PAYLOAD'
-    raw_payload TEXT,
-    screenshot_url TEXT,
-    payload_hash VARCHAR(255) NOT NULL,
-    mime_type VARCHAR(100) DEFAULT 'application/json',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-CREATE INDEX idx_evidence_finding ON evidence_records(finding_id);
+CREATE INDEX idx_evidence_artifacts_org_finding ON evidence_artifacts(organization_id, finding_id);
 
 -- Vector Embeddings for Knowledge Base & RAG
 CREATE TABLE security_embeddings (

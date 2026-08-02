@@ -48,6 +48,8 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://vulnova_admin:vulnova_secure_password@postgres:5432/vulnova_db
       REDIS_URL: redis://redis:6379/0
+    volumes:
+      - evidence_data:/app/uploads/evidence
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,6 +65,8 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://vulnova_admin:vulnova_secure_password@postgres:5432/vulnova_db
       REDIS_URL: redis://redis:6379/0
+    volumes:
+      - evidence_data:/app/uploads/evidence
     depends_on:
       - backend
 
@@ -79,6 +83,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  evidence_data:
 ```
 
 ---
@@ -97,3 +102,4 @@ Traefik manages TLS termination, Let's Encrypt certificates, HTTP/2, and WebSock
 For production enterprise deployments, Vulnova provides Helm charts under `infra/helm/vulnova/` featuring:
 - Horizontal Pod Autoscaler (HPA) for Celery assessment workers based on queue length.
 - Dedicated StatefulSets for PostgreSQL & Redis with persistent volume claims (PVC).
+- PersistentVolumeClaim (PVC) for multi-modal evidence store (`evidence_data` mount or S3/MinIO cloud object storage).

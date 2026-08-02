@@ -53,9 +53,6 @@ Because Vulnova executes dynamic security checks against external web targets, s
                   ┌─────────────────────────────────────────┐
                   │  Isolated Scanner Sandbox Workers       │
                   │  (Unprivileged Worker Pool)             │
-                  │ ┌───────────┬──────────────┬──────────┐ │
-                  │ │ Crawler   │ DAST Plugins │ Browser  │ │
-                  │ └───────────┴──────────────┴──────────┘ │
                   └─────────────────────────────────────────┘
 ```
 
@@ -73,7 +70,80 @@ Because Vulnova executes dynamic security checks against external web targets, s
 
 ---
 
-## 🧩 3. Extensible Security Plugin Framework
+## 🧩 3. Enterprise Assessment Intelligence Pipeline & Evidence Subsystem
+
+Vulnova transforms raw scanner outputs into normalized, deduplicated, and fully evidenced security intelligence prior to database persistence and AI analysis.
+
+```
+Security Assessment Plugins (10)
+        │
+        ▼
+   Raw Findings
+        │
+        ▼
+Risk Intelligence Engine ──► (CVSS v3.1/v4 + EPSS + Asset Multipliers ──► 0-100 Risk Score)
+        │
+        ▼
+ Finding Deduplicator   ──► (SHA-256 Signature Hash ──► Canonical Link & Duplicate Flag)
+        │
+        ▼
+Evidence Collection Engine ─► (Mask Headers/Cookies + HTTP Dumps + DOM Snapshots + PNG Screenshots)
+        │
+        ▼
+   Storage & DB         ──► (Storage Provider Bytes + DB EvidenceArtifactModel Records)
+        │
+        ▼
+AI Security Intelligence
+```
+
+### A. Risk Intelligence & Deduplication
+- **RiskIntelligenceEngine**: Normalizes CVSS v3.1/v4 vectors, EPSS exploit likelihood scores, asset criticality multipliers (1.5x, 1.2x, 1.0x, 0.8x), composite risk scores (0.0–100.0), business impact ratings, and remediation SLA hour thresholds (Critical: 24h, High: 72h, Medium: 336h, Low: 720h).
+- **FindingDeduplicator**: Generates SHA-256 signature hashes over `(organization_id, plugin_id, cwe_id, target_endpoint, parameter_name)` to merge duplicate finding instances into primary canonical findings.
+
+### B. Multi-Modal Evidence Subsystem
+- **EvidenceCollectionEngine**: Captures multi-modal proof for every normalized finding, including formatted HTTP request/response dumps, header JSON, cookie profiles, Playwright rendered HTML DOM snapshots, and visual PNG screenshots.
+- **Sensitive Data Sanitization**: Automatically masks `Authorization` headers (`Bearer *******`, `Basic *******`), session cookies, API keys, and JWT tokens (`eyJ...`) before storage.
+- **Storage Provider Independence**: `EvidenceArtifactStorage` provides an abstraction layer managing byte content, local filesystem paths (`uploads/evidence/<org_id>/<finding_id>/`), and future S3/MinIO cloud object stores.
+- **Integrity Verification**: Computes a SHA-256 checksum for every saved evidence artifact to guarantee proof non-repudiation and data integrity.
+
+---
+
+## ⚡ 4. Event-Driven Architecture Evolution Roadmap
+
+Vulnova initiates task distribution via Celery and Redis. As platform scale demands grow, the architecture transitions to an **Event-Driven Architecture (EDA)** leveraging an enterprise event bus.
+
+```
+ [Target Verified] ──► (ScanCreatedEvent)
+                              │
+                              ▼
+                     [Discovery Worker] ──► (DiscoveryCompletedEvent)
+                                                   │
+                                                   ▼
+                                        [Assessment Worker Pool]
+                                                   │
+                                                   ├─► (AssessmentStartedEvent)
+                                                   └─► (FindingCreatedEvent)
+                                                             │
+                                                             ▼
+                                                   [Evidence & Risk Engine] ──► (FindingEnrichedEvent)
+                                                             │
+                                                             ▼
+                                                   [AI Analyst Engine] ──► (AIAnalysisCompletedEvent)
+```
+
+### Supported Event Payload Types:
+1. `ScanCreatedEvent`: Dispatched when target authorization is confirmed and a scan job is queued.
+2. `DiscoveryCompletedEvent`: Emitted after crawling completes, carrying asset inventory tree payload.
+3. `AssessmentStartedEvent`: Emitted when DAST plugins initialize execution against target endpoints.
+4. `FindingCreatedEvent`: Emitted whenever a DAST plugin confirms a raw vulnerability.
+5. `AIAnalysisCompletedEvent`: Emitted when the AI Analyst finishes CVSS scoring, attack path synthesis, and remediation code patch generation.
+
+### Event Bus Migration Path:
+The application uses an abstract `EventBusPort`. While initial phases utilize Celery + Redis Pub/Sub, the interface supports seamless drop-in adapters for **RabbitMQ (AMQP)**, **Apache Kafka**, or **NATS JetStream** without modifying domain logic.
+
+---
+
+## 🔀 5. Extensible Security Plugin Framework
 
 Vulnova features a modular plugin architecture that allows security engineers to add custom assessment checks without modifying the core scanning engine.
 

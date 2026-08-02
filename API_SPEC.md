@@ -127,6 +127,48 @@ All API errors return a standardized JSON error format:
 
 ### E. Finding Triage & AI Intelligence (`/findings`)
 
+#### `GET /findings`
+- **Summary**: List all discovered security findings for an organization enriched with normalized risk metrics and multi-modal evidence metadata.
+- **Response (200 OK)**:
+  ```json
+  [
+    {
+      "id": "f83b2a19-4c3d-4e5f-8a1b-2c3d4e5f6a7b",
+      "assessment_job_id": "c73bcd8f-0e42-4f32-8419-756c66d214a1",
+      "plugin_id": "xss_plugin",
+      "title": "Reflected Cross-Site Scripting (XSS)",
+      "description": "Reflected XSS vulnerability detected in query parameter.",
+      "severity": "HIGH",
+      "category": "INJECTION",
+      "cve_id": null,
+      "cwe_id": "CWE-79",
+      "remediation": "Sanitize and HTML-encode user input prior to rendering.",
+      "evidence": { "probe_url": "https://example.com/search?q=\"><vlnv_xss_probe>" },
+      "cvss": { "version": "3.1", "base_score": 7.5, "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N" },
+      "epss": { "epss_score": 0.85, "percentile": 0.92 },
+      "risk_score": 82.5,
+      "confidence": "HIGH",
+      "is_duplicate": false,
+      "canonical_finding_id": null,
+      "fix_sla_hours": 72,
+      "evidence_count": 5,
+      "evidence_available": true,
+      "artifacts": [
+        {
+          "id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+          "finding_id": "f83b2a19-4c3d-4e5f-8a1b-2c3d4e5f6a7b",
+          "artifact_type": "SCREENSHOT",
+          "storage_path": "uploads/evidence/org_123/finding_456/screenshot.png",
+          "metadata": { "url": "https://example.com/search" },
+          "checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "created_at": "2026-08-02T22:00:00Z"
+        }
+      ],
+      "created_at": "2026-08-02T22:00:00Z"
+    }
+  ]
+  ```
+
 #### `GET /findings/{finding_id}/evidence`
 - **Summary**: Retrieve detailed evidence records (screenshots, HTTP request/response dumps, proof hashes) associated with finding.
 
