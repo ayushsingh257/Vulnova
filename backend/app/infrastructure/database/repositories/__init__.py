@@ -1,5 +1,6 @@
-"""Vulnova Database Repositories Package."""
-
+from app.infrastructure.database.repositories.api_key_repository import (
+    APIKeyRepository,
+)
 from app.infrastructure.database.repositories.organization_repository import (
     OrganizationRepository,
 )
@@ -12,4 +13,5 @@ __all__ = [
     "OrganizationRepository",
     "UserRepository",
     "RefreshTokenRepository",
+    "APIKeyRepository",
 ]
