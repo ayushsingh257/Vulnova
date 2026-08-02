@@ -128,3 +128,39 @@ class SubdomainScanResponse(BaseModel):
     total_subdomains: int
     discovered_subdomains: List[DiscoveredSubdomainDTO]
     duration_seconds: float
+
+
+class TechnologyScanRequest(BaseModel):
+    """Payload for triggering a Technology Stack Fingerprinting scan."""
+
+    target_url: HttpUrl = Field(
+        description="Explicit target URL to fingerprint technology stack (must be HTTP/HTTPS)"
+    )
+
+
+class DetectedTechnologyDTO(BaseModel):
+    """DTO representing a detected technology fingerprint finding."""
+
+    name: str
+    category: str
+    version: Optional[str] = None
+    confidence: int = 100
+    matched_by: List[str] = Field(default_factory=list)
+
+
+class SecurityHeaderDTO(BaseModel):
+    """DTO representing a security header audit status."""
+
+    header_name: str
+    present: bool
+    value: Optional[str] = None
+
+
+class TechnologyScanResponse(BaseModel):
+    """Response model for a completed Technology Stack Fingerprinting scan."""
+
+    target_url: str
+    status_code: Optional[int] = None
+    detected_technologies: List[DetectedTechnologyDTO] = Field(default_factory=list)
+    security_headers: List[SecurityHeaderDTO] = Field(default_factory=list)
+    duration_seconds: float

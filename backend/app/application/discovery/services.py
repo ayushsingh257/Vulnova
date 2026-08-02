@@ -8,6 +8,7 @@ from app.application.audit_logs.services import AuditLogService
 from app.application.discovery.dto import (
     CrawlRequest,
     CrawlResponse,
+    DetectedTechnologyDTO,
     DiscoveredFormDTO,
     DiscoveredNetworkRequestDTO,
     DiscoveredScriptDTO,
@@ -15,8 +16,11 @@ from app.application.discovery.dto import (
     DiscoveredURLDTO,
     DNSRecordDTO,
     IPAddressInfoDTO,
+    SecurityHeaderDTO,
     SubdomainScanRequest,
     SubdomainScanResponse,
+    TechnologyScanRequest,
+    TechnologyScanResponse,
 )
 from app.core.exceptions import ValidationException
 from app.core.logging import get_logger
@@ -33,6 +37,7 @@ from app.infrastructure.discovery.ssrf_validator import (
     extract_base_domain,
     is_safe_target_url,
 )
+from app.infrastructure.discovery.tech_fingerprinter import TechFingerprinter
 
 logger = get_logger("vulnova.discovery")
 
@@ -285,4 +290,92 @@ class DiscoveryService:
             total_subdomains=len(discovered_list),
             discovered_subdomains=discovered_list,
             duration_seconds=duration,
+        )
+
+    async def discover_technologies(
+        self, req: TechnologyScanRequest, current_user: UserModel
+    ) -> TechnologyScanResponse:
+        """Execute a technology stack fingerprinting scan on a target URL.
+
+        Enforces SSRF target validation, analyzes HTTP headers, HTML DOM structures, script URLs,
+        and security header compliance. Records structured audit events.
+        """
+        target_str = str(req.target_url).rstrip("/")
+
+        # 1. Pre-validate SSRF & Egress Firewall Safety
+        is_safe, reason = is_safe_target_url(target_str)
+        if not is_safe:
+            logger.warning(
+                "discovery.technology_scan_rejected_unsafe_target",
+                target_url=target_str,
+                reason=reason,
+                user_id=str(current_user.id),
+                org_id=str(current_user.organization_id),
+            )
+            await self.audit_service.record_event(
+                organization_id=current_user.organization_id,
+                action="technology.scan_rejected",
+                resource_type="target",
+                resource_id=target_str,
+                actor_user_id=current_user.id,
+                details={"target_url": target_str, "reason": reason},
+            )
+            raise ValidationException(f"Target URL is prohibited: {reason}")
+
+        # 2. Record Technology Scan Started Audit Event
+        await self.audit_service.record_event(
+            organization_id=current_user.organization_id,
+            action="technology.scan_started",
+            resource_type="target",
+            resource_id=target_str,
+            actor_user_id=current_user.id,
+            details={"target_url": target_str},
+        )
+
+        # 3. Execute Technology Stack Probe
+        fingerprinter = TechFingerprinter()
+        tech_result = await fingerprinter.probe_and_fingerprint(target_str)
+
+        # 4. Map Domain TechnologyScanResult to Response DTOs
+        tech_dtos = [
+            DetectedTechnologyDTO(
+                name=t.name,
+                category=t.category.value,
+                version=t.version,
+                confidence=t.confidence,
+                matched_by=t.matched_by,
+            )
+            for t in tech_result.detected_technologies
+        ]
+
+        sec_header_dtos = [
+            SecurityHeaderDTO(
+                header_name=sh.header_name,
+                present=sh.present,
+                value=sh.value,
+            )
+            for sh in tech_result.security_headers
+        ]
+
+        # 5. Record Technology Scan Completed Audit Event
+        await self.audit_service.record_event(
+            organization_id=current_user.organization_id,
+            action="technology.scan_completed",
+            resource_type="target",
+            resource_id=target_str,
+            actor_user_id=current_user.id,
+            details={
+                "target_url": target_str,
+                "status_code": tech_result.status_code,
+                "technologies_found": len(tech_dtos),
+                "duration_seconds": tech_result.duration_seconds,
+            },
+        )
+
+        return TechnologyScanResponse(
+            target_url=tech_result.target_url,
+            status_code=tech_result.status_code,
+            detected_technologies=tech_dtos,
+            security_headers=sec_header_dtos,
+            duration_seconds=tech_result.duration_seconds,
         )

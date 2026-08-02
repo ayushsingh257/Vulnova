@@ -10,6 +10,8 @@ from app.application.discovery.dto import (
     CrawlResponse,
     SubdomainScanRequest,
     SubdomainScanResponse,
+    TechnologyScanRequest,
+    TechnologyScanResponse,
 )
 from app.application.discovery.services import DiscoveryService
 from app.infrastructure.database.models.user import UserModel
@@ -57,3 +59,23 @@ async def discover_subdomains(
     """
     service = DiscoveryService(session)
     return await service.discover_subdomains(req, current_user)
+
+
+@router.post(
+    "/technology-scan",
+    response_model=TechnologyScanResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("targets:create"))],
+)
+async def discover_technologies(
+    req: TechnologyScanRequest,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> TechnologyScanResponse:
+    """Execute a Technology Stack Fingerprinting scan on a target web asset.
+
+    Identifies web servers, frontend frameworks, backend frameworks, CMS platforms,
+    and audits security header compliance. Requires authentication and 'targets:create' RBAC permission.
+    """
+    service = DiscoveryService(session)
+    return await service.discover_technologies(req, current_user)

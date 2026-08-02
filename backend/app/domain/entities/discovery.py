@@ -145,3 +145,48 @@ class SubdomainScanResult:
     total_subdomains: int
     discovered_subdomains: List[DiscoveredSubdomain] = field(default_factory=list)
     duration_seconds: float = 0.0
+
+
+class TechCategory(str, Enum):
+    """Technology classification categories."""
+
+    WEB_SERVER = "WEB_SERVER"
+    FRONTEND_FRAMEWORK = "FRONTEND_FRAMEWORK"
+    BACKEND_FRAMEWORK = "BACKEND_FRAMEWORK"
+    CMS = "CMS"
+    JAVASCRIPT_LIBRARY = "JAVASCRIPT_LIBRARY"
+    SECURITY_HEADER = "SECURITY_HEADER"
+    CDN_PROXY = "CDN_PROXY"
+    DATABASE = "DATABASE"
+    ANALYTICS = "ANALYTICS"
+
+
+@dataclass
+class DetectedTechnology:
+    """Technology fingerprint finding entity."""
+
+    name: str
+    category: TechCategory
+    version: Optional[str] = None
+    confidence: int = 100
+    matched_by: List[str] = field(default_factory=list)
+
+
+@dataclass
+class SecurityHeaderStatus:
+    """Audit status for security headers."""
+
+    header_name: str
+    present: bool
+    value: Optional[str] = None
+
+
+@dataclass
+class TechnologyScanResult:
+    """Aggregate result from a technology stack fingerprinting scan."""
+
+    target_url: str
+    status_code: Optional[int] = None
+    detected_technologies: List[DetectedTechnology] = field(default_factory=list)
+    security_headers: List[SecurityHeaderStatus] = field(default_factory=list)
+    duration_seconds: float = 0.0
