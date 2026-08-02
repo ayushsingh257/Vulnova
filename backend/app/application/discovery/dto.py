@@ -1,6 +1,6 @@
 """Discovery Data Transfer Objects (DTOs) for Application Services and API Routers."""
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -163,4 +163,55 @@ class TechnologyScanResponse(BaseModel):
     status_code: Optional[int] = None
     detected_technologies: List[DetectedTechnologyDTO] = Field(default_factory=list)
     security_headers: List[SecurityHeaderDTO] = Field(default_factory=list)
+    duration_seconds: float
+
+
+class BuildAssetGraphRequest(BaseModel):
+    """Payload for building or correlation scanning an Attack Surface Asset Graph."""
+
+    target_domain: str = Field(
+        description="Target base domain (e.g. 'example.com') to map into Attack Surface Graph"
+    )
+    include_crawls: bool = Field(
+        default=True,
+        description="True to run static/dynamic web crawling for target domain",
+    )
+    include_dns: bool = Field(
+        default=True,
+        description="True to run subdomain discovery & DNS record resolution",
+    )
+    include_tech: bool = Field(
+        default=True,
+        description="True to run technology stack fingerprinting",
+    )
+
+
+class AssetNodeDTO(BaseModel):
+    """DTO representing a node in the Attack Surface Graph."""
+
+    id: str
+    node_type: str
+    name: str
+    value: str
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AssetRelationshipDTO(BaseModel):
+    """DTO representing an edge connecting two nodes in Attack Surface Graph."""
+
+    id: str
+    source_node_id: str
+    target_node_id: str
+    relationship_type: str
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AssetGraphResponse(BaseModel):
+    """Response model for Attack Surface Asset Graph build queries."""
+
+    target_domain: str
+    total_nodes: int
+    total_relationships: int
+    nodes: List[AssetNodeDTO]
+    relationships: List[AssetRelationshipDTO]
     duration_seconds: float

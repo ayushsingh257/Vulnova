@@ -1,6 +1,10 @@
 """Vulnova Infrastructure Database ORM Models Package."""
 
 from app.infrastructure.database.models.api_key import APIKeyModel
+from app.infrastructure.database.models.asset_graph import (
+    AssetNodeModel,
+    AssetRelationshipModel,
+)
 from app.infrastructure.database.models.audit_log import AuditLogModel
 from app.infrastructure.database.models.organization import OrganizationModel
 from app.infrastructure.database.models.refresh_token import RefreshTokenModel
@@ -12,4 +16,6 @@ __all__ = [
     "RefreshTokenModel",
     "APIKeyModel",
     "AuditLogModel",
+    "AssetNodeModel",
+    "AssetRelationshipModel",
 ]

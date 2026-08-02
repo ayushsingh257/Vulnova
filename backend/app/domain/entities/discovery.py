@@ -190,3 +190,60 @@ class TechnologyScanResult:
     detected_technologies: List[DetectedTechnology] = field(default_factory=list)
     security_headers: List[SecurityHeaderStatus] = field(default_factory=list)
     duration_seconds: float = 0.0
+
+
+class AssetNodeType(str, Enum):
+    """Types of nodes in Vulnova Attack Surface Asset Graph."""
+
+    ORGANIZATION = "ORGANIZATION"
+    TARGET_DOMAIN = "TARGET_DOMAIN"
+    SUBDOMAIN = "SUBDOMAIN"
+    IP_ADDRESS = "IP_ADDRESS"
+    URL_ENDPOINT = "URL_ENDPOINT"
+    FORM = "FORM"
+    SCRIPT = "SCRIPT"
+    TECHNOLOGY = "TECHNOLOGY"
+
+
+class RelationshipType(str, Enum):
+    """Types of relationships connecting nodes in Attack Surface Asset Graph."""
+
+    BELONGS_TO = "BELONGS_TO"
+    RESOLVES_TO = "RESOLVES_TO"
+    RUNS_TECH = "RUNS_TECH"
+    HAS_ENDPOINT = "HAS_ENDPOINT"
+    DISCOVERED_FROM = "DISCOVERED_FROM"
+
+
+@dataclass
+class AssetNode:
+    """Pure domain model representing a node in the Attack Surface Graph."""
+
+    id: UUID = field(default_factory=uuid4)
+    organization_id: UUID = field(default_factory=uuid4)
+    node_type: AssetNodeType = AssetNodeType.TARGET_DOMAIN
+    name: str = ""
+    value: str = ""
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class AssetRelationship:
+    """Pure domain model representing a edge connecting two asset nodes."""
+
+    id: UUID = field(default_factory=uuid4)
+    organization_id: UUID = field(default_factory=uuid4)
+    source_node_id: UUID = field(default_factory=uuid4)
+    target_node_id: UUID = field(default_factory=uuid4)
+    relationship_type: RelationshipType = RelationshipType.BELONGS_TO
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class AssetGraph:
+    """Aggregate domain model representing an Attack Surface Asset Graph."""
+
+    target_domain: str
+    nodes: List[AssetNode] = field(default_factory=list)
+    relationships: List[AssetRelationship] = field(default_factory=list)
+    duration_seconds: float = 0.0
