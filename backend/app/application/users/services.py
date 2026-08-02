@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.audit_logs.services import AuditLogService
 from app.application.users.dto import (
     InviteUserRequest,
     UpdateUserProfileRequest,
@@ -33,6 +34,7 @@ class UserService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.user_repo = UserRepository(session)
+        self.audit_service = AuditLogService(session)
 
     async def update_profile(
         self, current_user: UserModel, req: UpdateUserProfileRequest
@@ -41,6 +43,14 @@ class UserService:
         current_user.full_name = req.full_name
         updated_user = await self.user_repo.update(current_user)
         logger.info("user.profile_updated", user_id=str(current_user.id))
+        await self.audit_service.record_event(
+            organization_id=current_user.organization_id,
+            action="user.profile_updated",
+            resource_type="user",
+            resource_id=str(current_user.id),
+            actor_user_id=current_user.id,
+            details={"full_name": req.full_name},
+        )
         return UserDetailResponse.model_validate(updated_user)
 
     async def list_organization_users(self, organization_id: UUID) -> UserListResponse:
@@ -99,6 +109,14 @@ class UserService:
             assigned_role=target_role.name,
             created_by=str(current_user.id),
         )
+        await self.audit_service.record_event(
+            organization_id=current_user.organization_id,
+            action="user.created",
+            resource_type="user",
+            resource_id=str(saved_user.id),
+            actor_user_id=current_user.id,
+            details={"email": saved_user.email, "role": target_role.name},
+        )
         return UserDetailResponse.model_validate(saved_user)
 
     async def update_user_role(
@@ -141,6 +159,14 @@ class UserService:
             new_role=new_role.name,
             updated_by=str(current_user.id),
         )
+        await self.audit_service.record_event(
+            organization_id=current_user.organization_id,
+            action="user.role_updated",
+            resource_type="user",
+            resource_id=str(target_user_id),
+            actor_user_id=current_user.id,
+            details={"old_role": old_role.name, "new_role": new_role.name},
+        )
         return UserDetailResponse.model_validate(updated_user)
 
     async def update_user_status(
@@ -181,6 +207,14 @@ class UserService:
             is_active=req.is_active,
             updated_by=str(current_user.id),
         )
+        await self.audit_service.record_event(
+            organization_id=current_user.organization_id,
+            action="user.status_updated",
+            resource_type="user",
+            resource_id=str(target_user_id),
+            actor_user_id=current_user.id,
+            details={"is_active": req.is_active},
+        )
         return UserDetailResponse.model_validate(updated_user)
 
     async def remove_user(self, target_user_id: UUID, current_user: UserModel) -> None:
@@ -220,4 +254,12 @@ class UserService:
             "user.deleted",
             target_user_id=str(target_user_id),
             removed_by=str(current_user.id),
+        )
+        await self.audit_service.record_event(
+            organization_id=current_user.organization_id,
+            action="user.deleted",
+            resource_type="user",
+            resource_id=str(target_user_id),
+            actor_user_id=current_user.id,
+            details={"removed_user_id": str(target_user_id)},
         )

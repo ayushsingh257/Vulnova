@@ -11,6 +11,7 @@ from app.application.api_keys.dto import (
     APIKeyResponse,
     CreateAPIKeyRequest,
 )
+from app.application.audit_logs.services import AuditLogService
 from app.core.exceptions import ResourceNotFoundException, UnauthorizedException
 from app.core.logging import get_logger
 from app.infrastructure.database.models.api_key import APIKeyModel
@@ -29,6 +30,7 @@ class APIKeyService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.repo = APIKeyRepository(session)
+        self.audit_service = AuditLogService(session)
 
     async def create_api_key(
         self, req: CreateAPIKeyRequest, user: UserModel
@@ -59,7 +61,6 @@ class APIKeyService:
 
         key_model = await self.repo.create(key_model)
 
-        # Structured event logging (Prepared for future AuditLoggerService integration)
         logger.info(
             "api_key.created",
             api_key_id=str(key_model.id),
@@ -68,6 +69,14 @@ class APIKeyService:
             key_prefix=key_prefix,
             name=req.name,
             scopes=req.scopes,
+        )
+        await self.audit_service.record_event(
+            organization_id=user.organization_id,
+            action="api_key.created",
+            resource_type="api_key",
+            resource_id=str(key_model.id),
+            actor_user_id=user.id,
+            details={"name": req.name, "key_prefix": key_prefix, "scopes": req.scopes},
         )
 
         return APIKeyCreateResponse(
@@ -181,4 +190,12 @@ class APIKeyService:
             api_key_id=str(key_id),
             organization_id=str(organization_id),
             revoked_by_user_id=str(current_user_id),
+        )
+        await self.audit_service.record_event(
+            organization_id=organization_id,
+            action="api_key.revoked",
+            resource_type="api_key",
+            resource_id=str(key_id),
+            actor_user_id=current_user_id,
+            details={"revoked_key_id": str(key_id)},
         )

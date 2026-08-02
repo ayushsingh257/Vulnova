@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.audit_logs.services import AuditLogService
 from app.application.auth.dto import (
     RegisterRequest,
     TokenResponse,
@@ -43,6 +44,7 @@ class AuthService:
         self.user_repo = UserRepository(session)
         self.org_repo = OrganizationRepository(session)
         self.refresh_repo = RefreshTokenRepository(session)
+        self.audit_service = AuditLogService(session)
 
     async def register(
         self, req: RegisterRequest
@@ -100,6 +102,14 @@ class AuthService:
             org_id=str(org.id),
             org_slug=org.slug,
         )
+        await self.audit_service.record_event(
+            organization_id=org.id,
+            action="auth.registered",
+            resource_type="organization",
+            resource_id=str(org.id),
+            actor_user_id=user.id,
+            details={"email": user.email, "org_name": org.name},
+        )
         return user, org
 
     async def login(self, email: str, password: str) -> Tuple[TokenResponse, str]:
@@ -114,10 +124,26 @@ class AuthService:
         user = await self.user_repo.get_by_email(email, load_organization=True)
         if not user or not verify_password(password, user.password_hash):
             logger.warning("login_failed_invalid_credentials", email=email)
+            if user:
+                await self.audit_service.record_event(
+                    organization_id=user.organization_id,
+                    action="auth.login_failed",
+                    resource_type="user",
+                    resource_id=str(user.id),
+                    details={"email": email, "reason": "invalid_credentials"},
+                )
             raise UnauthorizedException("Invalid email or password.")
 
         if not user.is_active:
             logger.warning("login_failed_inactive_user", user_id=str(user.id))
+            await self.audit_service.record_event(
+                organization_id=user.organization_id,
+                action="auth.login_failed",
+                resource_type="user",
+                resource_id=str(user.id),
+                actor_user_id=user.id,
+                details={"email": email, "reason": "user_inactive"},
+            )
             raise UnauthorizedException("User account is inactive.")
 
         # Issue Access Token
@@ -144,6 +170,15 @@ class AuthService:
         )
         await self.refresh_repo.create(refresh_model)
         await self.user_repo.update_last_login(user.id)
+
+        await self.audit_service.record_event(
+            organization_id=user.organization_id,
+            action="auth.login_success",
+            resource_type="user",
+            resource_id=str(user.id),
+            actor_user_id=user.id,
+            details={"email": user.email, "role": user.role},
+        )
 
         user_response = UserResponse(
             id=user.id,

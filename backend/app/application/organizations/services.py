@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.audit_logs.services import AuditLogService
 from app.application.organizations.dto import (
     OrganizationDetailResponse,
     UpdateOrganizationRequest,
@@ -24,6 +25,7 @@ class OrganizationService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.org_repo = OrganizationRepository(session)
+        self.audit_service = AuditLogService(session)
 
     async def get_organization(
         self, organization_id: UUID
@@ -70,6 +72,14 @@ class OrganizationService:
             organization_id=str(organization_id),
             updated_by=str(current_user.id),
         )
+        await self.audit_service.record_event(
+            organization_id=organization_id,
+            action="organization.updated",
+            resource_type="organization",
+            resource_id=str(organization_id),
+            actor_user_id=current_user.id,
+            details={"name": updated_org.name, "plan_tier": updated_org.plan_tier},
+        )
 
         return OrganizationDetailResponse(
             id=updated_org.id,
@@ -98,4 +108,12 @@ class OrganizationService:
             "organization.deactivated",
             organization_id=str(organization_id),
             deactivated_by=str(current_user.id),
+        )
+        await self.audit_service.record_event(
+            organization_id=organization_id,
+            action="organization.deactivated",
+            resource_type="organization",
+            resource_id=str(organization_id),
+            actor_user_id=current_user.id,
+            details={"is_active": False},
         )
