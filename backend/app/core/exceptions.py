@@ -82,3 +82,19 @@ class ValidationException(VulnovaException):
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             details=details,
         )
+
+
+class ConflictException(VulnovaException):
+    """Exception raised when a resource conflict occurs (e.g. duplicate resource)."""
+
+    def __init__(
+        self,
+        message: str = "Resource conflict occurred",
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            code="RESOURCE_CONFLICT",
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
