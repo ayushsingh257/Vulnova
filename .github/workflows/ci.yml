@@ -31,10 +31,13 @@ jobs:
           test -f DEVSECOPS.md
           test -f DEPLOYMENT.md
           test -f STYLE_GUIDE.md
-          test -f DECISIONS.md
+          test -f TECH_STACK.md
+          test -f THREAT_MODEL.md
           test -f CHANGELOG.md
           test -f CONTRIBUTING.md
           test -f DEVELOPMENT.md
+          test -f docs/audits/ERA_2_COMPLETION_AUDIT.md
+          test -f docs/audits/ERA_3_COMPLETION_AUDIT.md
           echo "All baseline documentation artifacts present."
 
   docker-validation:
