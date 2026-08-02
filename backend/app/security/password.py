@@ -1,7 +1,5 @@
 """Vulnova Argon2id Password Hashing & Verification Adapter."""
 
-from typing import cast
-
 from passlib.context import CryptContext
 
 # Configure Passlib with Argon2id algorithm
@@ -17,7 +15,7 @@ def hash_password(password: str) -> str:
     Returns:
         The Argon2id hashed password string.
     """
-    return cast(str, pwd_context.hash(password))
+    return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -30,4 +28,4 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True if password matches hash, False otherwise.
     """
-    return cast(bool, pwd_context.verify(plain_password, hashed_password))
+    return pwd_context.verify(plain_password, hashed_password)

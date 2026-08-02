@@ -68,6 +68,8 @@ class APIKeyRepository:
     async def delete(self, key_id: UUID, organization_id: UUID) -> bool:
         """Revoke / delete an API key belonging to an organization.
 
+        Uses DELETE ... RETURNING for type-safe SQLAlchemy 2.0 compatibility.
+
         Returns:
             True if key was deleted, False if key was not found.
         """
@@ -75,6 +77,8 @@ class APIKeyRepository:
             delete(APIKeyModel)
             .where(APIKeyModel.id == key_id)
             .where(APIKeyModel.organization_id == organization_id)
+            .returning(APIKeyModel.id)
         )
         result = await self.session.execute(stmt)
-        return result.rowcount > 0
+        deleted_id = result.scalar_one_or_none()
+        return deleted_id is not None
