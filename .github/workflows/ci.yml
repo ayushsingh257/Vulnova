@@ -74,7 +74,7 @@ jobs:
 
       - name: Run Mypy Type Checker
         working-directory: backend
-        run: mypy app --config-file pyproject.toml --ignore-missing-imports
+        run: mypy app --ignore-missing-imports
 
       - name: Run Pytest Suite
         working-directory: backend

@@ -5,7 +5,7 @@ These dependencies run AFTER authentication (get_current_user) and enforce
 authorization checks before endpoint handlers execute.
 """
 
-from typing import Callable
+from typing import Any, Callable
 from uuid import UUID
 
 from fastapi import Depends
@@ -41,7 +41,7 @@ def _resolve_user_role(user: UserModel) -> Role:
         return Role.VIEWER
 
 
-def require_role(minimum_role: Role) -> Callable:  # type: ignore[type-arg]
+def require_role(minimum_role: Role) -> Callable[..., Any]:
     """FastAPI dependency factory that enforces a minimum role level.
 
     Usage:
@@ -83,7 +83,7 @@ def require_role(minimum_role: Role) -> Callable:  # type: ignore[type-arg]
     return _check_role
 
 
-def require_permission(permission: str) -> Callable:  # type: ignore[type-arg]
+def require_permission(permission: str) -> Callable[..., Any]:
     """FastAPI dependency factory that enforces a specific permission.
 
     Resolves the permission string to its minimum required role via the
