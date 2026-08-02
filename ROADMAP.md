@@ -429,118 +429,161 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Infrastructure and cloud security plugins functional; exposed SSH/RDP/DB ports detected; TLS certificate expiration and weak ciphers audited; AWS S3/Azure Blob/IMDS cloud exposure flagged; pytest (134 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`7a3d13bc`).
 - **Testing Requirements**: Non-blocking TCP port probe tests, SSL socket certificate expiration checks, AWS S3 list bucket reflection tests, 10-plugin pipeline orchestration integration.
 
-### Phase 4.5: SSRF & Request Forgery Tester
-- **Objective**: Server-Side Request Forgery testing using callback listeners (out-of-band detection).
-- **Deliverables**: SSRF assessment plugin with callback interaction hook.
-- **Dependencies**: Phase 4.1.
-- **Completion Criteria**: Detects internal network access and out-of-band HTTP/DNS hits.
-- **Testing Requirements**: Mock out-of-band listener test.
+### Phase 4.5: Finding Normalization & Risk Intelligence Engine
+- **Objective**: Build the core vulnerability finding normalization and risk calculation engine supporting CVSS v3.1/v4 vectors, EPSS (Exploit Prediction Scoring System) probability mapping, CWE/CVE/OWASP Top 10 taxonomy alignment, finding deduplication, and asset criticality risk weighting.
+- **Deliverables**:
+  - `RiskIntelligenceEngine` (`app/application/assessment/risk_engine.py`) calculating composite risk scores (0–100) based on CVSS severity, EPSS exploit likelihood, and asset criticality weighting.
+  - `FindingDeduplicator` (`app/application/assessment/deduplication.py`) merging duplicate findings across asset nodes, domains, and scan runs.
+  - Standardized risk metadata DTOs (`CVSSScore`, `EPSSScore`, `RiskMetrics`, `BusinessImpact`).
+- **Dependencies**: Phase 4.1, Phase 4.2, Phase 4.3 & Phase 4.4.
+- **Completion Criteria**: Findings enriched with CVSS v3.1/v4 vectors, EPSS scores, OWASP mappings, and deduplicated risk scores; unit tests pass cleanly.
+- **Testing Requirements**: Risk calculation matrix tests, EPSS mapping accuracy tests, deduplication merge tests.
 
-### Phase 4.6: Authentication, Session & JWT Analyzer
-- **Objective**: Test for weak JWT algorithms, missing signature checks, expired sessions, and missing flags.
-- **Deliverables**: Auth & JWT security assessment plugin.
-- **Dependencies**: Phase 4.1.
-- **Completion Criteria**: Flags unverified JWT signatures, weak secrets, and insecure session cookies.
-- **Testing Requirements**: JWT weakness verification test suite.
+### Phase 4.6: Multi-Modal Evidence Collection & Capture Engine
+- **Objective**: Build an automated evidence collection engine capturing rich contextual proof (Playwright headless DOM snapshots, full HTTP request/response text dumps, cookie/header timelines, and visual screenshots) for all discovered security findings.
+- **Deliverables**:
+  - `EvidenceCollectionEngine` (`app/infrastructure/assessment/evidence_engine.py`) integrating Playwright DOM/screenshot capture and HTTP network exchange recording.
+  - `EvidenceArtifactStorage` (`app/infrastructure/storage/evidence_store.py`) storing encrypted evidence payloads and linking `evidence_json` to `SecurityFindingModel`.
+  - Visual evidence rendering helpers for finding drawers and reporting.
+- **Dependencies**: Phase 4.5, Phase 3.2.
+- **Completion Criteria**: Findings contain rich visual screenshots, raw HTTP request/response payloads, and DOM snapshots; evidence artifacts persisted securely.
+- **Testing Requirements**: Screenshot capture unit tests, HTTP Exchange dump tests, evidence storage security verification.
 
-### Phase 4.7: Broken Object Level Authorization (IDOR) Checker
-- **Objective**: Test for unauthorized object reference manipulation across user session contexts.
-- **Deliverables**: Dual-token IDOR assessment plugin.
-- **Dependencies**: Phase 4.1.
-- **Completion Criteria**: Detects resource access leakage when swapping user tokens.
-- **Testing Requirements**: Dual-user session IDOR test suite.
+### Phase 4.7: Enterprise Scan Profile & Execution Policy Engine
+- **Objective**: Create pre-configured enterprise scan profiles (Quick Scan, Web Scan, API Scan, Infrastructure Scan, OWASP Top 10, OWASP API Top 10, Full Assessment, Authenticated Scan, Passive Scan, Custom Scan) and a centralized execution policy engine enforcing rate limits, concurrency caps, scope boundaries, authentication injection, and safety controls.
+- **Deliverables**:
+  - `ScanProfileRegistry` (`app/application/assessment/scan_profiles.py`) mapping enterprise profiles to required plugin subsets and discovery depth.
+  - `ScanPolicyEngine` (`app/infrastructure/assessment/policy_engine.py`) enforcing rate limits, `robots.txt` compliance, max requests, include/exclude path rules, and emergency stop on critical findings.
+  - DTOs and API endpoints for profile selection and custom policy configuration.
+- **Dependencies**: Phase 4.5 & Phase 4.6.
+- **Completion Criteria**: Users can select pre-built enterprise scan profiles or configure custom execution policies; rate limits and scope boundaries strictly enforced.
+- **Testing Requirements**: Scan profile plugin resolution tests, policy rate limiting unit tests, scope exclusion enforcement tests.
 
-### Phase 4.8: Rate Limiting & Sensitive Data Exposure Checks
-- **Objective**: Inspect endpoint rate limits and detect exposed PII, API keys, and credentials in responses.
-- **Deliverables**: Rate limit & data exposure assessment plugin.
-- **Dependencies**: Phase 4.1.
-- **Completion Criteria**: Identifies unthrottled login endpoints and leaked secrets in response body.
-- **Testing Requirements**: Secret detection regex & throttling test suite.
+### Phase 4.8: Multi-Source Finding Correlation & Asset Inventory Engine
+- **Objective**: Correlate crawler endpoints, SPA rendered DOM nodes, DNS intelligence, technology stack fingerprints, Asset Graph topology, and 10 production security assessment plugins into a unified, normalized enterprise asset and vulnerability intelligence model.
+- **Deliverables**:
+  - `AssessmentCorrelationEngine` (`app/application/assessment/correlation_engine.py`) synthesizing multi-source discovery and assessment findings into a single unified asset inventory.
+  - `AssetInventoryRepository` (`app/infrastructure/database/repositories/asset_inventory_repository.py`) storing continuous asset posture and vulnerability associations.
+  - API router endpoints `/api/v1/assets/inventory` for querying consolidated tenant asset surface.
+- **Dependencies**: Phase 4.5 – Phase 4.7, Phase 3.5.
+- **Completion Criteria**: Discovered assets and security findings correlated without duplication; unified asset inventory queryable via API.
+- **Testing Requirements**: Multi-source correlation integration tests, asset graph finding linkage verification, tenant boundary isolation tests.
+
+### Phase 4.9: Attack Surface Trend & Continuous Monitoring Engine
+- **Objective**: Implement continuous attack surface tracking, historical technology change detection, new subdomain/open-port monitoring, asset health timelines, and historical risk trend analytics.
+- **Deliverables**:
+  - `ContinuousMonitoringEngine` (`app/application/assessment/continuous_monitoring.py`) tracking delta changes between scan runs (new subdomains, open port shifts, tech stack changes).
+  - `AssetTrendRepository` (`app/infrastructure/database/repositories/asset_trend_repository.py`) storing historical posture snapshots and risk metrics over time.
+  - API endpoints `/api/v1/assets/trends` returning historical risk trajectory and change logs.
+- **Dependencies**: Phase 4.8.
+- **Completion Criteria**: Asset history, technology changes, and risk trend metrics tracked over time; delta change detection active.
+- **Testing Requirements**: Trend snapshot calculation tests, delta change detection unit tests, historical data retention tests.
 
 ---
 
-## 🤖 Era 5: AI Security Analyst Engine & Vulnerability Intelligence
+## 🤖 Era 5: Enterprise AI Security Analyst & Copilot Engine
 
-### Phase 5.1: LLM Integration Gateway & Provider Abstraction
-- **Objective**: Build multi-provider LLM gateway supporting OpenAI, Anthropic, and local Ollama models.
-- **Deliverables**: `backend/app/services/ai/gateway.py` with fallback and retry logic.
+### Phase 5.1: Multi-Provider LLM Gateway & Prompt Orchestrator
+- **Objective**: Build a resilient multi-provider LLM gateway supporting OpenAI, Anthropic, and local Ollama models with prompt engineering orchestration, automatic fallback, retry logic, cost tracking, and dynamic model routing.
+- **Deliverables**:
+  - `LLMGateway` (`app/infrastructure/ai/llm_gateway.py`) implementing provider adapters (OpenAI, Anthropic, Ollama).
+  - `PromptOrchestrator` (`app/infrastructure/ai/prompt_orchestrator.py`) managing template rendering, context truncation, token cost calculation, and failover routing.
 - **Dependencies**: Era 4.
-- **Completion Criteria**: Sends prompts to configured LLM providers with automatic retry on failure.
-- **Testing Requirements**: Provider mock unit tests.
+- **Completion Criteria**: Gateway routes prompts seamlessly across providers with automatic retry, cost tracking, and fallback on rate limits/failures.
+- **Testing Requirements**: LLM provider adapter mock tests, failover routing unit tests, cost calculation tests.
 
-### Phase 5.2: Vulnerability Context & Business Impact Explainer
-- **Objective**: Prompt engineering pipeline to synthesize technical impact, business risk, and CVSS 4.0 vectors.
-- **Deliverables**: AI vulnerability analysis service.
-- **Dependencies**: Phase 5.1.
-- **Completion Criteria**: Produces detailed vulnerability explanations personalized to target application domain.
-- **Testing Requirements**: Test explanation quality against standard CVE dataset.
+### Phase 5.2: AI Finding Explainer & Impact Analysis Engine
+- **Objective**: Build an AI analysis engine that consumes normalized findings, evidence dumps, and asset graph context to generate clear business impact explanations, technical risk descriptions, attack prerequisites, and confidence reasoning.
+- **Deliverables**:
+  - `AIFindingExplainerService` (`app/application/ai/explainer_service.py`) generating human-readable technical and executive impact analyses.
+  - AI Analysis DTOs (`AIFindingExplanation`, `BusinessImpactSummary`, `AttackPrerequisites`).
+- **Dependencies**: Phase 5.1, Phase 4.5, Phase 4.6.
+- **Completion Criteria**: Synthesizes clear business impact, technical risk, and CVSS 4.0 vectors tailored to target application domain.
+- **Testing Requirements**: Impact analysis prompt validation tests, explanation schema compliance tests.
 
-### Phase 5.3: Attack Path & Exploit Scenario Generator
-- **Objective**: Generate realistic multi-step attack scenarios based on discovered vulnerability combinations.
-- **Deliverables**: Attack path synthesizer module.
+### Phase 5.3: Automated Attack Path & Kill Chain Visualization Engine
+- **Objective**: Synthesize discovered vulnerabilities, technology stack fingerprints, and Asset Graph relationship edges to construct multi-step attack scenarios, MITRE ATT&CK kill chain progressions, privilege escalation paths, and lateral movement vectors.
+- **Deliverables**:
+  - `AttackPathSynthesizer` (`app/application/ai/attack_path_service.py`) evaluating graph edges and findings to build structured attack trees.
+  - Attack path DTOs and Mermaid/JSON visualization renderers.
+- **Dependencies**: Phase 5.2, Phase 3.5.
+- **Completion Criteria**: Generates structured, multi-step attack chains and kill chain visual representations from asset graph topology.
+- **Testing Requirements**: Attack tree synthesis unit tests, kill chain mapping verification.
+
+### Phase 5.4: Contextual AI Remediation & Fix Generator Engine
+- **Objective**: Generate precise, production-ready code patches, framework configuration fixes (Nginx, Apache, FastAPI, Express, Django), and Infrastructure-as-Code (Terraform, Docker) snippets addressing the root causes of findings.
+- **Deliverables**:
+  - `AIRemediationEngine` (`app/application/ai/remediation_service.py`) producing syntactically correct code diffs and configuration patches.
+  - Patch validation and formatting helpers.
 - **Dependencies**: Phase 5.2.
-- **Completion Criteria**: Visualizes attack progression from initial access to data exfiltration.
-- **Testing Requirements**: Verification of synthesized attack trees.
+- **Completion Criteria**: Emits syntactically valid code diffs and configuration fixes for Python, JS, Go, Java, Nginx, and Docker.
+- **Testing Requirements**: Code remediation generation tests, patch syntax validation.
 
-### Phase 5.4: Contextual Remediation & Secure Code Fix Engine
-- **Objective**: Produce exact code patches and configuration snippets (Python, JS, Go, Java, Nginx).
-- **Deliverables**: AI code remediation generator.
-- **Dependencies**: Phase 5.2.
-- **Completion Criteria**: Emits syntactically valid code patches addressing the root cause.
-- **Testing Requirements**: Code generation validation tests.
+### Phase 5.5: AI False-Positive Reduction & Noise Filtering Engine
+- **Objective**: Build an AI correlation engine analyzing response bodies, execution evidence, technology signatures, and historical scan findings to assign confidence scores and filter out scanner false positives before ticket creation.
+- **Deliverables**:
+  - `FalsePositiveFilterEngine` (`app/application/ai/false_positive_filter.py`) calculating confidence ratings and flagging low-confidence scanner noise.
+  - Filtering policy configuration and audit records.
+- **Dependencies**: Phase 5.2, Phase 4.6.
+- **Completion Criteria**: Assigns confidence ratings (HIGH, MEDIUM, LOW) and filters out non-exploitable scanner noise prior to ticketing.
+- **Testing Requirements**: False-positive benchmark classification tests, noise reduction verification.
 
-### Phase 5.5: False-Positive Reduction & Noise Filtering Engine
-- **Objective**: AI correlation engine analyzing response bodies, execution contexts, and target signatures.
-- **Deliverables**: False-positive scoring module.
-- **Dependencies**: Phase 5.2.
-- **Completion Criteria**: Assigns confidence scores and filters scanner noise prior to ticketing.
-- **Testing Requirements**: Verification against labeled false-positive benchmark datasets.
-
-### Phase 5.6: Vector Database (pgvector) RAG Knowledge Base
-- **Objective**: Index OWASP Cheat Sheets, CWE databases, and security advisories into pgvector.
-- **Deliverables**: Vector store embedding pipeline & RAG retrieval service.
+### Phase 5.6: Security Knowledge Base & RAG Vector Engine (pgvector)
+- **Objective**: Build a Retrieval-Augmented Generation (RAG) knowledge base indexing OWASP Cheat Sheets, CWE definitions, CAPEC attack patterns, CVE/NVD databases, vendor advisories, and internal documentation into PostgreSQL `pgvector`.
+- **Deliverables**:
+  - `VectorKnowledgeStore` (`app/infrastructure/ai/vector_store.py`) implementing embedding generation and semantic similarity search via `pgvector`.
+  - Knowledge base ingest pipeline for security advisories and standards.
 - **Dependencies**: Phase 5.1, Phase 1.6.
-- **Completion Criteria**: Queries retrieve relevant security context to augment LLM prompts.
-- **Testing Requirements**: RAG recall and similarity evaluation tests.
+- **Completion Criteria**: Semantic search retrieves relevant security standards and advisories to augment LLM prompts.
+- **Testing Requirements**: Vector retrieval accuracy tests, RAG similarity search benchmark tests.
+
+### Phase 5.7: Enterprise AI Security Copilot & Interactive Assistant
+- **Objective**: Implement an interactive conversational AI Security Copilot capable of answering natural language security queries, explaining JWT/SQLi findings, rendering attack chains, generating remediation code, comparing scan runs, summarizing organizational risk, and drafting executive reports or Jira tickets.
+- **Deliverables**:
+  - `SecurityCopilotService` (`app/application/ai/copilot_service.py`) handling multi-turn conversational context, tool calls, and query dispatching.
+  - API endpoint `/api/v1/ai/copilot/chat` with WebSocket streaming support.
+- **Dependencies**: Phase 5.1 – Phase 5.6.
+- **Completion Criteria**: Interactive copilot responds to complex security queries with contextual reasoning, attack chain visualizations, and remediation patches.
+- **Testing Requirements**: Copilot intent routing unit tests, multi-turn conversation context tests, streaming API tests.
 
 ---
 
-## ⚡ Era 6: Scanning Orchestration & Isolated Worker Sandbox
+## ⚡ Era 6: Distributed Scanning Orchestration & Worker Sandbox
 
-### Phase 6.1: Celery & Isolated Worker Sandbox Cluster
-- **Objective**: Deploy unprivileged scanner worker containers with resource caps (1 vCPU, 512MB RAM) and egress filtering.
-- **Deliverables**: `backend/app/tasks/scan_tasks.py`, Docker worker sandbox configuration.
+### Phase 6.1: Celery & Distributed Isolated Worker Sandbox Cluster
+- **Objective**: Deploy distributed Celery worker clusters running unprivileged scanner container sandboxes with strict resource caps (1 vCPU, 512MB RAM), priority queues, and network egress filtering.
+- **Deliverables**: `backend/app/tasks/scan_tasks.py`, Celery worker sandbox configuration, Redis queue broker integration.
 - **Dependencies**: Era 4, Era 5.
-- **Completion Criteria**: Workers execute tasks in isolated sandbox environments.
-- **Testing Requirements**: Sandbox container boundary verification test.
+- **Completion Criteria**: Workers execute tasks in isolated sandbox container environments with distributed queue management.
+- **Testing Requirements**: Sandbox container boundary verification test, Celery task queue integration tests.
 
 ### Phase 6.2: Target Scan Configuration & Authorized Assessment Contract
 - **Objective**: Scan profile selection and mandatory "Authorized Security Assessment Confirmation" verification.
-- **Deliverables**: Scan creation router with legal scope declaration validation.
-- **Dependencies**: Phase 6.1.
-- **Completion Criteria**: Scans reject execution if user confirmation declaration is missing.
-- **Testing Requirements**: Legal authorization declaration validation tests.
+- **Deliverables**: Scan creation router with legal scope declaration validation and policy engine checks.
+- **Dependencies**: Phase 6.1, Phase 4.7.
+- **Completion Criteria**: Scans reject execution if user authorization declaration is missing or out-of-scope.
+- **Testing Requirements**: Legal authorization declaration validation tests, policy check tests.
 
-### Phase 6.3: Scan Execution Lifecycle State Machine
-- **Objective**: Implement state transitions (`QUEUED` -> `CRAWLING` -> `ASSESSING` -> `AI_ANALYSIS` -> `COMPLETED`).
-- **Deliverables**: Scan lifecycle manager service and database status updater.
+### Phase 6.3: Scan Execution Lifecycle State Machine & Retry Engine
+- **Objective**: Implement robust state transitions (`QUEUED` -> `CRAWLING` -> `ASSESSING` -> `AI_ANALYSIS` -> `COMPLETED`), retry engines, task deduplication, and distributed locking.
+- **Deliverables**: Scan lifecycle manager service, Redis distributed locks, failure/cancel hooks, database status updater.
 - **Dependencies**: Phase 6.2.
-- **Completion Criteria**: Scan state advances reliably and handles failure/cancel hooks cleanly.
-- **Testing Requirements**: Lifecycle state transition test suite.
+- **Completion Criteria**: Scan state advances reliably, locks prevent duplicate executions, and handles retry/failure hooks cleanly.
+- **Testing Requirements**: Lifecycle state transition test suite, distributed lock concurrence tests.
 
-### Phase 6.4: Real-time Scan Progress & WebSocket Stream
-- **Objective**: WebSocket connection manager streaming live progress, target URLs, and finding alerts to client.
-- **Deliverables**: `/api/v1/ws/scans/{scan_id}` WebSocket endpoint.
+### Phase 6.4: Real-Time Scan Progress & WebSocket Event Stream
+- **Objective**: WebSocket connection manager streaming live progress, target URLs, active plugin metrics, and finding alerts to connected clients.
+- **Deliverables**: `/api/v1/ws/scans/{scan_id}` WebSocket endpoint with pub/sub Redis adapter.
 - **Dependencies**: Phase 6.3.
 - **Completion Criteria**: Real-time event updates delivered to connected clients with <100ms latency.
 - **Testing Requirements**: WebSocket streaming integration test.
 
-### Phase 6.5: Scan Scheduling & Recurrence Engine
-- **Objective**: Support automated recurring scans (daily, weekly, custom cron) via Celery Beat.
+### Phase 6.5: Distributed Scan Scheduler & Recurrence Engine
+- **Objective**: Support automated recurring scans (daily, weekly, custom cron) via Celery Beat with worker autoscaling and health monitoring.
 - **Deliverables**: Celery Beat schedule manager & scan scheduler APIs.
 - **Dependencies**: Phase 6.3.
-- **Completion Criteria**: Scheduled scans launch automatically according to configured cron expressions.
-- **Testing Requirements**: Scheduler verification tests.
+- **Completion Criteria**: Scheduled scans launch automatically according to configured cron expressions with worker health tracking.
+- **Testing Requirements**: Scheduler verification tests, worker health monitoring tests.
 
 ---
 
@@ -561,24 +604,24 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Testing Requirements**: Next.js Lighthouse SEO & accessibility audits.
 
 ### Phase 7.3: Enterprise Dashboard Overview Interface
-- **Objective**: Executive overview dashboard displaying risk scores, vulnerability distribution, and active scans.
+- **Objective**: Executive overview dashboard displaying risk scores, vulnerability distribution, attack surface trends, and active scans.
 - **Deliverables**: `frontend/app/(dashboard)/dashboard/page.tsx`, metrics widgets.
 - **Dependencies**: Phase 7.1, Era 6.
-- **Completion Criteria**: Displays real-time security posture metrics and high-priority alerts.
+- **Completion Criteria**: Displays real-time security posture metrics, historical risk trends, and high-priority alerts.
 - **Testing Requirements**: Frontend integration tests with mock API data.
 
 ### Phase 7.4: Scan Management & Live Monitor Portal
-- **Objective**: Interfaces to launch scans, confirm target authorization, view progress, and control execution.
+- **Objective**: Interfaces to launch scans, select scan profiles, confirm target authorization, view progress, and control execution.
 - **Deliverables**: `frontend/app/(dashboard)/scans/` routes, live WebSocket progress bar.
 - **Dependencies**: Phase 7.3, Phase 6.4.
-- **Completion Criteria**: User can launch authorized scans and observe live vulnerability feeds.
+- **Completion Criteria**: User can launch authorized scans, select profiles, and observe live vulnerability feeds.
 - **Testing Requirements**: End-to-End Playwright scan control test.
 
-### Phase 7.5: Vulnerability Triage & Evidence Record Viewer
-- **Objective**: Vulnerability detail view displaying CVSS score, decoupled evidence dumps, and AI code fix.
-- **Deliverables**: `frontend/app/(dashboard)/vulnerabilities/[id]/page.tsx`, evidence viewer drawer.
-- **Dependencies**: Phase 7.4.
-- **Completion Criteria**: Analysts can inspect raw HTTP dumps, screenshots, and AI remediation patches.
+### Phase 7.5: Vulnerability Triage, Evidence Record Viewer & AI Remediation Drawer
+- **Objective**: Vulnerability detail view displaying CVSS score, EPSS probability, decoupled evidence dumps (screenshots, HTTP exchanges, DOM snapshots), attack paths, and AI code fix drawer.
+- **Deliverables**: `frontend/app/(dashboard)/vulnerabilities/[id]/page.tsx`, evidence viewer drawer, AI copilot widget.
+- **Dependencies**: Phase 7.4, Phase 4.6, Era 5.
+- **Completion Criteria**: Analysts can inspect raw HTTP dumps, screenshots, attack chain diagrams, and AI remediation patches.
 - **Testing Requirements**: Interactive UI state test for finding triage.
 
 ### Phase 7.6: User, Organization & Role Management UI
@@ -593,24 +636,24 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 ## 📊 Era 8: Reporting, Executive Metrics & Export System
 
 ### Phase 8.1: PDF & HTML Executive Security Report Generator
-- **Objective**: Build template engine generating downloadable CISO executive reports.
+- **Objective**: Build template engine generating downloadable CISO executive reports, risk summaries, and posture dashboards.
 - **Deliverables**: `backend/app/services/reporting/pdf_generator.py` using Jinja2 & WeasyPrint.
 - **Dependencies**: Era 7.
 - **Completion Criteria**: Generates polished PDF executive reports with charts, summary metrics, and top risks.
 - **Testing Requirements**: PDF layout and content generation test.
 
 ### Phase 8.2: Developer Technical Remediation Export (Markdown / CSV / JSON)
-- **Objective**: Export raw findings and AI remediation patches in machine-readable formats.
+- **Objective**: Export raw findings, evidence dumps, and AI remediation patches in machine-readable formats.
 - **Deliverables**: Export endpoints (`/api/v1/reports/export`).
 - **Dependencies**: Phase 8.1.
 - **Completion Criteria**: Downloads findings formatted in JSON, CSV, or Markdown.
 - **Testing Requirements**: Export format schema validation tests.
 
-### Phase 8.3: Compliance Framework Mapping (OWASP, PCI-DSS, ISO 27001)
+### Phase 8.3: Compliance Framework Mapping (OWASP, PCI-DSS, ISO 27001, ASVS)
 - **Objective**: Map discovered vulnerabilities to compliance requirements and generate compliance checklists.
 - **Deliverables**: Compliance mapping engine & report view.
-- **Dependencies**: Phase 8.1.
-- **Completion Criteria**: Reports display compliance score percentage against PCI-DSS and OWASP Top 10.
+- **Dependencies**: Phase 8.1, Phase 4.5.
+- **Completion Criteria**: Reports display compliance score percentage against PCI-DSS, OWASP Top 10, and ISO 27001.
 - **Testing Requirements**: Mapping accuracy tests against compliance standards.
 
 ---
@@ -618,10 +661,10 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 ## 🔗 Era 9: Enterprise Integration & Developer Workflows
 
 ### Phase 9.1: Jira & GitHub Issues Integration Plugin
-- **Objective**: Bi-directional integration pushing triaged findings into Jira tickets or GitHub Issues.
-- **Deliverables**: Jira/GitHub API integration module.
+- **Objective**: Bi-directional integration pushing triaged findings into Jira tickets or GitHub Issues with status sync.
+- **Deliverables**: Jira/GitHub API integration module (`backend/app/services/integrations/jira_service.py`).
 - **Dependencies**: Era 8.
-- **Completion Criteria**: Creating a ticket in Vulnova opens an issue in target issue tracker.
+- **Completion Criteria**: Creating a ticket in Vulnova opens an issue in target issue tracker and syncs status updates.
 - **Testing Requirements**: Mock integration API tests.
 
 ### Phase 9.2: Slack & Teams Security Alert Webhooks
@@ -761,3 +804,4 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Dependencies**: Phase 12.2.
 - **Completion Criteria**: Vulnova platform fully deployed and available for enterprise use.
 - **Testing Requirements**: Final production smoke test suite.
+
