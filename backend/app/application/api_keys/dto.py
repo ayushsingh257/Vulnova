@@ -11,7 +11,6 @@ class CreateAPIKeyRequest(BaseModel):
     """Payload for creating a new machine-to-machine API key."""
 
     name: str = Field(
-        ...,
         min_length=2,
         max_length=255,
         description="Descriptive label for the API key",
@@ -37,7 +36,6 @@ class APIKeyCreateResponse(BaseModel):
     name: str
     key_prefix: str
     raw_key: str = Field(
-        ...,
         description="Plain-text API key returned ONLY ONCE. Unrecoverable after creation.",
     )
     scopes: List[str]
