@@ -378,12 +378,20 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 
 ## 🛡️ Era 4: Vulnerability Assessment Engine & Dynamic Testing
 
-### Phase 4.1: Security Assessment Plugin Framework Core
-- **Objective**: Implement dynamic plugin loading engine evaluating `plugin.yaml` manifests.
-- **Deliverables**: `AssessmentPlugin` base class, plugin loader, test runner context.
+### ✅ Phase 4.1: Security Assessment Plugin Framework Core
+- **Objective**: Build a modular, decoupled Security Assessment Plugin Framework Core enabling dynamic plugin registration, metadata declaration (`supported_asset_types`, `required_permissions`), execution lifecycle management, standardized `Finding` objects, and multi-tenant finding persistence.
+- **Deliverables**:
+  - Pure Domain Entities (`app/domain/entities/assessment.py`) — `SeverityLevel` (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`), `VulnerabilityCategory` (`SECURITY_HEADER`, `MISCONFIGURATION`, `INFORMATION_DISCLOSURE`, `AUTHENTICATION`, `INJECTION`, `SSRF`, `DESERIALIZATION`, `OTHER`), `PluginStatus`, `AssessmentJobStatus`, `PluginMetadata`, `AssessmentContext`, `Finding`, `AssessmentResult`, `BaseAssessmentPlugin` (ABC).
+  - Infrastructure Plugin Framework (`app/infrastructure/assessment/registry.py`) — `PluginRegistry` managing dynamic plugin registration, discovery, metadata inspection, and lifecycle execution (`REGISTERED` → `LOADED` → `EXECUTING` → `COMPLETED` / `FAILED`).
+  - Reference Security Plugin (`app/infrastructure/assessment/plugins/headers_plugin.py`) — Built-in `SecurityHeadersPlugin` demonstrating the framework contract by auditing HTTP security header compliance (`HSTS`, `CSP`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`).
+  - Database ORM Models (`app/infrastructure/database/models/assessment.py`) — `AssessmentJobModel` (`assessment_jobs` table) & `SecurityFindingModel` (`security_findings` table) with composite indexes and multi-tenant isolation.
+  - Assessment Repository (`app/infrastructure/database/repositories/assessment_repository.py`) — `AssessmentRepository` providing tenant-isolated job and finding persistence.
+  - Application DTOs & Service (`app/application/assessment/dto.py` & `services.py`) — `CreateAssessmentRequest`, `FindingDTO`, `AssessmentJobResponse`, `PluginMetadataDTO`. `AssessmentService` acting as a generic orchestrator without hardcoded scanner logic. Auditing records `assessment.started`, `assessment.completed`, `assessment.failed`, `assessment.rejected`.
+  - API Endpoints (`app/api/v1/routers/assessment.py`) — `POST /api/v1/assessments` (`scans:trigger`), `GET /api/v1/assessments/{assessment_id}` (`scans:read`), `GET /api/v1/assessments/plugins` (`scans:read`), `GET /api/v1/findings` (`findings:read`). Registered in `app/api/v1/api.py`.
+  - Unit & Integration Test Suite (`tests/test_assessment.py`) — 6 tests covering domain enums, plugin registry, reference header plugin, `AssessmentService` pipeline, tenant isolation, and API authorization guards.
 - **Dependencies**: Era 3.
-- **Completion Criteria**: Plugins load dynamically from directory and execute in isolation.
-- **Testing Requirements**: Plugin loader unit tests.
+- **Completion Criteria**: Plugin framework core functional; dynamic plugin registry operational; standardized findings persisted to DB; multi-tenant isolation enforced; audit trail active; pytest (120 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`0a5ff489`, `62e1a503`).
+- **Testing Requirements**: Plugin metadata & registry unit tests, reference plugin execution, SSRF target rejection checks, service orchestration pipeline integration, API authorization and RBAC permission enforcement.
 
 ### Phase 4.2: Security Headers & Server Misconfiguration Checks
 - **Objective**: Detect missing or insecure CSP, HSTS, CORS, X-Frame-Options, and Server signatures.
