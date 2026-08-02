@@ -75,3 +75,56 @@ class CrawlResponse(BaseModel):
     network_requests: List[DiscoveredNetworkRequestDTO] = Field(default_factory=list)
     is_spa: bool = False
     duration_seconds: float
+
+
+class IPAddressInfoDTO(BaseModel):
+    """DTO representing classified IP metadata."""
+
+    value: str
+    classification: str = "PUBLIC"
+    is_internal: bool = False
+    is_egress_safe: bool = True
+
+
+class DNSRecordDTO(BaseModel):
+    """DTO representing a DNS record (A, AAAA, CNAME, MX, NS, TXT)."""
+
+    record_type: str
+    name: str
+    value: str
+    ttl: Optional[int] = None
+
+
+class DiscoveredSubdomainDTO(BaseModel):
+    """DTO representing a discovered subdomain intelligence finding."""
+
+    subdomain: str
+    ip_addresses: List[IPAddressInfoDTO] = Field(default_factory=list)
+    cname_aliases: List[str] = Field(default_factory=list)
+    dns_records: List[DNSRecordDTO] = Field(default_factory=list)
+    sources: List[str] = Field(default_factory=list)
+
+
+class SubdomainScanRequest(BaseModel):
+    """Payload for triggering a Subdomain & DNS Intelligence discovery scan."""
+
+    target_domain: str = Field(
+        description="Target base domain (e.g. 'example.com') to discover subdomains and DNS records"
+    )
+    include_ct_logs: bool = Field(
+        default=True,
+        description="True to query passive Certificate Transparency (CT) log history",
+    )
+    resolve_dns: bool = Field(
+        default=True,
+        description="True to perform async DNS resolution (A, AAAA, CNAME, MX, NS, TXT)",
+    )
+
+
+class SubdomainScanResponse(BaseModel):
+    """Response model for a completed Subdomain & DNS Intelligence scan."""
+
+    target_domain: str
+    total_subdomains: int
+    discovered_subdomains: List[DiscoveredSubdomainDTO]
+    duration_seconds: float

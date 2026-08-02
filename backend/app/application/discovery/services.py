@@ -1,4 +1,6 @@
-"""Discovery Application Use Case Services."""
+import asyncio
+import time
+from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,13 +11,20 @@ from app.application.discovery.dto import (
     DiscoveredFormDTO,
     DiscoveredNetworkRequestDTO,
     DiscoveredScriptDTO,
+    DiscoveredSubdomainDTO,
     DiscoveredURLDTO,
+    DNSRecordDTO,
+    IPAddressInfoDTO,
+    SubdomainScanRequest,
+    SubdomainScanResponse,
 )
 from app.core.exceptions import ValidationException
 from app.core.logging import get_logger
 from app.domain.entities.discovery import CrawlResult, CrawlScope
 from app.infrastructure.database.models.user import UserModel
 from app.infrastructure.discovery.crawler import AsyncWebCrawler
+from app.infrastructure.discovery.ct_logs_client import CTLogsClient
+from app.infrastructure.discovery.dns_resolver import AsyncDNSResolver
 from app.infrastructure.discovery.playwright_renderer import (
     PlaywrightUnavailableException,
     SPADynamicCrawler,
@@ -169,4 +178,111 @@ class DiscoveryService:
             network_requests=network_dto,
             is_spa=crawl_result.is_spa,
             duration_seconds=crawl_result.duration_seconds,
+        )
+
+    async def discover_subdomains(
+        self, req: SubdomainScanRequest, current_user: UserModel
+    ) -> SubdomainScanResponse:
+        """Execute a Subdomain & DNS Intelligence discovery scan on a target domain.
+
+        Queries Certificate Transparency logs and resolves A, AAAA, CNAME, MX, NS, and TXT DNS records.
+        Classifies IP findings into PUBLIC, PRIVATE, LOOPBACK for enterprise ASM intelligence.
+        """
+        start_time = time.time()
+        base_domain = extract_base_domain(req.target_domain)
+
+        # 1. Record Subdomain Scan Started Audit Event
+        await self.audit_service.record_event(
+            organization_id=current_user.organization_id,
+            action="discovery.subdomain_scan_started",
+            resource_type="domain",
+            resource_id=base_domain,
+            actor_user_id=current_user.id,
+            details={
+                "target_domain": base_domain,
+                "include_ct_logs": req.include_ct_logs,
+                "resolve_dns": req.resolve_dns,
+            },
+        )
+
+        # 2. Passive Certificate Transparency Discovery
+        candidate_subdomains: List[str] = [base_domain]
+        if req.include_ct_logs:
+            ct_client = CTLogsClient()
+            ct_subdomains = await ct_client.search_subdomains(base_domain)
+            candidate_subdomains = sorted(
+                list(set(candidate_subdomains + ct_subdomains))
+            )
+
+        discovered_list: List[DiscoveredSubdomainDTO] = []
+
+        # 3. Async DNS Record Enumeration
+        if req.resolve_dns:
+            resolver = AsyncDNSResolver()
+            tasks = [resolver.resolve_subdomain(sub) for sub in candidate_subdomains]
+            resolution_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            for raw_res in resolution_results:
+                if isinstance(raw_res, dict):
+                    ips_dto = [
+                        IPAddressInfoDTO(
+                            value=ip.value,
+                            classification=ip.classification,
+                            is_internal=ip.is_internal,
+                            is_egress_safe=ip.is_egress_safe,
+                        )
+                        for ip in raw_res.get("ip_addresses", [])
+                    ]
+                    dns_dto = [
+                        DNSRecordDTO(
+                            record_type=rec.record_type.value,
+                            name=rec.name,
+                            value=rec.value,
+                            ttl=rec.ttl,
+                        )
+                        for rec in raw_res.get("dns_records", [])
+                    ]
+
+                    discovered_list.append(
+                        DiscoveredSubdomainDTO(
+                            subdomain=raw_res["subdomain"],
+                            ip_addresses=ips_dto,
+                            cname_aliases=raw_res.get("cname_aliases", []),
+                            dns_records=dns_dto,
+                            sources=["ct_logs" if req.include_ct_logs else "input"],
+                        )
+                    )
+        else:
+            for sub in candidate_subdomains:
+                discovered_list.append(
+                    DiscoveredSubdomainDTO(
+                        subdomain=sub,
+                        ip_addresses=[],
+                        cname_aliases=[],
+                        dns_records=[],
+                        sources=["ct_logs" if req.include_ct_logs else "input"],
+                    )
+                )
+
+        duration = round(time.time() - start_time, 2)
+
+        # 4. Record Subdomain Scan Completed Audit Event
+        await self.audit_service.record_event(
+            organization_id=current_user.organization_id,
+            action="discovery.subdomain_scan_completed",
+            resource_type="domain",
+            resource_id=base_domain,
+            actor_user_id=current_user.id,
+            details={
+                "target_domain": base_domain,
+                "total_subdomains": len(discovered_list),
+                "duration_seconds": duration,
+            },
+        )
+
+        return SubdomainScanResponse(
+            target_domain=base_domain,
+            total_subdomains=len(discovered_list),
+            discovered_subdomains=discovered_list,
+            duration_seconds=duration,
         )

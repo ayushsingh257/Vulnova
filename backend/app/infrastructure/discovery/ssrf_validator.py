@@ -2,7 +2,7 @@
 
 import ipaddress
 import socket
-from typing import Set, Tuple
+from typing import Any, Dict, Set, Tuple
 from urllib.parse import urlparse
 
 # Allowed scheme whitelist
@@ -43,6 +43,45 @@ def is_private_ip(ip_str: str) -> bool:
         )
     except ValueError:
         return True
+
+
+def classify_ip(ip_str: str) -> Dict[str, Any]:
+    """Classify an IP address as PUBLIC, PRIVATE, LOOPBACK, LINK_LOCAL, or RESERVED.
+
+    Preserves internal IP findings for enterprise ASM intelligence while maintaining
+    egress safety flags for HTTP scanning.
+    """
+    try:
+        ip = ipaddress.ip_address(ip_str.strip())
+        if ip.is_loopback:
+            cls = "LOOPBACK"
+            is_internal = True
+        elif ip.is_private:
+            cls = "PRIVATE"
+            is_internal = True
+        elif ip.is_link_local:
+            cls = "LINK_LOCAL"
+            is_internal = True
+        elif ip.is_reserved or ip.is_multicast:
+            cls = "RESERVED"
+            is_internal = True
+        else:
+            cls = "PUBLIC"
+            is_internal = False
+
+        return {
+            "value": str(ip),
+            "classification": cls,
+            "is_internal": is_internal,
+            "is_egress_safe": not is_internal,
+        }
+    except ValueError:
+        return {
+            "value": ip_str,
+            "classification": "UNKNOWN",
+            "is_internal": False,
+            "is_egress_safe": False,
+        }
 
 
 def resolve_hostname(hostname: str) -> Tuple[bool, str]:
@@ -91,9 +130,13 @@ def is_safe_target_url(url: str) -> Tuple[bool, str]:
 
 
 def extract_base_domain(url: str) -> str:
-    """Extract clean base domain from target URL (e.g. 'https://app.example.com/login' -> 'example.com')."""
-    parsed = urlparse(url)
-    hostname = (parsed.hostname or "").lower()
+    """Extract clean base domain from target URL or domain string (e.g. 'https://app.example.com/login' or 'api.example.com' -> 'example.com')."""
+    clean_target = url.strip().lower()
+    if not clean_target.startswith(("http://", "https://")):
+        clean_target = f"https://{clean_target}"
+
+    parsed = urlparse(clean_target)
+    hostname = (parsed.hostname or "").lower().split(":")[0]
     parts = hostname.split(".")
     if len(parts) >= 2:
         return ".".join(parts[-2:])
