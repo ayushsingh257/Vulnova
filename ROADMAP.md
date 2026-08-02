@@ -393,12 +393,17 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Plugin framework core functional; dynamic plugin registry operational; standardized findings persisted to DB; multi-tenant isolation enforced; audit trail active; pytest (120 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`0a5ff489`, `62e1a503`).
 - **Testing Requirements**: Plugin metadata & registry unit tests, reference plugin execution, SSRF target rejection checks, service orchestration pipeline integration, API authorization and RBAC permission enforcement.
 
-### Phase 4.2: Security Headers & Server Misconfiguration Checks
-- **Objective**: Detect missing or insecure CSP, HSTS, CORS, X-Frame-Options, and Server signatures.
-- **Deliverables**: Headers assessment plugin module.
+### ✅ Phase 4.2: Web Vulnerability Assessment Plugin Suite
+- **Objective**: Build production-grade web application vulnerability assessment plugins adhering strictly to the `BaseAssessmentPlugin` abstract contract for SQL Injection, Cross-Site Scripting (XSS), and Authentication security auditing.
+- **Deliverables**:
+  - SQL Injection Detection Plugin (`app/infrastructure/assessment/plugins/sql_injection_plugin.py`) — `SQLInjectionPlugin` probing query parameters and URL endpoints with safe, non-destructive SQL syntax markers and detecting error signatures (PostgreSQL, MySQL, SQLite, Oracle, MSSQL) to emit `SeverityLevel.CRITICAL`, CWE-89 `Finding` objects.
+  - Cross-Site Scripting Detection Plugin (`app/infrastructure/assessment/plugins/xss_plugin.py`) — `XSSPlugin` analyzing query parameters and endpoints with safe marker payloads (`"><vlnv_xss_probe_<random>>`) and detecting unescaped HTML reflection to emit `SeverityLevel.HIGH`, CWE-79 `Finding` objects.
+  - Authentication Security Plugin (`app/infrastructure/assessment/plugins/auth_plugin.py`) — `AuthSecurityPlugin` auditing cookie flags (`HttpOnly`, `Secure`, `SameSite`) and unencrypted HTTP credential transmission risks to emit `SeverityLevel.HIGH` / `SeverityLevel.MEDIUM`, CWE-614 / CWE-319 `Finding` objects.
+  - Plugin Registry Auto-Registration (`app/infrastructure/assessment/plugins/__init__.py`) — Auto-registers all 4 production security plugins into `PluginRegistry`.
+  - Comprehensive Test Suite (`tests/test_web_assessment_plugins.py`) — 5 tests covering plugin registration, SQLi error signature detection, XSS marker reflection, auth cookie flag checks, generic `AssessmentService` pipeline integration, and multi-tenant isolation.
 - **Dependencies**: Phase 4.1.
-- **Completion Criteria**: Identifies header vulnerabilities and returns standardized findings.
-- **Testing Requirements**: Test against vulnerable web server instances.
+- **Completion Criteria**: Web vulnerability plugins functional; safe non-destructive SQLi and XSS probing operational; auth cookie flags audited; findings persisted to DB; pytest (125 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`1db2c6bd`).
+- **Testing Requirements**: SQLi error pattern detection tests, XSS marker reflection assertions, auth cookie security flag evaluations, generic pipeline execution tests.
 
 ### Phase 4.3: OWASP Injection Assessment (SQLi & Commandi)
 - **Objective**: Automated detection of error-based, time-based, and blind SQL injection flaws.

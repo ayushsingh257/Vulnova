@@ -118,7 +118,7 @@ No undocumented repository structure changes are permitted.
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
 | **Era 2** | Core Platform & Tenant Management System | ✅ **COMPLETED** (Phases 2.1–2.6 ✅) | Sprint 2 |
 | **Era 3** | Discovery Engine & Asset Surface Mapping | ✅ **COMPLETED** (Phases 3.1–3.5 ✅) | Sprint 3 |
-| **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | 🟡 **IN PROGRESS** (Phase 4.1 ✅) | Sprint 4 |
+| **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | 🟡 **IN PROGRESS** (Phase 4.1 ✅, Phase 4.2 ✅) | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
 | **Era 6** | Scanning Orchestration & Execution Pipeline | ⏳ Pending | Sprint 6 |
 | **Era 7** | Enterprise Web Application & Dashboard Interface | ⏳ Pending | Sprint 7 |
@@ -243,4 +243,6 @@ The following discovery engine architecture decisions were finalized during Phas
 
 1. **Decoupled Abstract Plugin Interface**: `BaseAssessmentPlugin` (ABC in `app/domain/entities/assessment.py`) defines a strict, generic plugin contract. Every security plugin declares metadata (`id`, `name`, `version`, `supported_asset_types`, `required_permissions`) and implements `async execute(ctx: AssessmentContext) -> List[Finding]`.
 2. **Generic Orchestration Architecture**: `AssessmentService` contains zero hardcoded scanner or vulnerability logic. It delegates plugin execution to `PluginRegistry`, receiving standardized `Finding` domain objects for database persistence.
-3. **Multi-Tenant Finding Topology**: `SecurityFindingModel` (`security_findings` table) persists vulnerability findings linked optionally to `asset_nodes` via `asset_node_id`, supporting severity ratings (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`) and OWASP categories (`SECURITY_HEADER`, `MISCONFIGURATION`, `AUTHENTICATION`, `INJECTION`, etc.).
+4. **Safe Non-Destructive SQL Injection Probing**: `SQLInjectionPlugin` tests query parameters using safe SQL syntax markers (`'`, `''`, `' OR '1'='1`) and regex error pattern matching across 5 major database engines (PostgreSQL, MySQL, SQLite, Oracle, MSSQL) without performing destructive data modifications.
+5. **Marker-Based Reflected XSS Detection**: `XSSPlugin` injects unique, non-executing marker tags (`"><vlnv_xss_probe_<uuid>>`) to confirm unescaped HTML reflection in HTTP responses without executing malicious scripts.
+6. **Authentication & Session Flag Auditing**: `AuthSecurityPlugin` analyzes Set-Cookie directives for missing `HttpOnly`, `Secure`, or `SameSite` flags and flags unencrypted HTTP credential transmission.
