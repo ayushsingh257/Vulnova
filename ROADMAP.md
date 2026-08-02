@@ -360,12 +360,19 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Technology fingerprinting engine functional; web server, framework, CMS, and library versions extracted; security header compliance audited; SSRF egress protection enforced; audit logs record scan events; pytest (111 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`2cca89f5`).
 - **Testing Requirements**: Header fingerprinting assertions, HTML DOM and script marker detection, security header compliance evaluation, SSRF target rejection checks, API authorization and RBAC permission enforcement.
 
-### Phase 3.5: Asset Inventory & Attack Surface Mapper
-- **Objective**: Store and organize target hosts, subdomains, endpoints, and components in DB.
-- **Deliverables**: Target asset database models and attack surface mapping logic.
+### ✅ Phase 3.5: Asset Inventory & Attack Surface Mapper
+- **Objective**: Store and correlate target domains, subdomains, IP addresses, technologies, URLs, forms, and scripts into a persistent, multi-tenant Attack Surface Asset Graph topology.
+- **Deliverables**:
+  - Domain Entities Extension (`app/domain/entities/discovery.py`) — `AssetNodeType` (`ORGANIZATION`, `TARGET_DOMAIN`, `SUBDOMAIN`, `IP_ADDRESS`, `URL_ENDPOINT`, `FORM`, `SCRIPT`, `TECHNOLOGY`), `RelationshipType` (`BELONGS_TO`, `RESOLVES_TO`, `RUNS_TECH`, `HAS_ENDPOINT`, `DISCOVERED_FROM`), `AssetNode`, `AssetRelationship`, `AssetGraph`.
+  - Database ORM Models (`app/infrastructure/database/models/asset_graph.py`) — `AssetNodeModel` (`asset_nodes` table) and `AssetRelationshipModel` (`asset_relationships` table) with composite unique constraints (`organization_id`, `node_type`, `value`).
+  - Asset Graph Repository (`app/infrastructure/database/repositories/asset_graph_repository.py`) — `AssetGraphRepository` for tenant-isolated node upserting, relationship linking, and domain graph querying.
+  - Discovery DTOs Extension (`app/application/discovery/dto.py`) — `BuildAssetGraphRequest`, `AssetNodeDTO`, `AssetRelationshipDTO`, `AssetGraphResponse`.
+  - Asset Graph Application Service (`app/application/discovery/asset_graph_service.py`) — `AssetGraphService.build_asset_graph` correlating crawler URLs, DNS subdomains/IPs, and technology stack fingerprints into a unified graph topology for an organization's target domain. Auditing records `asset_graph.build_started` and `asset_graph.build_completed`.
+  - Discovery API Endpoints (`app/api/v1/routers/discovery.py`) — `POST /api/v1/discovery/asset-graph/build` (`targets:create`) and `GET /api/v1/discovery/asset-graph/nodes/{node_id}` (`targets:read`) guarded by dual-mode auth and tenant isolation.
+  - Unit & Integration Test Suite (`tests/test_asset_graph.py`) — 3 tests covering graph domain enums, service build pipeline with audit trail, and tenant-isolated node lookup.
 - **Dependencies**: Phase 3.4.
-- **Completion Criteria**: Aggregates target assets into queryable surface tree.
-- **Testing Requirements**: Target inventory integration tests.
+- **Completion Criteria**: Attack Surface Asset Graph functional; nodes and edge relationships persisted; multi-tenant boundary isolation enforced; audit logs record build events; pytest (114 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`e6bdf6bf`).
+- **Testing Requirements**: Graph domain entity assertions, repository upserting and tenant boundary checks, service build correlation pipeline integration, API authorization and RBAC permission enforcement.
 
 ---
 
