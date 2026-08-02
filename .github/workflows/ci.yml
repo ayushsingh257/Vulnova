@@ -74,6 +74,8 @@ jobs:
 
       - name: Run Mypy Type Checker
         working-directory: backend
+        env:
+          PYTHONPATH: .
         run: mypy app --ignore-missing-imports
 
       - name: Run Pytest Suite
