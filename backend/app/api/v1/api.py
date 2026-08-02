@@ -4,6 +4,7 @@ from app.api.v1.routers import (
     api_keys,
     audit_logs,
     auth,
+    discovery,
     organizations,
     status,
     users,
@@ -16,3 +17,4 @@ api_v1_router.include_router(api_keys.router)
 api_v1_router.include_router(users.router)
 api_v1_router.include_router(organizations.router)
 api_v1_router.include_router(audit_logs.router)
+api_v1_router.include_router(discovery.router)

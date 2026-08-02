@@ -3,127 +3,241 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
 [![Security: OWASP ASVS](https://img.shields.io/badge/Security-OWASP_ASVS_v4.0-crimson.svg)](SECURITY.md)
 [![Architecture: Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20DDD-black.svg)](ARCHITECTURE.md)
-[![Status: Era 0.5 Foundation](https://img.shields.io/badge/Status-Era%200.5%20Foundation-darkred.svg)](ROADMAP.md)
+[![Status: Era 2 Complete](https://img.shields.io/badge/Status-Era%202%20Complete-green.svg)](ROADMAP.md)
+[![Build Status](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](.github/workflows/ci.yml)
 
-**Vulnova** is an enterprise-grade, AI-powered Application Security (AppSec) platform designed to continuously discover, assess, prioritize, and remediate security risks across modern cloud-native software lifecycles.
-
-Unlike basic scanner tools, Vulnova operates as a unified AppSec operational command center—integrating dynamic application security testing (DAST), automated attack surface discovery, API security inspection, and an autonomous AI Security Analyst to drive AI-assisted false-positive reduction and vulnerability prioritization for continuous DevSecOps compliance.
-
----
-
-## 🌟 Key Capabilities
-
-### 🔎 Application & Attack Surface Discovery
-- **Web Crawling & SPA Rendering**: Dynamic visual DOM crawling and single-page application navigation.
-- **Endpoint & API Discovery**: Automated REST/GraphQL schema inference, OpenAPI extraction, and dynamic route enumeration.
-- **Technology Fingerprinting**: Deep client/server stack detection (frameworks, web servers, third-party libraries, known CVE mapping).
-- **Asset Inventory & Surface Mapping**: Enterprise asset taxonomy and continuous shadow asset discovery.
-
-### 🛡️ Dynamic Security Assessment & Sandbox Isolation
-- **Isolated Scanner Sandbox**: Containerized execution of dynamic scanning workloads isolated from platform core with egress firewalling and unprivileged execution boundaries.
-- **Extensible Plugin Engine**: Modular plugin framework supporting standard `plugin.yaml` manifests for custom security checks.
-- **OWASP Top 10 & API Security Top 10**: Deep automated checks for SQLi, XSS, SSRF, CSRF, IDOR, Broken Authentication, Rate Limiting bypasses, and JWT flaws.
-- **Legal Target Authorization**: Mandatory ownership verification and scope confirmation prior to scan execution.
-
-### 🤖 Autonomous AI Security Analyst
-- **Contextual Risk & Impact Analysis**: Evaluates technical severity (CVSS 4.0) alongside business context and exposure path.
-- **Exploit Path & Attack Scenarios**: Synthesizes multi-step attack vectors and realistic threat actor scenarios.
-- **Remediation & Secure Coding**: Generates context-aware, language-specific code patches and framework configuration fixes.
-- **False-Positive Mitigation Engine**: Correlates stack traces, execution context, and response behaviors to filter scanner noise.
-- **Executive & Engineering Reporting**: Automated generation of CISO executive summaries, compliance audits, and developer actionable tickets.
+**Vulnova** is a next-generation, AI-native Application Security (AppSec) platform engineered for enterprise security teams, DevSecOps practitioners, and security analysts. It unifies automated attack surface discovery, dynamic security assessments (DAST), API security inspection, and an autonomous AI Security Analyst to continuously identify, prioritize, and remediate application vulnerabilities.
 
 ---
 
-## 🏛️ Architecture Overview
+## 🎯 1. What is Vulnova?
 
-Vulnova is built following **Clean Architecture** and **Domain-Driven Design (DDD)** principles, supporting an event-driven evolution path and microservices migration.
+### Product Identity
+Vulnova is built to serve as an **Enterprise Security Operations & Application Risk Control Plane**. It replaces fragmented legacy security tools with a unified, multi-tenant platform designed for high-concurrency vulnerability scanning, deep API inspection, and AI-assisted risk triaging.
+
+### The Problem It Solves
+Traditional Dynamic Application Security Testing (DAST) scanners suffer from fundamental challenges:
+- **High False-Positive Noise**: Legacy scanners flood security teams with thousands of low-context alerts without business impact prioritization.
+- **Single-Page & API Blind Spots**: Standard crawlers fail to parse modern JavaScript Single-Page Applications (SPAs) and dynamic REST/GraphQL API surfaces.
+- **Siloed Multi-Tenancy & Governance**: Enterprise organizations lack unified tenant boundaries, granular role-based access controls (RBAC), and immutable audit logs.
+- **Lack of Actionable Remediation**: Scanner reports output raw vulnerability descriptions rather than verified, framework-specific code patches.
+
+### Mission & Vision
+- **Mission**: Automate complex application security assessments using isolated execution sandboxes and autonomous AI intelligence, enabling engineering teams to fix vulnerabilities before production deployment.
+- **Vision**: Define the enterprise standard for AI-native AppSec platforms where security testing, asset surface mapping, and code remediation operate in a continuous, automated loop.
+
+---
+
+## 👥 2. Who Should Use Vulnova?
+
+| User Persona | Key Use Cases |
+|---|---|
+| 🛡️ **Application Security (AppSec) Teams** | Centralized vulnerability management, false-positive reduction, policy enforcement, and CISO executive reporting. |
+| 💻 **Security Engineers** | Custom DAST plugin creation, automated scope declaration enforcement, and target vulnerability verification. |
+| 🚀 **DevSecOps & Engineering Teams** | Automated CI/CD security pipeline gates, language-specific code patch generation, and API security testing. |
+| 👁️ **SOC & Incident Response Teams** | Forensic security audit log analysis, client metadata attribution, and attack surface tracking. |
+| 🏢 **Enterprise Organizations** | Multi-tenant organization isolation, RBAC role management (`OWNER`, `ADMIN`, `SECURITY_ANALYST`, `VIEWER`), and machine-to-machine API key integration. |
+| 🔬 **Security Researchers** | Modular plugin testing, custom attack payload evaluation, and target asset surface mapping. |
+
+---
+
+## 🚀 3. Core Capabilities
+
+### 🔐 Enterprise Identity & Access Management
+- **Argon2id Password Security**: Memory-hard password hashing aligned with OWASP ASVS standards.
+- **OAuth2 & JWT Framework**: Short-lived (15-minute) HS256 JWT access tokens paired with cryptographically secure 64-byte refresh tokens.
+- **Refresh Token Rotation**: Family-based refresh token rotation (`family_id`) with automatic reuse detection that immediately revokes compromised sessions.
+- **HTTP-Only Cookies**: Secure `vulnova_refresh_token` delivery via HTTP-Only, Secure, SameSite=Lax cookies.
+
+### 🔑 Machine-to-Machine API Key Management
+- **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).
+- **Constant-Time Verification**: `hmac.compare_digest` constant-time verification preventing timing side-channel attacks.
+- **Dual-Mode Authentication**: Universal FastAPI dependency (`get_current_user_or_api_key`) prioritizing Bearer JWT tokens with X-API-Key fallback.
+
+### 🛡️ Multi-Tenant RBAC & Tenant Isolation
+- **Hierarchical Role Model**: Four-tier integer-ordered role structure (`OWNER = 40 > ADMIN = 30 > SECURITY_ANALYST = 20 > VIEWER = 10`).
+- **Centralized Permission Map**: Resource-action permissions (`organization:update`, `users:invite`, `api_keys:create`, `audit_logs:read`) enforced via `require_permission()` dependencies.
+- **Strict Tenant Isolation**: `verify_organization_access()` and `require_same_organization` prevent cross-organization resource tampering with HTTP 403 `ForbiddenException` guards.
+
+### 👥 User & Organization Lifecycle Management
+- **Organization Settings & Billing Tier Control**: Profile management, subscription plan tracking, and member counting.
+- **Team Invitations & Role Updates**: Granular team member creation, role modification with sole-owner protection, and account status toggling.
+- **Administrative Safeguards**: Built-in protection preventing self-deactivation, self-deletion, and orphaned organization states.
+
+### 📜 Security Auditability & Compliance
+- **Immutable Security Audit Log**: Append-only `audit_logs` database table capturing administrative actions, authentication attempts, user lifecycle mutations, and API key revocations.
+- **Client Context Extraction**: Captures `client_ip` (supporting `X-Forwarded-For` proxy headers) and `user_agent` strings.
+- **Fail-Safe Audit Logging**: Async audit recording designed to log high-priority warnings without disrupting primary business transactions.
+
+---
+
+## ⚡ 4. Why Vulnova is Different
+
+1. **AI-Native AppSec Workflows**: Built specifically to integrate Large Language Models (LLMs) for intelligent vulnerability scoring (CVSS 4.0), false-positive mitigation, and automated patch generation.
+2. **Clean Architecture & Domain Isolation**: Strict separation of concerns (`api` → `application` → `domain` ← `infrastructure`) ensures core business logic remains independent of web frameworks and database drivers.
+3. **Enterprise Multi-Tenancy**: Built from day one for multi-organization SaaS deployments with zero cross-tenant data leakage.
+4. **Security-First Engineering**: OWASP ASVS v4.0 aligned, strict Python type annotations (`mypy --strict`), automated supply chain vulnerability scanning (Trivy, Semgrep, Gitleaks), and immutable audit trails.
+
+---
+
+## 📐 5. System Architecture
 
 ```
-                  ┌─────────────────────────────────────────┐
-                  │   Next.js 14 Enterprise Web App         │
-                  │   (shadcn/ui, Framer Motion, Red/Dark)  │
-                  └────────────────────┬────────────────────┘
-                                       │ HTTPS / WSS
-                                       ▼
-                  ┌─────────────────────────────────────────┐
-                  │    FastAPI API Gateway & Control Plane   │
-                  │   (Async Python 3.12, OAuth2/JWT/RBAC)  │
-                  └────────────────────┬────────────────────┘
-                                       │ Task Dispatch / Event Bus
-                                       ▼
-                  ┌─────────────────────────────────────────┐
-                  │   Isolated Scanner Sandbox Workers      │
-                  │   (Unprivileged Containers, Egress Rule)│
-                  │ ┌───────────┬──────────────┬──────────┐ │
-                  │ │ Crawling  │ DAST Plugins │ Browser  │ │
-                  │ └───────────┴──────────────┴──────────┘ │
-                  └────────────────────┬────────────────────┘
-                                       │
-                                       ▼
-                  ┌─────────────────────────────────────────┐
-                  │  PostgreSQL (pgvector) & Redis          │
-                  └─────────────────────────────────────────┘
+                               ┌─────────────────────────────────────────┐
+                               │   Next.js 14 Enterprise Web App         │
+                               │   (React 18, TypeScript, TailwindCSS)   │
+                               └────────────────────┬────────────────────┘
+                                                    │ HTTPS / WSS
+                                                    ▼
+                               ┌─────────────────────────────────────────┐
+                               │    FastAPI Gateway & Control Plane      │
+                               │  (Async Python 3.12, OAuth2/JWT/RBAC)   │
+                               └────────────────────┬────────────────────┘
+                                                    │ Task Queue / Event Bus
+                                                    ▼
+                               ┌─────────────────────────────────────────┐
+                               │   Isolated Scanner Sandbox Workers      │
+                               │  (Unprivileged Worker Pool, Egress Rules)│
+                               │ ┌───────────┬──────────────┬──────────┐ │
+                               │ │ Crawler   │ DAST Plugins │ Browser  │ │
+                               │ └───────────┴──────────────┴──────────┘ │
+                               └────────────────────┬────────────────────┘
+                                                    │
+                                                    ▼
+                               ┌─────────────────────────────────────────┐
+                               │  PostgreSQL 16 (pgvector) & Redis 7     │
+                               └─────────────────────────────────────────┘
 ```
 
-For full architectural details, see [ARCHITECTURE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/ARCHITECTURE.md).
+---
+
+## 🛠️ 6. Technology Stack Matrix
+
+| Subsystem | Technologies & Specifications |
+|---|---|
+| **Core Language** | Python 3.12+ (Strict Type Annotations, AsyncIO) |
+| **API Gateway & Web** | FastAPI 0.111+, Uvicorn, Pydantic v2, Pydantic Settings |
+| **Authentication & Security** | Argon2id (`passlib[argon2]`), PyJWT (HS256), HMAC SHA-256 |
+| **Database & ORM** | PostgreSQL 16+, SQLAlchemy 2.0 (Async), Alembic, `pgvector` |
+| **Cache & Task Queue** | Redis 7+, Celery |
+| **Code Quality & CI/CD** | Pytest 8.2+, Black, Ruff, Mypy (`strict = true`), GitHub Actions |
+| **DevSecOps Tools** | Trivy (SCA/Container), Semgrep (SAST), Gitleaks (Secret Detection) |
 
 ---
 
-## 🔒 Enterprise Trust Center & Public Pages
+## 🔒 7. Security Architecture & Controls
 
-Vulnova provides a dedicated **Trust Center** (`/trust`) to offer full transparency into enterprise security practices, compliance standards, and real-time operational status.
+### Authentication Flow
+```
+User Credentials ──► Argon2id Verify ──► Issue HS256 Access Token (15m)
+                                      └──► Issue Refresh Token (7d HTTP-Only Cookie)
+```
 
-### Included Enterprise Public Pages:
-- 🌐 **Landing & Features**: Product overview, platform demo, capability matrix.
-- 🛡️ **Trust Center (`/trust`)**: Security posture, SOC 2 / ISO 27001 readiness, encryption disclosures.
-- 📜 **Legal & Compliance**: Terms of Service, Privacy Policy, Cookie Policy, Authorized Security Testing Agreement.
-- 📢 **Responsible Disclosure**: Vulnerability reporting guidelines and security contact details.
-- 📖 **Documentation & Support**: API documentation, integration guides, support desk.
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Primary Technologies |
-| :--- | :--- |
-| **Frontend Platform** | Next.js 14 (App Router), React 18, TypeScript, TailwindCSS, shadcn/ui, Framer Motion |
-| **Backend Core** | Python 3.12+, FastAPI, Pydantic v2, AsyncIO |
-| **Task Queue & Event Bus** | Celery, Redis 7+ (Bridge path to RabbitMQ / Kafka / NATS) |
-| **Sandbox Execution** | Containerized Worker Pool, Egress Firewall, Linux Namespaces |
-| **Database & Vector Store** | PostgreSQL 16+ with `pgvector` extension, Alembic migrations |
-| **AI & LLM Orchestration**| LangChain / LlamaIndex, OpenAI / Anthropic APIs, Local LLM fallback (Ollama) |
-| **Security & DevSecOps** | Gitleaks, Semgrep, Trivy, Docker, GitHub Actions, Traefik Reverse Proxy |
-
-See [TECH_STACK.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/TECH_STACK.md) for detailed technical decisions.
+### Authorization & Tenant Isolation
+- **Role Hierarchy**: `OWNER` (40) > `ADMIN` (30) > `SECURITY_ANALYST` (20) > `VIEWER` (10)
+- **Dependency Guard**: `@router.get("", dependencies=[Depends(require_permission("users:read"))])`
+- **Tenant Validation**: Enforces `UserModel.organization_id == target_organization_id` on all queries.
 
 ---
 
-## 📚 Core Repository Documentation
+## ⚡ 8. Quick Start Guide
 
-The repository is governed by 19 enterprise-grade specification documents:
+### Prerequisites
+- Python 3.12+
+- PostgreSQL 16+ (with `uuid-ossp` and `vector` extensions enabled)
+- Redis 7+
 
-| Document | Description |
-| :--- | :--- |
-| 🧠 [BRAIN.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/BRAIN.md) | Permanent project memory, design axioms, and engineering rules |
-| 🗺️ [ROADMAP.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/ROADMAP.md) | 12-Era roadmap spanning 100+ implementation phases |
-| 📁 [PROJECT_STRUCTURE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/PROJECT_STRUCTURE.md) | Canonical repository layout blueprint & architectural boundaries |
-| 🏛️ [ARCHITECTURE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/ARCHITECTURE.md) | System architecture diagrams, scanner sandboxing, event bus, and plugins |
-| 🛡️ [SECURITY.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/SECURITY.md) | Security policy, ASVS standards, sandbox isolation, legal target authorization |
-| 🎯 [THREAT_MODEL.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/THREAT_MODEL.md) | Formal STRIDE threat analysis, sandbox escape risks, and mitigations |
-| 🗄️ [DATABASE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/DATABASE.md) | PostgreSQL entity schemas, scan profiles, evidence management, pgvector |
-| 📡 [API_SPEC.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/API_SPEC.md) | REST API endpoints, plugin manifest schemas, target authorization payloads |
-| 🎨 [FRONTEND_GUIDELINES.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/FRONTEND_GUIDELINES.md) | UI design system, Trust Center specs, color tokens, and accessibility rules |
-| ⚙️ [BACKEND_GUIDELINES.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/BACKEND_GUIDELINES.md) | FastAPI code standards, Clean Architecture guidelines, error handling |
-| 🧪 [TESTING.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/TESTING.md) | Unit, integration, DAST verification, and coverage requirements |
-| 🔒 [DEVSECOPS.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/DEVSECOPS.md) | CI/CD security pipelines, SAST, SCA, and image scanning |
-| 🚀 [DEPLOYMENT.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/DEPLOYMENT.md) | Containerization, Docker Compose, reverse proxy, and K8s readiness |
-| 📐 [STYLE_GUIDE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/STYLE_GUIDE.md) | Code styling, linting configs, commit conventions (Conventional Commits) |
-| 📝 [DECISIONS.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/DECISIONS.md) | Architectural Decision Records (ADRs 001–007) |
-| 📜 [CHANGELOG.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/CHANGELOG.md) | Chronological version history and milestone tracking |
-| 🤝 [CONTRIBUTING.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/CONTRIBUTING.md) | Developer onboarding guide, local environment setup, PR guidelines |
+### Backend Setup
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/ayushsingh257/Vulnova.git
+   cd Vulnova/backend
+   ```
+
+2. **Set Up Virtual Environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -e .[dev]
+   ```
+
+3. **Configure Environment Variables**:
+   Create a `.env` file in `backend/`:
+   ```ini
+   SECRET_KEY=your-super-secret-key-min-32-characters-long
+   DATABASE_URL=postgresql+asyncpg://vulnova_admin:vulnova_secure_password@localhost:5432/vulnova_db
+   REDIS_URL=redis://localhost:6379/0
+   ENVIRONMENT=development
+   ```
+
+4. **Run Database Migrations**:
+   ```bash
+   alembic upgrade head
+   ```
+
+5. **Start FastAPI Control Plane**:
+   ```bash
+   uvicorn app.main:app --reload --port 8000
+   ```
+   Interactive OpenAPI docs available at `http://localhost:8000/docs`.
+
+---
+
+## 🧪 9. Testing & Quality Verification
+
+Run the full local quality gates before committing code:
+
+```bash
+cd backend
+
+# 1. Format Check (Black)
+black --check app tests
+
+# 2. Linting (Ruff)
+ruff check app
+
+# 3. Strict Type Checking (Mypy)
+mypy app --config-file pyproject.toml
+
+# 4. Automated Test Suite (Pytest)
+python -m pytest -v
+```
+
+**Current Backend Quality Metrics**: **91/91 Passed** (100% test pass rate).
+
+---
+
+## 🗺️ 10. Roadmap & Era Progression
+
+- ✅ **Era 0**: Architecture & Enterprise Documentation Foundation
+- ✅ **Era 0.5**: Enterprise Architecture Refinement & Security Model Polish
+- ✅ **Era 1**: Infrastructure, Monorepo & DevSecOps Foundation
+- ✅ **Era 2**: Core Platform & Tenant Management System
+  - ✅ Phase 2.1 — Database Entity Models & SQLAlchemy Mappings
+  - ✅ Phase 2.2 — JWT & OAuth2 Authentication Framework
+  - ✅ Phase 2.3 — Multi-Tenant RBAC Security Layer
+  - ✅ Phase 2.4 — API Key Management System
+  - ✅ Phase 2.5 — User & Organization Management Endpoints
+  - ✅ Phase 2.6 — Security Audit Logging System
+- 🚧 **Era 3**: Discovery Engine & Asset Surface Mapping *(IN PROGRESS)*
+  - ⏳ Phase 3.1 — Async HTTP Web Crawler Core
+  - ⏳ Phase 3.2 — SPA & Dynamic DOM Crawling System
+  - ⏳ Phase 3.3 — Target Asset Taxonomy & Fingerprinting
+  - ⏳ Phase 3.4 — API Schema Inference & Endpoint Discovery
+  - ⏳ Phase 3.5 — Attack Surface Mapping & Visual Graph Engine
+- ⏳ **Era 4**: Vulnerability Assessment Engine & Dynamic Testing
+- ⏳ **Era 5**: AI Security Analyst Engine & Vulnerability Intelligence
+- ⏳ **Era 6**: Scanning Orchestration & Execution Pipeline
+- ⏳ **Era 7**: Enterprise Web Application & Dashboard Interface
+- ⏳ **Era 8**: Reporting, Executive Metrics & Export System
+- ⏳ **Era 9**: Enterprise Integration & Developer Workflows
+- ⏳ **Era 10**: Advanced Security Hardening & OWASP Compliance
+- ⏳ **Era 11**: Enterprise Scale, Performance Tuning & Reliability
+- ⏳ **Era 12**: Final Security Audit, Production Deployment & Release
 
 ---
 
 ## 📄 License
 
-Vulnova is distributed under the MIT License. See `LICENSE` for details.
+Vulnova is licensed under the [MIT License](LICENSE).
