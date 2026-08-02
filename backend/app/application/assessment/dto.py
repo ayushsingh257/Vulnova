@@ -17,6 +17,18 @@ class CreateAssessmentRequest(BaseModel):
     )
 
 
+class EvidenceArtifactDTO(BaseModel):
+    """DTO representing a proof evidence artifact attached to a finding."""
+
+    id: str
+    finding_id: str
+    artifact_type: str
+    storage_path: str
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    checksum: str
+    created_at: str
+
+
 class FindingDTO(BaseModel):
     """DTO representing a security finding/vulnerability."""
 
@@ -39,6 +51,9 @@ class FindingDTO(BaseModel):
     is_duplicate: bool = False
     canonical_finding_id: Optional[str] = None
     fix_sla_hours: Optional[int] = None
+    evidence_count: int = 0
+    evidence_available: bool = False
+    artifacts: List[EvidenceArtifactDTO] = Field(default_factory=list)
     created_at: str
 
 

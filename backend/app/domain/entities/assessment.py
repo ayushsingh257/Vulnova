@@ -124,6 +124,33 @@ class AssessmentContext:
     options: Dict[str, Any] = field(default_factory=dict)
 
 
+class EvidenceType(str, Enum):
+    """Classification types of evidence artifacts captured during assessment."""
+
+    SCREENSHOT = "SCREENSHOT"
+    DOM_SNAPSHOT = "DOM_SNAPSHOT"
+    HTTP_REQUEST = "HTTP_REQUEST"
+    HTTP_RESPONSE = "HTTP_RESPONSE"
+    COOKIE_DATA = "COOKIE_DATA"
+    HEADER_DATA = "HEADER_DATA"
+    REDIRECT_CHAIN = "REDIRECT_CHAIN"
+    TIMELINE_EVENT = "TIMELINE_EVENT"
+
+
+@dataclass
+class EvidenceArtifact:
+    """Pure domain entity representing a proof artifact attached to a finding."""
+
+    id: UUID = field(default_factory=uuid4)
+    organization_id: UUID = field(default_factory=uuid4)
+    finding_id: UUID = field(default_factory=uuid4)
+    artifact_type: EvidenceType = EvidenceType.HTTP_RESPONSE
+    storage_path: str = ""
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    checksum: str = ""
+    created_at: Optional[Any] = None
+
+
 @dataclass
 class Finding:
     """Pure domain entity representing a security finding/vulnerability."""
@@ -150,6 +177,9 @@ class Finding:
     is_duplicate: bool = False
     canonical_finding_id: Optional[UUID] = None
     deduplication_hash: Optional[str] = None
+
+    # Phase 4.6 Multi-Modal Evidence Extensions
+    artifacts: List[EvidenceArtifact] = field(default_factory=list)
 
 
 @dataclass

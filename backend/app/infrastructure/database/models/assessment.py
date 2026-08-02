@@ -124,3 +124,39 @@ class SecurityFindingModel(Base):
         Index("ix_security_findings_org_cat", "organization_id", "category"),
         Index("ix_security_findings_org_risk", "organization_id", "risk_score"),
     )
+
+
+class EvidenceArtifactModel(Base):
+    """SQLAlchemy model representing a proof evidence artifact attached to a finding."""
+
+    __tablename__ = "evidence_artifacts"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
+    )
+    organization_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    finding_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("security_findings.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    artifact_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    storage_path: Mapped[str] = mapped_column(String(1024), nullable=False)
+    metadata_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    checksum: Mapped[str] = mapped_column(String(64), nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    finding = relationship("SecurityFindingModel", backref="artifacts")
+
+    __table_args__ = (
+        Index("ix_evidence_artifacts_org_finding", "organization_id", "finding_id"),
+    )
