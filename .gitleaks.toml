@@ -1,0 +1,11 @@
+# Vulnova Gitleaks Configuration (.gitleaks.toml)
+# Defines custom allowlists for mock test secret strings in test suites.
+
+[allowlist]
+description = "Allow mock API key strings used exclusively in unit/integration test suites"
+paths = [
+    '''backend/tests/.*''',
+]
+regexes = [
+    '''vn_live_.*''',
+]
