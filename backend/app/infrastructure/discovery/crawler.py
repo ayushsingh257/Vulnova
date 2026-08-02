@@ -167,7 +167,11 @@ class AsyncWebCrawler:
                     try:
                         soup = BeautifulSoup(body_bytes, "html.parser")
                         title_tag = soup.find("title")
-                        if title_tag and isinstance(title_tag, Tag) and title_tag.string:
+                        if (
+                            title_tag
+                            and isinstance(title_tag, Tag)
+                            and title_tag.string
+                        ):
                             title = str(title_tag.string).strip()
 
                         # 1. Extract Links (<a href>)
@@ -187,17 +191,23 @@ class AsyncWebCrawler:
                             if isinstance(form_tag, Tag):
                                 action = str(form_tag.get("action") or url)
                                 full_action = self.normalize_url(urljoin(url, action))
-                                method_val = str(form_tag.get("method") or "GET").upper()
+                                method_val = str(
+                                    form_tag.get("method") or "GET"
+                                ).upper()
 
                                 inputs: List[Dict[str, str]] = []
-                                for inp in form_tag.find_all(["input", "textarea", "select"]):
+                                for inp in form_tag.find_all(
+                                    ["input", "textarea", "select"]
+                                ):
                                     if isinstance(inp, Tag):
                                         name_val = inp.get("name")
                                         if name_val:
                                             inputs.append(
                                                 {
                                                     "name": str(name_val),
-                                                    "type": str(inp.get("type") or "text"),
+                                                    "type": str(
+                                                        inp.get("type") or "text"
+                                                    ),
                                                 }
                                             )
 
@@ -220,7 +230,9 @@ class AsyncWebCrawler:
                                     self.scope.allow_subdomains,
                                 )
                                 self.discovered_scripts.append(
-                                    DiscoveredScript(src_url=full_src, is_external=is_ext)
+                                    DiscoveredScript(
+                                        src_url=full_src, is_external=is_ext
+                                    )
                                 )
 
                     except Exception as parse_err:
