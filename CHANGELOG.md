@@ -19,6 +19,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 4 Phase 4.6 (Multi-Modal Evidence Collection & Capture Engine)** (`bc8ddea8`):
+  - Created `EvidenceCollectionEngine` (`app/infrastructure/assessment/evidence_engine.py`) capturing HTTP request/response dumps, header dumps, cookie profiles, Playwright DOM snapshots, and visual PNG screenshots.
+  - Implemented sensitive data masking for Authorization headers (Bearer/Basic), session cookies, API keys, and JWT tokens before storage.
+  - Created `EvidenceArtifactStorage` (`app/infrastructure/storage/evidence_store.py`) providing a provider-independent storage layer calculating SHA-256 checksums and managing file paths.
+  - Extended domain entities (`app/domain/entities/assessment.py`) with `EvidenceType` (`SCREENSHOT`, `DOM_SNAPSHOT`, `HTTP_REQUEST`, `HTTP_RESPONSE`, `COOKIE_DATA`, `HEADER_DATA`, `REDIRECT_CHAIN`, `TIMELINE_EVENT`), `EvidenceArtifact`, and attached `artifacts` list to `Finding`.
+  - Added `EvidenceArtifactModel` ORM (`app/infrastructure/database/models/assessment.py`) and `EvidenceRepository` (`app/infrastructure/database/repositories/evidence_repository.py`) with tenant-isolated database persistence.
+  - Extended DTOs (`app/application/assessment/dto.py`) with `EvidenceArtifactDTO` and enriched `FindingDTO` with `evidence_count`, `evidence_available`, and `artifacts`.
+  - Integrated evidence capture into `AssessmentService` pipeline (`app/application/assessment/services.py`): `Plugins -> Risk Engine -> Deduplication -> Evidence Engine -> DB & Storage`.
+  - Added unit & integration test suite (`tests/test_evidence_engine.py`) — 6 tests covering header/cookie masking, storage checksums, Playwright DOM/screenshot capture, repository CRUD, and end-to-end service integration. Total backend test suite now stands at **148 passing tests**.
 - **Era 4 Phase 4.5 (Finding Normalization & Risk Intelligence Engine)** (`c164d4b5`):
   - Created `RiskIntelligenceEngine` (`app/application/assessment/risk_engine.py`) calculating CVSS v3.1/v4 vectors, EPSS exploit likelihood scores, asset criticality risk multipliers (1.5x, 1.2x, 1.0x, 0.8x), 0–100 composite risk scores, business impact ratings, and remediation SLA hour thresholds (Critical: 24h, High: 72h, Medium: 336h, Low: 720h).
   - Created `FindingDeduplicator` (`app/application/assessment/deduplication.py`) generating SHA-256 deduplication signature hashes based on tenant ID, plugin ID, CWE ID, target endpoint, and parameter name to link redundant findings to primary canonical findings.
