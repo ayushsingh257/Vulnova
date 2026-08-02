@@ -19,6 +19,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 3 Phase 3.4 (Technology Stack Fingerprinting Engine)** (`2cca89f5`):
+  - Extended domain entities (`app/domain/entities/discovery.py`) with `TechCategory` (`WEB_SERVER`, `FRONTEND_FRAMEWORK`, `BACKEND_FRAMEWORK`, `CMS`, `JAVASCRIPT_LIBRARY`, `SECURITY_HEADER`, `CDN_PROXY`, `DATABASE`, `ANALYTICS`), `DetectedTechnology`, `SecurityHeaderStatus`, and `TechnologyScanResult`.
+  - Created `TechFingerprinter` (`app/infrastructure/discovery/tech_fingerprinter.py`) for HTTP banner/header signature analysis, generator meta tag parsing, DOM structure detection (`__next`, `__nuxt`, `ng-version`, `data-reactroot`), script path analysis, and Security Header compliance auditing.
+  - Extended Discovery DTOs (`app/application/discovery/dto.py`) with `TechnologyScanRequest`, `DetectedTechnologyDTO`, `SecurityHeaderDTO`, and `TechnologyScanResponse`.
+  - Extended `DiscoveryService` (`app/application/discovery/services.py`) with `discover_technologies` executing HTTP probing with SSRF pre-validation, recording audit events (`technology.scan_started`, `technology.scan_completed`).
+  - Added Discovery API endpoint (`app/api/v1/routers/discovery.py`) `POST /api/v1/discovery/technology-scan` guarded by dual-mode auth (`get_current_user_or_api_key`), `targets:create` RBAC guard, and tenant isolation.
+  - Added unit & integration test suite (`tests/test_tech_fingerprinter.py`) — 5 tests covering header fingerprinting, DOM/script fingerprinting, SSRF target rejection, service integration, and audit logging. Total backend test suite now stands at **111 passing tests**.
 - **Era 3 Phase 3.3 (Subdomain & DNS Intelligence Engine)** (`54190b3`):
   - Extended domain entities (`app/domain/entities/discovery.py`) with `DNSRecordType` (`A`, `AAAA`, `CNAME`, `MX`, `NS`, `TXT`), `DNSRecord`, `DiscoveredIP` (`value`, `classification`, `is_internal`, `is_egress_safe`), `DiscoveredSubdomain`, and `SubdomainScanResult`.
   - Created Enterprise IP Classifier (`app/infrastructure/discovery/ssrf_validator.py`) with `classify_ip` function classifying IPs into `PUBLIC`, `PRIVATE`, `LOOPBACK`, `LINK_LOCAL`, `RESERVED` so internal asset findings (`dev.company.local` -> `10.10.5.20`) are preserved for enterprise ASM without over-blocking.

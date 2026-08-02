@@ -117,7 +117,7 @@ No undocumented repository structure changes are permitted.
 | **Era 0.5**| Enterprise Architecture Refinement & Security Model Polish | ✅ **COMPLETED** | Sprint 0.5 |
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
 | **Era 2** | Core Platform & Tenant Management System | ✅ **COMPLETED** (Phases 2.1–2.6 ✅) | Sprint 2 |
-| **Era 3** | Discovery Engine & Asset Surface Mapping | 🟡 **IN PROGRESS** (Phase 3.1 ✅, Phase 3.2 ✅, Phase 3.3 ✅) | Sprint 3 |
+| **Era 3** | Discovery Engine & Asset Surface Mapping | 🟡 **IN PROGRESS** (Phase 3.1 ✅, Phase 3.2 ✅, Phase 3.3 ✅, Phase 3.4 ✅) | Sprint 3 |
 | **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | ⏳ Pending | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
 | **Era 6** | Scanning Orchestration & Execution Pipeline | ⏳ Pending | Sprint 6 |
@@ -232,3 +232,5 @@ The following discovery engine architecture decisions were finalized during Phas
 11. **Enterprise IP Classification**: Rather than over-blocking and discarding internal IP findings, `classify_ip()` annotates IP addresses with `classification` (`PUBLIC`, `PRIVATE`, `LOOPBACK`, `LINK_LOCAL`, `RESERVED`), `is_internal`, and `is_egress_safe`. Enterprise ASM retains internal assets (e.g. `dev.company.local` -> `10.10.5.20`) for attack surface visibility while preventing SSRF during active HTTP scanning.
 12. **Non-Blocking Async DNS Resolution**: `AsyncDNSResolver` uses `dnspython` to asynchronously query `A`, `AAAA`, `CNAME`, `MX`, `NS`, and `TXT` records in parallel across discovered subdomains.
 13. **Passive Certificate Transparency Discovery**: `CTLogsClient` queries Certificate Transparency logs (`crt.sh`) via `httpx.AsyncClient` to discover active subdomains matching the target domain scope.
+14. **Modular Technology Fingerprinting**: `TechFingerprinter` combines HTTP header signature parsing (Nginx, Apache, Express, PHP, Cloudflare), HTML meta generator tags (WordPress, Drupal), DOM structure markers (`__next`, `__nuxt`, `ng-version`, `data-reactroot`), and script paths (`react`, `vue`, `jquery`, `bootstrap`) into structured `DetectedTechnology` domain entities with version extraction and confidence scores.
+15. **Security Header Compliance Auditing**: Automatically evaluates presence and configuration of `Strict-Transport-Security`, `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and `Permissions-Policy` headers during technology scans.

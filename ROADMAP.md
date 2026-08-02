@@ -347,12 +347,18 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Subdomain discovery and DNS record resolution functional; enterprise IP classification active; CT log passive search operational; audit logs record subdomain scan events; pytest (106 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`54190b3`).
 - **Testing Requirements**: IP classification assertions (PUBLIC, PRIVATE, LOOPBACK), `DNSRecordType` enum verification, CT log parsing and scope filtering, service subdomain scanning integration.
 
-### Phase 3.4: Technology Stack Fingerprinting Engine
-- **Objective**: Detect web server, CMS, frontend framework, and backend library versions.
-- **Deliverables**: Fingerprint engine leveraging Wappalyzer rules and header signatures.
+### ✅ Phase 3.4: Technology Stack Fingerprinting Engine
+- **Objective**: Build a modular, rule-based Technology Stack Fingerprinting & Asset Intelligence Engine to analyze HTTP headers, server banners, security header compliance, HTML DOM structure markers, and JavaScript library resources with version extraction.
+- **Deliverables**:
+  - Domain Entities Extension (`app/domain/entities/discovery.py`) — `TechCategory` (`WEB_SERVER`, `FRONTEND_FRAMEWORK`, `BACKEND_FRAMEWORK`, `CMS`, `JAVASCRIPT_LIBRARY`, `SECURITY_HEADER`, `CDN_PROXY`, `DATABASE`, `ANALYTICS`), `DetectedTechnology`, `SecurityHeaderStatus`, `TechnologyScanResult`.
+  - Technology Stack Fingerprinter (`app/infrastructure/discovery/tech_fingerprinter.py`) — `TechFingerprinter` analyzing HTTP server banners (Nginx, Apache, IIS), `X-Powered-By` (Express, Next.js, PHP, ASP.NET), reverse proxies/CDNs (Cloudflare, Fastly, Varnish), generator meta tags (WordPress, Drupal), DOM markers (`__next`, `__nuxt`, `ng-version`, `data-reactroot`), script URLs, and auditing security header compliance (`HSTS`, `CSP`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`).
+  - Discovery DTOs Extension (`app/application/discovery/dto.py`) — `TechnologyScanRequest`, `DetectedTechnologyDTO`, `SecurityHeaderDTO`, `TechnologyScanResponse`.
+  - Discovery Service Extension (`app/application/discovery/services.py`) — `DiscoveryService.discover_technologies` executing tech stack probing with SSRF pre-validation and recording audit log events (`technology.scan_started`, `technology.scan_completed`).
+  - Discovery API Endpoint (`app/api/v1/routers/discovery.py`) — `POST /api/v1/discovery/technology-scan` guarded by dual-mode auth (`get_current_user_or_api_key`), `targets:create` RBAC guard, and tenant isolation.
+  - Unit & Integration Test Suite (`tests/test_tech_fingerprinter.py`) — 5 tests covering header fingerprinting, DOM/script fingerprinting, SSRF target rejection, service integration, and audit logging.
 - **Dependencies**: Phase 3.1.
-- **Completion Criteria**: Accurately maps target technologies and known CVE versions.
-- **Testing Requirements**: Verification against benchmark technology stacks.
+- **Completion Criteria**: Technology fingerprinting engine functional; web server, framework, CMS, and library versions extracted; security header compliance audited; SSRF egress protection enforced; audit logs record scan events; pytest (111 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`2cca89f5`).
+- **Testing Requirements**: Header fingerprinting assertions, HTML DOM and script marker detection, security header compliance evaluation, SSRF target rejection checks, API authorization and RBAC permission enforcement.
 
 ### Phase 3.5: Asset Inventory & Attack Surface Mapper
 - **Objective**: Store and organize target hosts, subdomains, endpoints, and components in DB.
