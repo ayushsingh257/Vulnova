@@ -417,12 +417,17 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: API security plugins functional; exposed Swagger/OpenAPI/GraphQL endpoints detected; JWT algorithm/claim security audited; CORS wildcard credential risks flagged; pytest (130 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`1a8cf439`).
 - **Testing Requirements**: API doc path probe tests, JWT claim decoding and unsigned token checks, CORS origin reflection tests, 7-plugin pipeline orchestration integration.
 
-### Phase 4.4: Cross-Site Scripting (XSS) Detection Plugin
-- **Objective**: Reflection and DOM-based XSS vulnerability scanner.
-- **Deliverables**: XSS assessment plugin module.
-- **Dependencies**: Phase 4.1.
-- **Completion Criteria**: Identifies unescaped user input reflections in HTML/JS context.
-- **Testing Requirements**: Test against reflected and DOM XSS benchmarks.
+### ✅ Phase 4.4: Infrastructure & Cloud Security Assessment Plugin Suite
+- **Objective**: Implement specialized infrastructure and cloud security assessment plugins for port & administrative service exposure detection, TLS/SSL certificate & cipher protocol security auditing, and public cloud storage (AWS S3, Azure Blob, GCP) & metadata exposure analysis.
+- **Deliverables**:
+  - Port & Service Exposure Assessment Plugin (`app/infrastructure/assessment/plugins/network_service_plugin.py`) — `NetworkServicePlugin` probing target host IP / hostname for exposed high-risk administrative and database ports (SSH 22, RDP 3389, MySQL 3306, PostgreSQL 5432, MongoDB 27017, Redis 6379, Elasticsearch 9200, Memcached 11211) to emit `SeverityLevel.HIGH` / `SeverityLevel.MEDIUM`, CWE-284 / CWE-200 `Finding` objects.
+  - TLS/SSL Security Assessment Plugin (`app/infrastructure/assessment/plugins/tls_security_plugin.py`) — `TLSSecurityPlugin` inspecting HTTPS socket connections for certificate expiration, hostname verification, and deprecated protocol versions (TLS 1.0/1.1) to emit `SeverityLevel.HIGH` / `SeverityLevel.MEDIUM`, CWE-295 / CWE-326 `Finding` objects.
+  - Cloud Exposure Assessment Plugin (`app/infrastructure/assessment/plugins/cloud_security_plugin.py`) — `CloudSecurityPlugin` auditing public cloud storage exposure (AWS S3 `s3.amazonaws.com`, Azure Blob `blob.core.windows.net`, GCP Cloud Storage `storage.googleapis.com`) and cloud instance metadata service endpoint references (`169.254.169.254`) to emit `SeverityLevel.HIGH` / `SeverityLevel.MEDIUM`, CWE-732 / CWE-918 `Finding` objects.
+  - Plugin Registry Auto-Registration (`app/infrastructure/assessment/plugins/__init__.py`) — Auto-registers all 10 production security plugins into `PluginRegistry`.
+  - Comprehensive Test Suite (`tests/test_infrastructure_security_plugins.py`) — 4 tests covering plugin registration, port exposure checks, S3 bucket listing detection, and generic `AssessmentService` 10-plugin pipeline integration.
+- **Dependencies**: Phase 4.1, Phase 4.2 & Phase 4.3.
+- **Completion Criteria**: Infrastructure and cloud security plugins functional; exposed SSH/RDP/DB ports detected; TLS certificate expiration and weak ciphers audited; AWS S3/Azure Blob/IMDS cloud exposure flagged; pytest (134 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`7a3d13bc`).
+- **Testing Requirements**: Non-blocking TCP port probe tests, SSL socket certificate expiration checks, AWS S3 list bucket reflection tests, 10-plugin pipeline orchestration integration.
 
 ### Phase 4.5: SSRF & Request Forgery Tester
 - **Objective**: Server-Side Request Forgery testing using callback listeners (out-of-band detection).

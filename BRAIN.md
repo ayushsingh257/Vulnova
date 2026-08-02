@@ -118,7 +118,7 @@ No undocumented repository structure changes are permitted.
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
 | **Era 2** | Core Platform & Tenant Management System | ✅ **COMPLETED** (Phases 2.1–2.6 ✅) | Sprint 2 |
 | **Era 3** | Discovery Engine & Asset Surface Mapping | ✅ **COMPLETED** (Phases 3.1–3.5 ✅) | Sprint 3 |
-| **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | 🟡 **IN PROGRESS** (Phase 4.1 ✅, Phase 4.2 ✅, Phase 4.3 ✅) | Sprint 4 |
+| **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | 🟡 **IN PROGRESS** (Phase 4.1 ✅, Phase 4.2 ✅, Phase 4.3 ✅, Phase 4.4 ✅) | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
 | **Era 6** | Scanning Orchestration & Execution Pipeline | ⏳ Pending | Sprint 6 |
 | **Era 7** | Enterprise Web Application & Dashboard Interface | ⏳ Pending | Sprint 7 |
@@ -249,3 +249,6 @@ The following discovery engine architecture decisions were finalized during Phas
 7. **Exposed API Documentation Probing**: `APISecurityPlugin` probes target assets for exposed Swagger/OpenAPI/GraphQL documentation or schema endpoints (`/swagger`, `/swagger-ui`, `/openapi.json`, `/api-docs`, `/graphql`) and alerts on information disclosure risks.
 8. **JWT Signature & Claims Analysis**: `JWTSecurityPlugin` inspects JSON Web Tokens for critical signing risks (`alg: none`), missing `exp` claims, excessive lifetime (> 24h), and missing `iss`/`aud` claims without requiring server secret keys.
 9. **CORS Misconfiguration Detection**: `CORSPlugin` evaluates `Access-Control-Allow-Origin` and `Access-Control-Allow-Credentials` headers via custom `Origin` probes to flag wildcard origin credentials and arbitrary origin reflection.
+10. **Non-Blocking Administrative Port Probing**: `NetworkServicePlugin` asynchronously checks for exposed high-risk administrative and database ports (SSH 22, RDP 3389, MySQL 3306, PostgreSQL 5432, MongoDB 27017, Redis 6379, Elasticsearch 9200) without stalling execution.
+11. **TLS Certificate & Protocol Inspection**: `TLSSecurityPlugin` inspects SSL socket connections to audit certificate expiration, trust store verification, and deprecated protocol versions (TLS 1.0/1.1).
+12. **Cloud Bucket & IMDS Exposure Auditing**: `CloudSecurityPlugin` detects public cloud storage bucket listing permissions (AWS S3, Azure Blob, GCP) and flags references to Cloud Metadata Service (169.254.169.254).
