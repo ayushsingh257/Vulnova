@@ -1,6 +1,6 @@
 """FastAPI API Key & Dual-Mode Authentication Dependencies."""
 
-from typing import Optional
+from typing import Annotated, Optional
 
 from fastapi import Depends, Header
 from fastapi.security import APIKeyHeader
@@ -20,7 +20,7 @@ api_key_header_scheme = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 async def get_api_key_user(
-    x_api_key: Optional[str] = Depends(api_key_header_scheme),
+    x_api_key: Annotated[Optional[str], Depends(api_key_header_scheme)] = None,
     session: AsyncSession = Depends(get_async_session),
 ) -> UserModel:
     """Dependency injecting authenticated UserModel via X-API-Key header.
@@ -37,8 +37,8 @@ async def get_api_key_user(
 
 
 async def get_current_user_or_api_key(
-    authorization: Optional[str] = Header(None, alias="Authorization"),
-    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    authorization: Annotated[Optional[str], Header(alias="Authorization")] = None,
+    x_api_key: Annotated[Optional[str], Header(alias="X-API-Key")] = None,
     session: AsyncSession = Depends(get_async_session),
 ) -> UserModel:
     """Dual-mode authentication dependency.
