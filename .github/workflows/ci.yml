@@ -73,7 +73,8 @@ jobs:
         run: ruff check backend/app
 
       - name: Run Mypy Type Checker
-        run: mypy backend/app --ignore-missing-imports
+        working-directory: backend
+        run: mypy app --ignore-missing-imports
 
       - name: Run Pytest Suite
         working-directory: backend

@@ -239,8 +239,10 @@ def test_dual_mode_auth_priority_and_fallback() -> None:
 
     mock_service_instance = AsyncMock()
 
+    mock_secret_key = f"{API_KEY_PREFIX}mock_test_secret_value_12345"  # gitleaks:allow
+
     async def mock_auth_key(raw_key: str):
-        if raw_key == "vn_live_valid_key_secret_12345678":
+        if raw_key == mock_secret_key:
             return MagicMock(), mock_api_key_user
         raise UnauthorizedException("Invalid or revoked API key")
 
@@ -269,7 +271,7 @@ def test_dual_mode_auth_priority_and_fallback() -> None:
             # 2. X-API-Key header only -> Authenticates via X-API-Key
             res = client.get(
                 "/test/protected-dual-mode",
-                headers={"X-API-Key": "vn_live_valid_key_secret_12345678"},
+                headers={"X-API-Key": mock_secret_key},
             )
             assert res.status_code == 200
             assert res.json()["user_id"] == str(mock_api_key_user.id)
@@ -279,7 +281,7 @@ def test_dual_mode_auth_priority_and_fallback() -> None:
                 "/test/protected-dual-mode",
                 headers={
                     "Authorization": f"Bearer {valid_jwt}",
-                    "X-API-Key": "vn_live_valid_key_secret_12345678",
+                    "X-API-Key": mock_secret_key,
                 },
             )
             assert res.status_code == 200
