@@ -117,7 +117,7 @@ No undocumented repository structure changes are permitted.
 | **Era 0.5**| Enterprise Architecture Refinement & Security Model Polish | ✅ **COMPLETED** | Sprint 0.5 |
 | **Era 1** | Infrastructure, Monorepo & DevSecOps Foundation | ✅ **COMPLETED** (Phases 1.1–1.7 ✅) | Sprint 1 |
 | **Era 2** | Core Platform & Tenant Management System | ✅ **COMPLETED** (Phases 2.1–2.6 ✅) | Sprint 2 |
-| **Era 3** | Discovery Engine & Asset Surface Mapping | 🟡 **IN PROGRESS** (Phase 3.1 ✅) | Sprint 3 |
+| **Era 3** | Discovery Engine & Asset Surface Mapping | 🟡 **IN PROGRESS** (Phase 3.1 ✅, Phase 3.2 ✅) | Sprint 3 |
 | **Era 4** | Vulnerability Assessment Engine & Dynamic Testing | ⏳ Pending | Sprint 4 |
 | **Era 5** | AI Security Analyst Engine & Vulnerability Intelligence | ⏳ Pending | Sprint 5 |
 | **Era 6** | Scanning Orchestration & Execution Pipeline | ⏳ Pending | Sprint 6 |
@@ -226,3 +226,6 @@ The following discovery engine architecture decisions were finalized during Phas
 5. **Extensible Domain Asset Architecture**: Domain entities in `app/domain/entities/discovery.py` (`AssetType`, `DiscoveredAsset`, `DiscoveredURL`, `DiscoveredForm`, `DiscoveredScript`, `CrawlResult`) are designed as extensible base structures for future phases (subdomains, tech fingerprinting, API schemas).
 6. **Audit Traceability**: Every crawl request logs structured audit events (`discovery.crawl_started`, `discovery.crawl_completed`, or `discovery.crawl_rejected`) capturing actor user ID, organization ID, target domain, page count, duration, and rejection reason.
 7. **RBAC & Authorization**: `/api/v1/discovery/crawl` requires authentication (Bearer JWT or X-API-Key), valid organization context, and `targets:create` RBAC permission.
+8. **Lazy Playwright Import**: `playwright.async_api` is imported lazily inside `SPADynamicCrawler.crawl()`. Zero top-level Playwright imports exist in the module layer, ensuring API server startup never crashes if Playwright is uninstalled.
+9. **Graceful Static Fallback**: If Playwright package or Chromium binaries are missing (`PlaywrightUnavailableException`), `DiscoveryService` logs a warning (`discovery.playwright_unavailable_falling_back_to_static`) and executes `AsyncWebCrawler` (Phase 3.1).
+10. **Background AJAX/Fetch Interception**: `SPADynamicCrawler` listens to `page.on("request", ...)` events to capture dynamic `fetch` and `XHR` calls, running SSRF checks (`is_safe_target_url`) on every intercepted endpoint.

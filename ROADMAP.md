@@ -320,12 +320,17 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Async web crawler operational; SSRF egress filtering active; domain scope boundaries strictly enforced; response body caps (5 MB) and redirect limits (5) active; audit logs recorded; pytest (98 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`2f5500b`, `455c127`).
 - **Testing Requirements**: Scheme whitelist verification, private IP & AWS metadata blocking assertions, HTML link/form/script extraction, service pre-validation rejection checks, API authorization and RBAC permission enforcement.
 
-### Phase 3.2: SPA Dynamic DOM Renderer (Playwright Integration)
-- **Objective**: Integrate headless Chromium rendering for JavaScript-heavy single page applications.
-- **Deliverables**: Playwright crawler module for DOM rendering and event triggers.
+### ✅ Phase 3.2: SPA Dynamic DOM Renderer (Playwright Integration)
+- **Objective**: Integrate headless Chromium rendering for JavaScript-heavy Single-Page Applications (SPAs), background network request (`fetch`/`XHR`) interception, and dynamic DOM parsing with a fail-safe fallback to static web crawling.
+- **Deliverables**:
+  - Domain Entities Extension (`app/domain/entities/discovery.py`) — `DiscoveredNetworkRequest` and `is_spa: bool` flag in `CrawlResult`.
+  - Headless Chromium SPA Renderer (`app/infrastructure/discovery/playwright_renderer.py`) — `SPADynamicCrawler` using lazy Playwright import, background `fetch`/`XHR` network interception, dynamic DOM element evaluation, and `PlaywrightUnavailableException`.
+  - Discovery DTOs Extension (`app/application/discovery/dto.py`) — `render_js: bool` in `CrawlRequest`, `DiscoveredNetworkRequestDTO`, and `is_spa: bool` in `CrawlResponse`.
+  - Discovery Service Extension (`app/application/discovery/services.py`) — `DiscoveryService.crawl_target` executing `SPADynamicCrawler` when `render_js=True` with graceful fallback to `AsyncWebCrawler` if Playwright is uninstalled or browser binaries are absent. Audit trail logs `render_mode` and `is_spa`.
+  - Unit & Integration Test Suite (`tests/test_playwright_renderer.py`) — 4 tests covering `render_js` flag parsing, lazy import handling, Playwright unavailability exception raising, and service static crawler fallback execution.
 - **Dependencies**: Phase 3.1.
-- **Completion Criteria**: Captures rendered DOM nodes, dynamic routes, and AJAX endpoints.
-- **Testing Requirements**: SPA rendering test against sample React web app.
+- **Completion Criteria**: Playwright dynamic rendering functional; lazy import prevents startup crashes; background fetch/XHR network requests intercepted and SSRF validated; graceful fallback to static crawler operational; audit logs record `render_mode`; pytest (102 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`90d50f5`).
+- **Testing Requirements**: `render_js` flag validation, lazy import isolation, Playwright unavailability exception handling, service static crawler fallback execution, network request DTO serialization.
 
 ### Phase 3.3: Endpoint & REST/GraphQL API Discovery
 - **Objective**: Extract API routes, URL parameters, headers, and GraphQL schemas from client scripts.

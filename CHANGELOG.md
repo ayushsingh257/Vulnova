@@ -19,6 +19,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 3 Phase 3.2 (SPA Dynamic DOM Renderer with Playwright)** (`90d50f5`):
+  - Extended domain entities (`app/domain/entities/discovery.py`) with `DiscoveredNetworkRequest` and `is_spa: bool` flag in `CrawlResult`.
+  - Created `SPADynamicCrawler` (`app/infrastructure/discovery/playwright_renderer.py`) for headless Chromium SPA rendering, dynamic DOM evaluation, and background `fetch`/`XHR` network request interception with SSRF pre-validation.
+  - Implemented lazy Playwright loading and `PlaywrightUnavailableException` exception handling to ensure server startup and static crawling remain 100% operational when Playwright binaries are absent.
+  - Extended Discovery DTOs (`app/application/discovery/dto.py`) with `render_js: bool` in `CrawlRequest`, `DiscoveredNetworkRequestDTO`, and `is_spa: bool` in `CrawlResponse`.
+  - Extended `DiscoveryService` (`app/application/discovery/services.py`) to execute Playwright SPA rendering when `render_js=True` with graceful fallback to `AsyncWebCrawler`. Audit logging captures `render_mode` and `is_spa` flags.
+  - Added unit & integration test suite (`tests/test_playwright_renderer.py`) — 4 tests covering `render_js` flag parsing, lazy import handling, Playwright unavailability exception raising, and static crawler fallback. Total backend test suite now stands at **102 passing tests**.
 - **Era 3 Phase 3.1 (Async HTTP Web Crawler Core)** (`2f5500b`, `455c127`):
   - Created extensible domain entities (`app/domain/entities/discovery.py`) — `AssetType`, `DiscoveredAsset`, `DiscoveredURL`, `DiscoveredForm`, `DiscoveredScript`, `CrawlScope`, `CrawlResult`.
   - Created SSRF Egress Firewall & Domain Scope Validator (`app/infrastructure/discovery/ssrf_validator.py`) — Scheme whitelist (`http`/`https` only), IP range filtering (`127.0.0.1`, `169.254.169.254`, RFC 1918 private subnets, `0.0.0.0`), and domain scope matcher (`is_url_in_scope`).
