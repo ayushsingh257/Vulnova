@@ -65,6 +65,25 @@ class AssessmentRepository:
         self, organization_id: UUID, finding: Finding
     ) -> SecurityFindingModel:
         """Persist a security finding for a target tenant."""
+        cvss_data = (
+            {
+                "version": finding.cvss.version,
+                "base_score": finding.cvss.base_score,
+                "vector_string": finding.cvss.vector_string,
+            }
+            if finding.cvss
+            else None
+        )
+        epss_data = (
+            {
+                "epss_score": finding.epss.epss_score,
+                "percentile": finding.epss.percentile,
+            }
+            if finding.epss
+            else None
+        )
+        risk_val = finding.risk.composite_risk_score if finding.risk else None
+
         finding_model = SecurityFindingModel(
             id=finding.id,
             organization_id=organization_id,
@@ -79,6 +98,13 @@ class AssessmentRepository:
             cwe_id=finding.cwe_id,
             remediation=finding.remediation,
             evidence_json=finding.evidence,
+            cvss_json=cvss_data,
+            epss_json=epss_data,
+            risk_score=risk_val,
+            confidence=finding.confidence.value if finding.confidence else "HIGH",
+            is_duplicate=finding.is_duplicate,
+            canonical_finding_id=finding.canonical_finding_id,
+            deduplication_hash=finding.deduplication_hash,
         )
         self.session.add(finding_model)
         await self.session.flush()

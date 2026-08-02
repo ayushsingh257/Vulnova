@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     DateTime,
     Float,
     ForeignKey,
@@ -91,6 +92,26 @@ class SecurityFindingModel(Base):
     remediation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     evidence_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
 
+    # Phase 4.5 Intelligence & Normalization Extensions
+    cvss_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    epss_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    risk_score: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, index=True
+    )
+    confidence: Mapped[Optional[str]] = mapped_column(
+        String(20), nullable=True, default="HIGH", index=True
+    )
+    is_duplicate: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    canonical_finding_id: Mapped[Optional[UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("security_findings.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    deduplication_hash: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, index=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -101,4 +122,5 @@ class SecurityFindingModel(Base):
     __table_args__ = (
         Index("ix_security_findings_org_sev", "organization_id", "severity"),
         Index("ix_security_findings_org_cat", "organization_id", "category"),
+        Index("ix_security_findings_org_risk", "organization_id", "risk_score"),
     )

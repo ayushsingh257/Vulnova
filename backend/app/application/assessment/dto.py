@@ -31,6 +31,14 @@ class FindingDTO(BaseModel):
     cwe_id: Optional[str] = None
     remediation: Optional[str] = None
     evidence: Dict[str, Any] = Field(default_factory=dict)
+    cvss: Optional[Dict[str, Any]] = None
+    epss: Optional[Dict[str, Any]] = None
+    risk_score: Optional[float] = None
+    business_impact: Optional[str] = None
+    confidence: Optional[str] = "HIGH"
+    is_duplicate: bool = False
+    canonical_finding_id: Optional[str] = None
+    fix_sla_hours: Optional[int] = None
     created_at: str
 
 

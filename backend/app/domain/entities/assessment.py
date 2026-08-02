@@ -52,6 +52,52 @@ class AssessmentJobStatus(str, Enum):
     CANCELLED = "CANCELLED"
 
 
+class ConfidenceLevel(str, Enum):
+    """Confidence rating of vulnerability detection accuracy."""
+
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+
+class AssetCriticality(str, Enum):
+    """Business criticality rating of target asset."""
+
+    CRITICAL = "CRITICAL"  # 1.5x risk multiplier
+    HIGH = "HIGH"  # 1.2x risk multiplier
+    MEDIUM = "MEDIUM"  # 1.0x risk multiplier
+    LOW = "LOW"  # 0.8x risk multiplier
+
+
+@dataclass
+class CVSSMetrics:
+    """CVSS v3.1 / v4 scoring parameters."""
+
+    version: str = "3.1"
+    base_score: float = 0.0
+    vector_string: Optional[str] = None
+    exploitability_score: Optional[float] = None
+    impact_score: Optional[float] = None
+
+
+@dataclass
+class EPSSMetrics:
+    """EPSS (Exploit Prediction Scoring System) parameters."""
+
+    epss_score: float = 0.0  # 0.0 to 1.0 probability
+    percentile: float = 0.0  # 0.0 to 1.0 percentile rank
+
+
+@dataclass
+class RiskMetrics:
+    """Composite risk score and remediation SLA metrics."""
+
+    composite_risk_score: float = 0.0  # 0.0 to 100.0
+    business_impact: str = "MEDIUM"  # CRITICAL, HIGH, MEDIUM, LOW
+    fix_sla_hours: int = 336  # Hours until SLA breach
+    risk_level: str = "MEDIUM"  # CRITICAL, HIGH, MEDIUM, LOW
+
+
 @dataclass
 class PluginMetadata:
     """Metadata describing a security assessment plugin."""
@@ -74,6 +120,7 @@ class AssessmentContext:
     target_domain: str
     organization_id: UUID
     asset_nodes: List[AssetNode] = field(default_factory=list)
+    asset_criticality: AssetCriticality = AssetCriticality.MEDIUM
     options: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -94,6 +141,15 @@ class Finding:
     remediation: Optional[str] = None
     evidence: Dict[str, Any] = field(default_factory=dict)
     asset_node_id: Optional[UUID] = None
+
+    # Phase 4.5 Intelligence & Normalization Extensions
+    cvss: Optional[CVSSMetrics] = None
+    epss: Optional[EPSSMetrics] = None
+    risk: Optional[RiskMetrics] = None
+    confidence: ConfidenceLevel = ConfidenceLevel.HIGH
+    is_duplicate: bool = False
+    canonical_finding_id: Optional[UUID] = None
+    deduplication_hash: Optional[str] = None
 
 
 @dataclass

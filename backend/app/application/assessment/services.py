@@ -6,12 +6,14 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.assessment.deduplication import FindingDeduplicator
 from app.application.assessment.dto import (
     AssessmentJobResponse,
     CreateAssessmentRequest,
     FindingDTO,
     PluginMetadataDTO,
 )
+from app.application.assessment.risk_engine import RiskIntelligenceEngine
 from app.application.audit_logs.services import AuditLogService
 from app.core.exceptions import ResourceNotFoundException, ValidationException
 from app.core.logging import get_logger
@@ -34,18 +36,20 @@ logger = get_logger("vulnova.assessment_service")
 
 
 class AssessmentService:
-    """Application Service orchestrating vulnerability scanning plugins and findings persistence."""
+    """Application Service orchestrating vulnerability scanning plugins, risk intelligence, and findings persistence."""
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.repo = AssessmentRepository(session)
         self.audit_service = AuditLogService(session)
         self.plugin_registry = PluginRegistry()
+        self.risk_engine = RiskIntelligenceEngine()
+        self.deduplicator = FindingDeduplicator()
 
     async def create_and_run_assessment(
         self, req: CreateAssessmentRequest, current_user: UserModel
     ) -> AssessmentJobResponse:
-        """Create an assessment job and execute requested security assessment plugins."""
+        """Create an assessment job, execute plugins, apply risk intelligence normalization, deduplicate, and persist."""
         start_time = time.time()
         target_str = str(req.target_url).rstrip("/")
         base_domain = extract_base_domain(target_str)
@@ -99,7 +103,7 @@ class AssessmentService:
         )
 
         # 6. Execute Plugins Decoupled from AssessmentService
-        collected_findings: List[Finding] = []
+        raw_findings: List[Finding] = []
         status = "COMPLETED"
         error_msg: Optional[str] = None
 
@@ -116,8 +120,7 @@ class AssessmentService:
                 findings = await plugin.execute(context)
                 for f in findings:
                     f.assessment_job_id = job_model.id
-                    collected_findings.append(f)
-                    await self.repo.create_finding(org_id, f)
+                    raw_findings.append(f)
 
         except Exception as e:
             status = "FAILED"
@@ -126,9 +129,19 @@ class AssessmentService:
                 "assessment.execution_failed", error=error_msg, job_id=str(job_model.id)
             )
 
+        # 7. Apply Risk Intelligence & Deduplication Normalization Pipeline
+        enriched_findings = self.risk_engine.enrich_findings(
+            raw_findings, context.asset_criticality
+        )
+        final_findings = self.deduplicator.deduplicate_findings(enriched_findings)
+
+        # 8. Persist Normalized Findings to DB
+        for f in final_findings:
+            await self.repo.create_finding(org_id, f)
+
         duration = round(time.time() - start_time, 2)
 
-        # 7. Update Job Status & Duration
+        # 9. Update Job Status & Duration
         await self.repo.update_job_status(
             organization_id=org_id,
             job_id=job_model.id,
@@ -137,7 +150,7 @@ class AssessmentService:
             error_message=error_msg,
         )
 
-        # 8. Audit Assessment Completed / Failed
+        # 10. Audit Assessment Completed / Failed
         audit_action = (
             "assessment.completed" if status == "COMPLETED" else "assessment.failed"
         )
@@ -149,7 +162,7 @@ class AssessmentService:
             actor_user_id=current_user.id,
             details={
                 "target_url": target_str,
-                "total_findings": len(collected_findings),
+                "total_findings": len(final_findings),
                 "duration_seconds": duration,
                 "error": error_msg,
             },
@@ -168,9 +181,34 @@ class AssessmentService:
                 cwe_id=f.cwe_id,
                 remediation=f.remediation,
                 evidence=f.evidence,
+                cvss=(
+                    {
+                        "version": f.cvss.version,
+                        "base_score": f.cvss.base_score,
+                        "vector_string": f.cvss.vector_string,
+                    }
+                    if f.cvss
+                    else None
+                ),
+                epss=(
+                    {
+                        "epss_score": f.epss.epss_score,
+                        "percentile": f.epss.percentile,
+                    }
+                    if f.epss
+                    else None
+                ),
+                risk_score=f.risk.composite_risk_score if f.risk else None,
+                business_impact=f.risk.business_impact if f.risk else None,
+                confidence=f.confidence.value if f.confidence else "HIGH",
+                is_duplicate=f.is_duplicate,
+                canonical_finding_id=(
+                    str(f.canonical_finding_id) if f.canonical_finding_id else None
+                ),
+                fix_sla_hours=f.risk.fix_sla_hours if f.risk else None,
                 created_at=str(job_model.created_at),
             )
-            for f in collected_findings
+            for f in final_findings
         ]
 
         return AssessmentJobResponse(
@@ -211,6 +249,14 @@ class AssessmentService:
                 cwe_id=f.cwe_id,
                 remediation=f.remediation,
                 evidence=f.evidence_json or {},
+                cvss=f.cvss_json,
+                epss=f.epss_json,
+                risk_score=f.risk_score,
+                confidence=f.confidence,
+                is_duplicate=f.is_duplicate,
+                canonical_finding_id=(
+                    str(f.canonical_finding_id) if f.canonical_finding_id else None
+                ),
                 created_at=str(f.created_at),
             )
             for f in job_findings
@@ -256,6 +302,14 @@ class AssessmentService:
                 cwe_id=f.cwe_id,
                 remediation=f.remediation,
                 evidence=f.evidence_json or {},
+                cvss=f.cvss_json,
+                epss=f.epss_json,
+                risk_score=f.risk_score,
+                confidence=f.confidence,
+                is_duplicate=f.is_duplicate,
+                canonical_finding_id=(
+                    str(f.canonical_finding_id) if f.canonical_finding_id else None
+                ),
                 created_at=str(f.created_at),
             )
             for f in findings_models
