@@ -44,6 +44,7 @@ Every target setup and scan creation request requires an explicit user confirmat
    - Target URL, `profile_id`, and `enabled_plugins` list
    - Target URL & confirmed scope rules
    - User IP address, timestamp (UTC ISO 8601), and error logs.
+7. **Asset Inventory Multi-Tenant Isolation**: `AssetInventoryService` and `AssetInventoryRepository` enforce mandatory `organization_id` boundary filters on all inventory endpoints (`GET /api/v1/assets/inventory`, `GET /api/v1/assets/{asset_id}`). Cross-organization asset lookups strictly fail with `ResourceNotFoundException` / 404 to prevent unauthorized posture visibility.
 
 ---
 

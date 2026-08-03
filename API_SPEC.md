@@ -138,8 +138,75 @@ All API errors return a standardized JSON error format:
     "duration_seconds": 4.12,
     "error_message": null,
     "created_at": "2026-08-03T00:00:00Z"
+---
+
+### D. Enterprise Asset Inventory & Posture Intelligence (`/assets`)
+
+#### `GET /api/v1/assets/inventory`
+- **Summary**: List tenant asset inventory nodes enriched with risk posture scores, findings count, and running technologies.
+- **RBAC Guard**: Requires authentication (`get_current_user_or_api_key`) and `assets:read` permission.
+- **Query Parameters**: `node_type` (optional), `min_risk_score` (optional float), `search` (optional string), `page`, `limit`.
+- **Response (200 OK)**:
+  ```json
+  {
+    "total": 1,
+    "items": [
+      {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "node_type": "TARGET_DOMAIN",
+        "name": "shop.enterprise.com",
+        "value": "shop.example.com",
+        "risk_score": 85.5,
+        "risk_level": "CRITICAL",
+        "total_findings": 3,
+        "findings_by_severity": { "CRITICAL": 1, "HIGH": 2 },
+        "technologies": ["FastAPI", "PostgreSQL"],
+        "created_at": "2026-08-03T00:00:00Z",
+        "updated_at": "2026-08-03T00:00:00Z"
+      }
+    ]
   }
   ```
+
+#### `GET /api/v1/assets/{asset_id}`
+- **Summary**: Query detailed inventory summary for a single asset node.
+- **RBAC Guard**: Requires authentication (`get_current_user_or_api_key`) and `assets:read` permission.
+- **Response (200 OK)**:
+  ```json
+  {
+    "asset": {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "node_type": "TARGET_DOMAIN",
+      "name": "shop.enterprise.com",
+      "value": "shop.example.com",
+      "risk_score": 85.5,
+      "risk_level": "CRITICAL",
+      "total_findings": 3,
+      "findings_by_severity": { "CRITICAL": 1, "HIGH": 2 },
+      "technologies": ["FastAPI", "PostgreSQL"],
+      "created_at": "2026-08-03T00:00:00Z",
+      "updated_at": "2026-08-03T00:00:00Z"
+    },
+    "technologies": [
+      {
+        "id": "9a12b34c-5678-90ef-a1b2-c3d4e5f67890",
+        "name": "FastAPI",
+        "category": "BACKEND_FRAMEWORK",
+        "version": "0.110.0"
+      }
+    ],
+    "findings": [],
+    "relationships": []
+  }
+  ```
+
+#### `GET /api/v1/assets/{asset_id}/findings`
+- **Summary**: List security findings affecting a specific asset.
+- **RBAC Guard**: Requires authentication and `findings:read` permission.
+
+#### `GET /api/v1/assets/{asset_id}/technologies`
+- **Summary**: List technologies running on a specific asset.
+- **RBAC Guard**: Requires authentication and `assets:read` permission.
 
 ---
 

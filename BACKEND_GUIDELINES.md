@@ -112,3 +112,12 @@ All logs are emitted using `structlog` as formatted JSON:
 3. **ScanPolicyEngine Separation**: Execution policy enforcement is encapsulated in a dedicated `ScanPolicyEngine` (`app/application/assessment/policy_engine.py`) rather than tightly coupled inside `AssessmentService`.
 4. **Stateless Policy Evaluation**: Policy methods (`validate_policy`, `is_url_in_scope`, `enrich_request_headers`, `enrich_request_cookies`, `should_stop_on_critical`) operate statelessly on `ScanPolicy` objects without side effects.
 5. **Future Distributed Worker Compatibility**: `ScanPolicyEngine` has zero dependencies on web framework routers or database sessions, ensuring full compatibility for reuse inside Era 6 distributed Celery worker sandboxes.
+
+---
+
+## 🔗 7. Multi-Source Finding Correlation & Asset Inventory Architecture
+
+1. **Optional asset_node_id Linkage**: `asset_node_id` on `SecurityFindingModel` remains `Optional[UUID]` to preserve complete backward compatibility for legacy scan findings without requiring schema migration defaults.
+2. **Zero Graph Node Explosion**: Findings MUST NOT be duplicated as graph nodes in `asset_nodes`. Security findings remain stored in `security_findings` table, linked via `asset_node_id` and target URL.
+3. **Risk Intelligence Reuse**: Asset risk score calculation reuses composite risk scores (`composite_risk_score`) produced by `RiskIntelligenceEngine` (Phase 4.5) rather than computing secondary risk scores.
+4. **Mandatory Tenant Boundary Isolation**: Every repository method in `AssetInventoryRepository` and `AssetGraphRepository` MUST include explicit `organization_id` filters to guarantee zero cross-tenant asset data leakage.

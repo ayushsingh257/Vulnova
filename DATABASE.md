@@ -112,12 +112,12 @@ CREATE TABLE assessment_jobs (
 CREATE INDEX idx_assessment_jobs_org_status ON assessment_jobs(organization_id, status);
 CREATE INDEX idx_assessment_jobs_org_profile ON assessment_jobs(organization_id, profile_id);
 
--- Security Findings (Normalized & Evidence Enriched - Phase 4.5 & 4.6)
+-- Security Findings (Normalized, Evidence Enriched, & Asset Correlated - Phase 4.5, 4.6, 4.8)
 CREATE TABLE security_findings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     assessment_job_id UUID NOT NULL REFERENCES assessment_jobs(id) ON DELETE CASCADE,
-    asset_node_id UUID REFERENCES asset_nodes(id) ON DELETE SET NULL,
+    asset_node_id UUID REFERENCES asset_nodes(id) ON DELETE SET NULL, -- Phase 4.8 optional FK to AssetNode (keeps legacy backward compatibility)
     plugin_id VARCHAR(100) NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
@@ -139,6 +139,7 @@ CREATE TABLE security_findings (
 CREATE INDEX idx_security_findings_org_severity ON security_findings(organization_id, severity);
 CREATE INDEX idx_security_findings_org_category ON security_findings(organization_id, category);
 CREATE INDEX idx_security_findings_org_risk ON security_findings(organization_id, risk_score);
+CREATE INDEX idx_security_findings_org_asset ON security_findings(organization_id, asset_node_id);
 
 -- Multi-Modal Evidence Artifacts (Phase 4.6)
 CREATE TABLE evidence_artifacts (

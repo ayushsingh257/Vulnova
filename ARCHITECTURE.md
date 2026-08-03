@@ -99,10 +99,13 @@ Risk Intelligence Engine ──► (CVSS v3.1/v4 + EPSS + Asset Multipliers ─�
 Evidence Collection Engine ─► (Mask Headers/Cookies + HTTP Dumps + DOM Snapshots + PNG Screenshots)
         │
         ▼
-Normalized Database & Storage ──► (Storage Provider Bytes + DB EvidenceArtifactModel Records)
+Multi-Source Correlation Engine ─► (Link Finding to AssetNode + Aggregate Composite Risk Posture)
         │
         ▼
-AI Security Intelligence
+Normalized Database & Storage ──► (Storage Provider Bytes + DB Findings & Inventory Metadata)
+        │
+        ▼
+Asset Inventory Intelligence & AI Security Copilot
 ```
 
 ### A. Profile-Driven Execution & Policy Enforcement
@@ -119,6 +122,13 @@ AI Security Intelligence
 - **Sensitive Data Sanitization**: Automatically masks `Authorization` headers (`Bearer *******`, `Basic *******`), session cookies, API keys, and JWT tokens (`eyJ...`) before storage.
 - **Storage Provider Independence**: `EvidenceArtifactStorage` provides an abstraction layer managing byte content, local filesystem paths (`uploads/evidence/<org_id>/<finding_id>/`), and future S3/MinIO cloud object stores.
 - **Integrity Verification**: Computes a SHA-256 checksum for every saved evidence artifact to guarantee proof non-repudiation and data integrity.
+
+### D. Multi-Source Finding Correlation & Asset Inventory Subsystem
+- **AssessmentCorrelationEngine**: Synthesizes discovery targets (`AssetNode`), running technology stack fingerprints (`RUNS_TECH`), security findings, and evidence artifacts into consolidated asset risk posture metadata.
+- **Backward Compatibility & Optional Linkage**: `asset_node_id` remains an optional field (`Optional[UUID]`) on `SecurityFindingModel` to ensure legacy findings remain valid without breaking existing database schemas.
+- **Zero Graph Explosion**: Security findings remain in `security_findings` rather than duplicated as individual graph nodes, maintaining clean and fast graph topology traversal.
+- **Risk Score Aggregation**: Asset composite risk scores reuse existing Phase 4.5 `RiskIntelligenceEngine` metrics (`composite_risk_score`) to aggregate maximum severity and risk ratings per asset node.
+- **Tenant Boundary Security**: All inventory lookup APIs (`GET /api/v1/assets/inventory`, `GET /api/v1/assets/{asset_id}`) strictly enforce tenant boundary isolation (`organization_id`).
 
 ---
 

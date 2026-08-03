@@ -261,3 +261,8 @@ The following discovery engine architecture decisions were finalized during Phas
     - `ScanProfileRegistry` references `PluginRegistry` IDs only and does not duplicate plugin metadata or implementation logic.
     - `PluginRegistry` remains the single source of truth for plugin availability and capability verification.
     - `ScanPolicyEngine` is a stateless helper class independent of FastAPI/HTTP layers, ensuring full compatibility for reuse inside future Era 6 distributed Celery worker sandboxes.
+16. **Multi-Source Finding Correlation & Asset Inventory Architecture**: Findings are no longer isolated scanner records. `AssessmentCorrelationEngine` maps normalized findings to Asset Graph nodes (`AssetNode`) and aggregates posture metrics:
+    - `asset_node_id` remains an optional field (`Optional[UUID]`) on findings to preserve full backward compatibility with legacy scan data.
+    - Findings are NOT duplicated as graph nodes; they remain stored in `security_findings` while linked via `asset_node_id` to prevent graph node explosion.
+    - Asset posture risk scores reuse `RiskIntelligenceEngine` composite scores (`composite_risk_score`) rather than inventing secondary risk engines.
+    - Every asset inventory query enforces mandatory `organization_id` filtering for strict multi-tenant boundary security.

@@ -111,3 +111,10 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 - **Stateless Execution Policy Reuse**: The `ScanPolicyEngine` (`app/application/assessment/policy_engine.py`) introduced in Phase 4.7 operates statelessly without dependencies on web framework routers or database connections.
 - **Worker Sandbox Integration**: In future Era 6 distributed worker deployments, Celery worker nodes running in unprivileged sandbox pods will directly consume `ScanPolicyEngine` to enforce URL scope matching, concurrency throttling, header/cookie injection, and emergency `stop_on_critical` scan termination.
 - **Zero Deployment Infrastructure Overhead**: No additional deployment topology changes or new services are required currently.
+
+---
+
+## 📊 5. Asset Inventory Indexing & Database Query Performance (Phase 4.8)
+
+- **Tenant-Isolated Asset Query Indexing**: `asset_nodes` and `security_findings` tables utilize composite PostgreSQL indexes on `(organization_id, node_type)` and `(organization_id, asset_node_id)` to ensure sub-millisecond query execution times for asset inventory dashboards (`GET /api/v1/assets/inventory`).
+- **Zero Graph Node Explosion**: Finding data remains in `security_findings`, preventing table size inflation in `asset_nodes` and `asset_relationships`.

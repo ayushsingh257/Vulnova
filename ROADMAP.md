@@ -476,14 +476,27 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Pre-built enterprise scan profiles and custom execution policies operational; rate limits, concurrency, and scope boundaries strictly enforced; pytest (155 passed), Ruff, Black, Mypy (strict) pass cleanly (`ba93cf3d`, `9167387d`).
 - **Testing Requirements**: Scan profile plugin resolution tests, policy rate limiting unit tests, scope exclusion enforcement tests, auth enrichment tests, stop-on-critical emergency termination tests.
 
-### Phase 4.8: Multi-Source Finding Correlation & Asset Inventory Engine
+### ✅ Phase 4.8: Multi-Source Finding Correlation & Asset Inventory Engine
 - **Objective**: Correlate crawler endpoints, SPA rendered DOM nodes, DNS intelligence, technology stack fingerprints, Asset Graph topology, and 10 production security assessment plugins into a unified, normalized enterprise asset and vulnerability intelligence model.
 - **Deliverables**:
-  - `AssessmentCorrelationEngine` (`app/application/assessment/correlation_engine.py`) synthesizing multi-source discovery and assessment findings into a single unified asset inventory.
-  - `AssetInventoryRepository` (`app/infrastructure/database/repositories/asset_inventory_repository.py`) storing continuous asset posture and vulnerability associations.
-  - API router endpoints `/api/v1/assets/inventory` for querying consolidated tenant asset surface.
+  - `AssessmentCorrelationEngine` (`app/application/assessment/correlation_engine.py`) synthesizing multi-source discovery and assessment findings into a single unified asset inventory posture model.
+  - Optional `asset_node_id` finding linkage maintaining backward compatibility for legacy findings.
+  - Zero graph node explosion architecture keeping findings in `security_findings` table while linking to `AssetNode`.
+  - Reused `RiskIntelligenceEngine` scores for asset composite risk score aggregation.
+  - `AssetInventoryRepository` (`app/infrastructure/database/repositories/asset_inventory_repository.py`) storing tenant-isolated asset posture and technology associations.
+  - `AssetInventoryService` (`app/application/assessment/asset_inventory_service.py`) and DTOs (`AssetInventoryDTO`, `AssetInventoryResponse`, `AssetDetailResponse`).
+  - REST API router endpoints (`app/api/v1/routers/assets.py`): `GET /api/v1/assets/inventory`, `GET /api/v1/assets/{asset_id}`, `GET /api/v1/assets/{asset_id}/findings`, `GET /api/v1/assets/{asset_id}/technologies`.
+  - Unit & Integration test suite (`tests/test_correlation_inventory.py`) — 3 tests covering correlation engine node matching, tenant isolation, and inventory lookups.
+- **Implementation Details**:
+  - **Feature Commit**: `17d8fb06`
+  - **Documentation Commit**: `f319b2af`
+  - **Quality Verification**:
+    - **Black**: Passed
+    - **Ruff**: 0 errors
+    - **Mypy**: 119 source files passed (strict mode)
+    - **Pytest**: 158/158 passed
 - **Dependencies**: Phase 4.5 – Phase 4.7, Phase 3.5.
-- **Completion Criteria**: Discovered assets and security findings correlated without duplication; unified asset inventory queryable via API.
+- **Completion Criteria**: Discovered assets and security findings correlated without duplication; unified asset inventory queryable via API; pytest (158 passed), Ruff, Black, Mypy (strict) pass cleanly (`17d8fb06`, `f319b2af`).
 - **Testing Requirements**: Multi-source correlation integration tests, asset graph finding linkage verification, tenant boundary isolation tests.
 
 ### Phase 4.9: Attack Surface Trend & Continuous Monitoring Engine

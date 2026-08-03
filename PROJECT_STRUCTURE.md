@@ -55,9 +55,11 @@ Vulnova/
 │   │   │   ├── dependencies/        # FastAPI Auth & RBAC dependency injectors
 │   │   │   └── schemas/             # Pydantic v2 request/response models
 │   │   ├── application/             # Use Cases & Application Service Coordinators
-│   │   │   ├── assessment/          # AssessmentService, ScanProfileRegistry, ScanPolicyEngine, RiskIntelligenceEngine, FindingDeduplicator, DTOs
+│   │   │   ├── assessment/          # AssessmentService, ScanProfileRegistry, ScanPolicyEngine, RiskIntelligenceEngine, FindingDeduplicator, AssessmentCorrelationEngine, AssetInventoryService, DTOs
 │   │   │   │   ├── scan_profiles.py # Enterprise Scan Profile Registry (10 predefined profiles)
-│   │   │   │   └── policy_engine.py # Stateless Execution Policy Engine (rate limiting, concurrency, scope, auth, stop-on-critical)
+│   │   │   │   ├── policy_engine.py # Stateless Execution Policy Engine (rate limiting, concurrency, scope, auth, stop-on-critical)
+│   │   │   │   ├── correlation_engine.py # Multi-Source Finding Correlation Engine
+│   │   │   │   └── asset_inventory_service.py # Enterprise Asset Inventory Service
 │   │   │   ├── use_cases/           # Scan launch, finding triage, report generation workflows
 │   │   │   └── services/            # Domain service orchestrators
 │   │   ├── domain/                  # Pure Business Logic (No external framework dependencies)
@@ -67,7 +69,7 @@ Vulnova/
 │   │   ├── infrastructure/          # Adapters & External System Implementations
 │   │   │   ├── assessment/          # 10 DAST Security Plugins, PluginRegistry, EvidenceCollectionEngine
 │   │   │   ├── storage/             # EvidenceArtifactStorage (local filesystem & cloud object store adapter)
-│   │   │   ├── db/                  # Async SQLAlchemy models, Alembic migrations, pgvector, Repositories
+│   │   │   ├── db/                  # Async SQLAlchemy models, Alembic migrations, pgvector, Repositories (AssetInventoryRepository)
 │   │   │   ├── cache/               # Redis caching client & token bucket rate limiter
 │   │   │   ├── messaging/           # Celery task definitions & Event Bus publisher
 │   │   │   ├── ai/                  # Multi-provider LLM gateway & RAG retrieval engine
@@ -76,7 +78,7 @@ Vulnova/
 │   │   └── workers/                 # Celery background worker task entrypoints
 │   ├── migrations/                  # Alembic database migration scripts
 │   ├── scripts/                     # Local seed scripts & DB maintenance utilities
-│   └── tests/                       # Pytest unit, integration, and security test suite (155 passed)
+│   └── tests/                       # Pytest unit, integration, and security test suite (158 passed)
 │
 ├── plugins/                         # Modular Security Assessment Plugins
 │   ├── sqli_assessment/             # SQL Injection Plugin (plugin.yaml, plugin.py, payloads.json)

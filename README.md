@@ -78,7 +78,8 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
 - **Enterprise Scan Profile Engine**: 10 pre-configured profiles (`Quick Scan`, `Web Scan`, `API Scan`, `Infrastructure Scan`, `OWASP Top 10`, `OWASP API Top 10`, `Full Assessment`, `Authenticated Scan`, `Passive Scan`, `Custom Scan`) resolving plugin execution subsets via `PluginRegistry`.
 - **Policy-Controlled Assessment Execution**: Centralized `ScanPolicyEngine` enforcing concurrency limits, RPS rate limits, `robots.txt` compliance, wildcard scope include/exclude rules, custom auth header/cookie injection, and emergency `stop_on_critical` termination triggers.
 - **Authenticated Scan Support & Custom Scan Policies**: Per-scan overrides for authentication headers, session cookies, rate limits, and custom scope boundaries.
-- **Scope-Controlled Security Assessments**: Wildcard fnmatch target path matching ensuring scans strictly adhere to legal boundaries without unintended egress.
+- **Multi-Source Finding Correlation Engine**: `AssessmentCorrelationEngine` links security findings to Asset Graph nodes (`AssetNode`) and aggregates composite risk scores without duplicating findings as graph nodes or causing node graph explosion.
+- **Unified Asset Inventory & Posture Model**: Tenant-isolated asset inventory (`GET /api/v1/assets/inventory`, `GET /api/v1/assets/{asset_id}`) combining discovery targets, technology stack fingerprints (`RUNS_TECH`), security findings, and evidence artifacts into consolidated posture views.
 
 ---
 
