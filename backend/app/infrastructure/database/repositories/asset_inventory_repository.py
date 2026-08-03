@@ -68,7 +68,8 @@ class AssetInventoryRepository:
             count_scalars = total_res.scalars()
             total = (
                 len(count_scalars.all())
-                if hasattr(count_scalars, "all") and not asyncio.iscoroutine(count_scalars.all())
+                if hasattr(count_scalars, "all")
+                and not asyncio.iscoroutine(count_scalars.all())
                 else 0
             )
         except Exception:
@@ -82,7 +83,8 @@ class AssetInventoryRepository:
             node_scalars = result.scalars()
             nodes = (
                 list(node_scalars.all())
-                if hasattr(node_scalars, "all") and not asyncio.iscoroutine(node_scalars.all())
+                if hasattr(node_scalars, "all")
+                and not asyncio.iscoroutine(node_scalars.all())
                 else []
             )
         except Exception:
