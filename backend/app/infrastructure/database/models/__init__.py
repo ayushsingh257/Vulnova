@@ -1,5 +1,11 @@
 """Vulnova Infrastructure Database ORM Models Package."""
 
+from app.infrastructure.database.models.ai import (
+    LLMModelRegistryModel,
+    LLMProviderModel,
+    LLMRequestLogModel,
+    PromptTemplateModel,
+)
 from app.infrastructure.database.models.api_key import APIKeyModel
 from app.infrastructure.database.models.assessment import (
     AssessmentJobModel,
@@ -36,4 +42,8 @@ __all__ = [
     "AssetChangeEventModel",
     "FindingTriageHistoryModel",
     "FindingSuppressionRuleModel",
+    "LLMProviderModel",
+    "LLMModelRegistryModel",
+    "PromptTemplateModel",
+    "LLMRequestLogModel",
 ]

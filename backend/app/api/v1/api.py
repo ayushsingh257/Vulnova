@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.routers import (
+    ai,
     api_keys,
     assessment,
     assets,
@@ -26,3 +27,4 @@ api_v1_router.include_router(assessment.router)
 api_v1_router.include_router(assets.router)
 api_v1_router.include_router(trends.router)
 api_v1_router.include_router(triage.router)
+api_v1_router.include_router(ai.router)

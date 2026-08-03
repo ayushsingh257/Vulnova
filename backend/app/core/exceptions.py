@@ -98,3 +98,35 @@ class ConflictException(VulnovaException):
             status_code=status.HTTP_409_CONFLICT,
             details=details,
         )
+
+
+class LLMProviderException(VulnovaException):
+    """Exception raised when LLM provider API communication fails or all fallbacks fail."""
+
+    def __init__(
+        self,
+        message: str = "LLM provider execution failed",
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            code="LLM_PROVIDER_ERROR",
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            details=details,
+        )
+
+
+class SecurityException(VulnovaException):
+    """Exception raised during security or encryption operation failure."""
+
+    def __init__(
+        self,
+        message: str = "Security operation failed",
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            code="SECURITY_ERROR",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            details=details,
+        )
