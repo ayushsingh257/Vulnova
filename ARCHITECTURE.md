@@ -102,7 +102,10 @@ Evidence Collection Engine ─► (Mask Headers/Cookies + HTTP Dumps + DOM Snaps
 Multi-Source Correlation Engine ─► (Link Finding to AssetNode + Aggregate Composite Risk Posture)
         │
         ▼
-Posture Snapshot & Change Engine ─► (Compute Posture Snapshot + Track Finding Lifecycle State + Record Change Events)
+Posture Snapshot & Change Engine ──► (Compute Posture Snapshot + Track Finding Lifecycle State + Record Change Events)
+        │
+        ▼
+Finding Triage & Suppression Engine ──► (Automated Suppression Rules + Analyst Triage Workflow + Audit History)
         │
         ▼
 Normalized Database & Storage ──► (Storage Provider Bytes + DB Findings & Inventory Metadata)

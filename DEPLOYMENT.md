@@ -125,3 +125,12 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 
 - **Composite Posture Indexing**: `asset_snapshots` and `asset_change_events` tables utilize composite PostgreSQL indexes on `(organization_id, created_at)` and `(organization_id, change_type)` to optimize historical risk trajectory (`GET /api/v1/assets/trends`) and posture timeline queries.
 - **Snapshot Retention Strategy**: Posture snapshots are lightweight metric aggregates (~200 bytes per record) linked to `assessment_job_id` and timestamped, allowing multi-year security posture audit histories without storage bottlenecks.
+
+---
+
+## 🏷️ 7. Triage Audit History Retention & Automated Suppression Indexing (Phase 4.10)
+
+- **Triage Audit Trail Indexing**: `finding_triage_history` table utilizes composite indexes `(organization_id, finding_id)` and `(organization_id, created_at)` to support sub-millisecond retrieval of historical finding triage decisions (`GET /api/v1/findings/{id}/triage-history`).
+- **Suppression Rule Evaluation**: `finding_suppression_rules` table utilizes composite index `(organization_id, is_active)` to ensure fast in-memory matching of active false-positive rules during post-assessment pipeline execution.
+- **Data Retention Strategy**: Triage audit history records are immutable and lightweight (~150 bytes per record), providing non-repudiable audit trails for SOC 2 Type II and ISO 27001 compliance.
+

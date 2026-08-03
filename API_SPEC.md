@@ -235,6 +235,38 @@ All API errors return a standardized JSON error format:
 - **Summary**: Query aggregated security posture delta change events (`ASSET_ADDED`, `ASSET_REMOVED`, `TECH_UPDATED`, `FINDING_NEW`, `FINDING_RESOLVED`, `FINDING_REOPENED`).
 - **RBAC Guard**: Requires authentication and `assets:read` permission.
 
+#### `PATCH /api/v1/findings/{finding_id}/triage`
+- **Summary**: Triage a security finding status (`UNREVIEWED`, `CONFIRMED`, `FALSE_POSITIVE`, `RISK_ACCEPTED`, `REMEDIATED`, `REOPENED`).
+- **RBAC Guard**: Requires authentication and `findings:triage` permission (`SECURITY_ANALYST`+).
+- **Request Body**:
+  ```json
+  {
+    "status": "CONFIRMED",
+    "comment": "Verified valid SQL injection vulnerability.",
+    "risk_accepted_until": "2026-12-31T23:59:59Z"
+  }
+  ```
+
+#### `POST /api/v1/findings/triage/bulk`
+- **Summary**: Bulk triage multiple security findings in a single request.
+- **RBAC Guard**: Requires authentication and `findings:triage` permission (`SECURITY_ANALYST`+).
+
+#### `GET /api/v1/findings/{finding_id}/triage-history`
+- **Summary**: Query historical triage audit timeline for a finding.
+- **RBAC Guard**: Requires authentication and `findings:read` permission.
+
+#### `POST /api/v1/findings/suppression-rules`
+- **Summary**: Create an automated false-positive finding suppression rule.
+- **RBAC Guard**: Requires authentication and `findings:suppress` permission (`ADMIN`+).
+
+#### `GET /api/v1/findings/suppression-rules`
+- **Summary**: List active automated finding suppression rules for tenant organization.
+- **RBAC Guard**: Requires authentication and `findings:read` permission.
+
+#### `DELETE /api/v1/findings/suppression-rules/{rule_id}`
+- **Summary**: Deactivate or delete an automated finding suppression rule.
+- **RBAC Guard**: Requires authentication and `findings:suppress` permission (`ADMIN`+).
+
 ---
 
 ### D. Security Plugin Management (`/plugins`)

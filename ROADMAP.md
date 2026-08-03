@@ -520,6 +520,29 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Point-in-time posture snapshots, finding lifecycle transitions (`NEW`, `RESOLVED`, `REOPENED`), and historical risk trajectory analytics operational; pytest (161 passed), Ruff, Black, Mypy (strict) pass cleanly (`88ebc528`, `de524626`).
 - **Testing Requirements**: Posture snapshot aggregation unit tests, change detection engine delta tests, trend repository multi-tenant boundary isolation tests.
 
+### ✅ Phase 4.10: Enterprise Finding Triage & Vulnerability Lifecycle Engine
+- **Objective**: Implement enterprise finding triage workflows, analyst lifecycle state tracking (`UNREVIEWED`, `CONFIRMED`, `FALSE_POSITIVE`, `RISK_ACCEPTED`, `REMEDIATED`, `REOPENED`), automated false-positive suppression rules, remediation SLA deadline tracking, immutable triage audit trail history, and RBAC permission enforcement (`findings:triage`, `findings:suppress`).
+- **Deliverables**:
+  - `FindingTriageHistoryModel` (`finding_triage_history` table) and `FindingSuppressionRuleModel` (`finding_suppression_rules` table) ORM models (`app/infrastructure/database/models/triage.py`). Preserves backward compatibility of original finding data, risk scores, evidence, and asset graph linkages.
+  - `FindingTriageRepository` (`app/infrastructure/database/repositories/finding_triage_repository.py`) enforcing tenant-isolated triage audit history persistence and automated suppression rule management.
+  - `FindingTriageService` (`app/application/assessment/finding_triage_service.py`) managing analyst finding triage state transitions, bulk triage execution, automated suppression rule matching, and structured audit log recording (`finding.triaged`, `suppression_rule.created`, `suppression_rule.deleted`). Reuses existing `AuditLogService` pattern.
+  - Extended DTO schemas (`app/application/assessment/dto.py`): `TriageFindingRequest`, `BulkTriageRequest`, `CreateSuppressionRuleRequest`, `FindingTriageHistoryDTO`, `SuppressionRuleDTO`, `TriageResponse`.
+  - REST API router endpoints (`app/api/v1/routers/triage.py`): `PATCH /api/v1/findings/{id}/triage`, `POST /api/v1/findings/triage/bulk`, `GET /api/v1/findings/{id}/triage-history`, `POST /api/v1/findings/suppression-rules`, `GET /api/v1/findings/suppression-rules`, `DELETE /api/v1/findings/suppression-rules/{id}`.
+  - Configured `"findings:suppress": Role.ADMIN` permission in `PERMISSION_MAP` (`app/domain/entities/role.py`) and guarded triage endpoints with RBAC role authorization.
+  - Integrated `FindingTriageService.evaluate_suppression_rules` into `AssessmentService.create_and_run_assessment` post-assessment pipeline execution.
+  - Unit & Integration test suite (`tests/test_finding_triage.py`) — 3 tests covering single/bulk triage workflows, automated suppression rule matching, and triage repository multi-tenant boundary isolation.
+- **Implementation Details**:
+  - **Feature Commit**: `9d1f0174`
+  - **Documentation Commit**: `22ab549f`
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 128 source files passed (strict mode)
+    - **Pytest**: 164/164 passed
+- **Dependencies**: Phase 4.9.
+- **Completion Criteria**: Analyst finding triage workflows, automated false-positive suppression rules, immutable triage audit history, and RBAC authorization guards operational; pytest (164 passed), Ruff, Black, Mypy (strict) pass cleanly (`9d1f0174`, `22ab549f`).
+- **Testing Requirements**: Finding triage state transition tests, automated suppression rule pattern matching assertions, triage repository tenant boundary isolation tests.
+
 ---
 
 ## 🤖 Era 5: Enterprise AI Security Analyst & Copilot Engine

@@ -91,6 +91,12 @@ Every target setup and scan creation request requires an explicit user confirmat
 - **Audit Trail Non-Repudiation**: Every posture snapshot is tied to `assessment_job_id` and timestamped (`created_at` TIMESTAMPTZ) to create an immutable compliance history.
 - **RBAC Endpoint Protection**: Trend APIs (`GET /api/v1/assets/trends`, `GET /api/v1/security/posture/timeline`) enforce strict RBAC permissions (`assets:read`, `findings:read`).
 
+### Finding Triage & Automated Suppression Security Controls (Phase 4.10)
+- **Granular RBAC Authorization**: Finding triage actions (`PATCH /api/v1/findings/{id}/triage`) require `findings:triage` permission (`SECURITY_ANALYST` role level 20+), while creating or deleting automated suppression rules (`POST /api/v1/findings/suppression-rules`) requires `findings:suppress` permission (`ADMIN` role level 30+).
+- **Immutable Triage History**: Every finding triage state transition is recorded in `finding_triage_history` with actor user attribution (`actor_user_id`), previous status, new status, and audit timestamps.
+- **Audit Trail Traceability**: Reuses `AuditLogService.record_event` (`finding.triaged`, `suppression_rule.created`, `suppression_rule.deleted`) to provide complete audit trail traceability for regulatory compliance.
+- **Multi-Tenant Boundary Security**: All `FindingTriageRepository` queries enforce strict `organization_id` filters to prevent cross-organization triage or suppression rule access.
+
 ---
 
 ## 🌐 7. Secure HTTP Headers & Browser Protections

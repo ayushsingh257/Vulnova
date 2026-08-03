@@ -188,6 +188,38 @@ CREATE TABLE asset_change_events (
 CREATE INDEX idx_change_events_org_created ON asset_change_events(organization_id, created_at);
 CREATE INDEX idx_change_events_org_type ON asset_change_events(organization_id, change_type);
 
+-- Finding Triage History (Phase 4.10)
+CREATE TABLE finding_triage_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    finding_id UUID NOT NULL REFERENCES security_findings(id) ON DELETE CASCADE,
+    actor_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    previous_status VARCHAR(50) NOT NULL DEFAULT 'UNREVIEWED',
+    new_status VARCHAR(50) NOT NULL, -- 'UNREVIEWED', 'CONFIRMED', 'FALSE_POSITIVE', 'RISK_ACCEPTED', 'REMEDIATED', 'REOPENED'
+    comment TEXT,
+    risk_accepted_until TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_triage_history_org_finding ON finding_triage_history(organization_id, finding_id);
+CREATE INDEX idx_triage_history_org_created ON finding_triage_history(organization_id, created_at);
+
+-- Finding Suppression Rules (Phase 4.10)
+CREATE TABLE finding_suppression_rules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    name VARCHAR(255) NOT NULL,
+    rule_type VARCHAR(50) NOT NULL, -- 'EXACT_CWE', 'TARGET_PATTERN', 'PLUGIN_ID', 'COMPOSITE'
+    plugin_id VARCHAR(100),
+    cwe_id VARCHAR(50),
+    target_pattern TEXT,
+    reason TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    expires_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_suppression_rules_org_active ON finding_suppression_rules(organization_id, is_active);
+
 -- Vector Embeddings for Knowledge Base & RAG
 CREATE TABLE security_embeddings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

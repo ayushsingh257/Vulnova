@@ -130,3 +130,14 @@ All logs are emitted using `structlog` as formatted JSON:
 2. **Risk Engine Reuse**: Posture metrics (`avg_risk_score`, `max_risk_score`) MUST reuse Phase 4.5 `RiskIntelligenceEngine` composite scores (`f.risk.composite_risk_score`) directly without secondary calculators.
 3. **Finding Lifecycle State Tracking**: `ChangeDetectionEngine` MUST evaluate vulnerability lifecycle shifts (`FINDING_NEW`, `FINDING_RESOLVED`, `FINDING_REOPENED`) across consecutive assessment runs.
 4. **Tenant-Isolated Trend Analytics**: Every method in `AssetTrendRepository` MUST include mandatory `organization_id` filtering.
+
+---
+
+## 🏷️ 9. Finding Triage & Automated Suppression Architecture
+
+1. **Backward Compatibility Preservation**: Finding triage MUST operate as an additional intelligence layer on top of existing `security_findings`. Original finding attributes, CVSS/EPSS risk scores, evidence artifacts, and asset graph linkages MUST NOT be overwritten or corrupted.
+2. **Immutable Triage History**: Every finding triage state transition (`UNREVIEWED`, `CONFIRMED`, `FALSE_POSITIVE`, `RISK_ACCEPTED`, `REMEDIATED`, `REOPENED`) MUST be recorded in `FindingTriageHistoryModel` (`finding_triage_history` table) with actor attribution (`actor_user_id`), comments, and optional expiration dates (`risk_accepted_until`).
+3. **Automated Suppression Rules**: `FindingSuppressionRuleModel` (`finding_suppression_rules` table) supports automated rule evaluation (`EXACT_CWE`, `TARGET_PATTERN`, `PLUGIN_ID`, `COMPOSITE`). Post-assessment, `FindingTriageService.evaluate_suppression_rules` overlays suppression metadata without altering underlying risk scores or evidence proof.
+4. **Audit Logging Integration**: Triage operations MUST reuse existing `AuditLogService.record_event` patterns (`finding.triaged`, `suppression_rule.created`, `suppression_rule.deleted`).
+5. **RBAC Guarding & Tenant Isolation**: Triage operations require `findings:triage` (`SECURITY_ANALYST`+), while suppression rule creation/deletion requires `findings:suppress` (`ADMIN`+). All repository queries MUST enforce mandatory `organization_id` tenant boundary isolation.
+
