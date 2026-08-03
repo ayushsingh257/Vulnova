@@ -261,6 +261,12 @@ The Phase 5.3 attack path synthesis subsystem provides graph-aware attack chain 
 - **Option A Relational Storage**: Persists normalized master/detail tables (`ai_attack_paths` and `ai_attack_path_steps`) for sub-millisecond relational queries by MITRE technique or finding ID.
 - **SOC Analyst Feedback Loop**: Supports review state transitions (`GENERATED`, `REVIEWED`, `ACCEPTED`, `REJECTED`, `STALE`) and records reviewer notes and timestamps (`review_notes`, `reviewed_by`, `reviewed_at`).
 
+### F. AI Remediation Engine & Fix Recommendation Subsystem (Phase 5.4)
+The Phase 5.4 remediation subsystem transforms multi-layer vulnerability intelligence into non-executable fix recommendations:
+- **AIRemediationService**: Synthesizes multi-tier remediation plans, step actions, and code/config patch diff suggestions (`PYTHON`, `JAVASCRIPT`, `GO`, `JAVA`, `NGINX`, `DOCKER`, `TERRAFORM`, `YAML`) from 7 intelligence layers under a strict **Human Approval Safety Policy** (zero auto-execution capability).
+- **3-Table Normalized Relational Schema**: Persists master plans (`ai_remediation_plans`), step actions (`ai_remediation_steps`), and code patch diffs (`ai_patch_suggestions`) with CVE/CWE mapping, dual confidence metrics (`ai_confidence_score`, `effectiveness_confidence_score`), and operational risk flags (`requires_backup`, `requires_downtime`, `rollback_available`).
+- **Analyst Review State Machine**: Supports review workflows (`GENERATED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `IMPLEMENTED`, `VERIFIED`, `VALIDATION_FAILED`) with reviewer attribution (`reviewed_by`, `review_notes`).
+
 ### Event Bus Migration Path:
 The application uses an abstract `EventBusPort`. While initial phases utilize Celery + Redis Pub/Sub, the interface supports seamless drop-in adapters for **RabbitMQ (AMQP)**, **Apache Kafka**, or **NATS JetStream** without modifying domain logic.
 

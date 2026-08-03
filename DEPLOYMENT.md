@@ -159,6 +159,15 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 - **Eager Loading Optimization**: `AIAttackPathRepository` utilizes SQLAlchemy `selectinload(AIAttackPathModel.steps)` to retrieve full attack paths and their ordered steps in a single optimized DB round-trip.
 - **Analyst Review Metadata Indexing**: `ai_attack_paths.status` index supports fast filtering of paths requiring SOC analyst validation (`GENERATED` vs `REVIEWED` / `ACCEPTED`).
 
+---
+
+## 🤖 11. AI Remediation Engine Performance & Storage Blueprint (Phase 5.4)
+
+- **3-Table Normalized Relational Indexing**: `ai_remediation_plans`, `ai_remediation_steps`, and `ai_patch_suggestions` feature composite indexes `(organization_id, root_finding_id)`, `(organization_id, status)`, `(remediation_plan_id, sequence_number)`, and `(remediation_plan_id, language)`. This allows sub-millisecond querying of remediation plans and patch suggestions by language or finding ID.
+- **Eager Loading Optimization**: `AIRemediationRepository` utilizes SQLAlchemy `selectinload(AIRemediationPlanModel.steps)` and `selectinload(AIRemediationPlanModel.patch_suggestions)` to fetch master plans, step sequences, and code patch diffs in a single query.
+- **Review State Machine Indexing**: Index on `ai_remediation_plans.status` supports fast filtering of plans by review state (`GENERATED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `IMPLEMENTED`, `VERIFIED`, `VALIDATION_FAILED`).
+
+
 
 
 

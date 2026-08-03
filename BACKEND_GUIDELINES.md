@@ -172,6 +172,17 @@ All logs are emitted using `structlog` as formatted JSON:
 4. **Analyst Review Feedback Loop**: Attack path records MUST support analyst review state transitions (`GENERATED`, `REVIEWED`, `ACCEPTED`, `REJECTED`, `STALE`) and capture reviewer metadata (`review_notes`, `reviewed_by`, `reviewed_at`) via `PATCH /api/v1/ai/attack-paths/{id}/review`.
 5. **Evidence Grounding**: Attack path context MUST be constructed from verified asset graph nodes (`AssetNode`), edge relationships (`AssetRelationshipModel`), and evidence artifacts. LLM prompts MUST explicitly prohibit hallucinating non-existent target assets or vulnerabilities.
 
+---
+
+## 🤖 13. AI Remediation Engine Architecture
+
+1. **Strict Non-Executable Human Approval Safety Policy**: AI remediation services (`AIRemediationService`) generate advisory fix guidance, validation commands, and code patch diff suggestions, but MUST NOT possess shell execution, git commit, or cloud API auto-mutation triggers.
+2. **3-Table Normalized Relational Schema**: Remediation plans MUST be stored across 3 normalized tables (`ai_remediation_plans`, `ai_remediation_steps`, `ai_patch_suggestions`) rather than raw JSON blobs, enabling language-specific indexing (`language`), step order sorting, and step-level queryability.
+3. **Dual Confidence Scoring**: Remediation plans MUST store separate `ai_confidence_score` (LLM generation accuracy confidence) and `effectiveness_confidence_score` (estimated fix resolution confidence) to provide full transparency to security teams.
+4. **Vulnerability & Operational Risk Metadata**: Remediation plans MUST record vulnerability identifiers (`cve_id`, `cwe_id`), version targets (`affected_version`, `fixed_version`), and operational risk flags (`requires_backup`, `requires_downtime`, `rollback_available`).
+5. **Analyst Review State Machine**: Remediation plans MUST support lifecycle review transitions (`GENERATED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `IMPLEMENTED`, `VERIFIED`, `VALIDATION_FAILED`) and capture reviewer notes and timestamps via `PATCH /api/v1/ai/remediation/{id}/review`.
+
+
 
 
 

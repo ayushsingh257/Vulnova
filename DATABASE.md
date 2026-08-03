@@ -378,6 +378,73 @@ CREATE TABLE ai_attack_path_steps (
 CREATE INDEX idx_ai_steps_path_seq ON ai_attack_path_steps(attack_path_id, sequence_number);
 CREATE INDEX idx_ai_steps_mitre ON ai_attack_path_steps(mitre_technique_id);
 
+-- AI Remediation Plans Master Table (Phase 5.4)
+CREATE TABLE ai_remediation_plans (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    root_finding_id UUID NOT NULL REFERENCES security_findings(id) ON DELETE CASCADE,
+    attack_path_id UUID REFERENCES ai_attack_paths(id) ON DELETE SET NULL,
+    cve_id VARCHAR(50),
+    cwe_id VARCHAR(50),
+    affected_version VARCHAR(100),
+    fixed_version VARCHAR(100),
+    title VARCHAR(255) NOT NULL,
+    summary TEXT NOT NULL,
+    technical_solution TEXT NOT NULL,
+    business_solution TEXT NOT NULL,
+    risk_reduction_explanation TEXT NOT NULL,
+    validation_strategy TEXT NOT NULL,
+    composite_risk_score DOUBLE PRECISION NOT NULL,
+    ai_confidence_score DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+    effectiveness_confidence_score DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+    requires_backup BOOLEAN NOT NULL DEFAULT FALSE,
+    requires_downtime BOOLEAN NOT NULL DEFAULT FALSE,
+    rollback_available BOOLEAN NOT NULL DEFAULT TRUE,
+    model_used VARCHAR(100) NOT NULL,
+    provider_used VARCHAR(50) NOT NULL,
+    prompt_version INT NOT NULL DEFAULT 1,
+    status VARCHAR(30) NOT NULL DEFAULT 'GENERATED', -- 'GENERATED', 'UNDER_REVIEW', 'APPROVED', 'REJECTED', 'IMPLEMENTED', 'VERIFIED', 'VALIDATION_FAILED', 'FAILED'
+    review_notes TEXT,
+    reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_ai_remed_org_finding ON ai_remediation_plans(organization_id, root_finding_id);
+CREATE INDEX idx_ai_remed_org_status ON ai_remediation_plans(organization_id, status);
+CREATE INDEX idx_ai_remed_org_created ON ai_remediation_plans(organization_id, created_at);
+
+-- AI Remediation Steps Detail Table (Phase 5.4)
+CREATE TABLE ai_remediation_steps (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    remediation_plan_id UUID NOT NULL REFERENCES ai_remediation_plans(id) ON DELETE CASCADE,
+    sequence_number INT NOT NULL,
+    step_type VARCHAR(50) NOT NULL, -- 'CODE_PATCH', 'CONFIGURATION_CHANGE', 'DEPENDENCY_UPDATE', 'ARCHITECTURE_CHANGE', 'SECURITY_CONTROL', 'MANUAL_PROCESS'
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    affected_component VARCHAR(255) NOT NULL,
+    recommended_action TEXT NOT NULL,
+    validation_command TEXT,
+    rollback_strategy TEXT,
+    confidence_score DOUBLE PRECISION NOT NULL DEFAULT 1.0
+);
+CREATE INDEX idx_ai_remed_step_plan_seq ON ai_remediation_steps(remediation_plan_id, sequence_number);
+
+-- AI Patch Suggestions Table (Phase 5.4)
+CREATE TABLE ai_patch_suggestions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    remediation_plan_id UUID NOT NULL REFERENCES ai_remediation_plans(id) ON DELETE CASCADE,
+    language VARCHAR(50) NOT NULL, -- 'PYTHON', 'JAVASCRIPT', 'GO', 'JAVA', 'NGINX', 'DOCKER', 'TERRAFORM', 'YAML'
+    file_type VARCHAR(50) NOT NULL, -- 'SOURCE_CODE', 'CONFIG', 'IAC', 'DOCKERFILE', 'MANIFEST'
+    target_file_path VARCHAR(500),
+    original_code_snippet TEXT NOT NULL,
+    proposed_patch_diff TEXT NOT NULL,
+    explanation TEXT NOT NULL,
+    security_impact_notes TEXT NOT NULL,
+    confidence_score DOUBLE PRECISION NOT NULL DEFAULT 1.0
+);
+CREATE INDEX idx_ai_patch_plan_lang ON ai_patch_suggestions(remediation_plan_id, language);
+
 -- Vector Embeddings for Knowledge Base & RAG
 CREATE TABLE security_embeddings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

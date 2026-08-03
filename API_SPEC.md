@@ -486,6 +486,77 @@ All API errors return a standardized JSON error format:
 #### `PATCH /ai/attack-paths/{id}/review`
 - **Summary**: Record SOC analyst review status (`ACCEPTED`, `REJECTED`, `REVIEWED`) and notes (`findings:ai_attack_path` permission required).
 
+#### `POST /ai/findings/{finding_id}/remediation`
+- **Summary**: Synthesize AI remediation plan with non-executable patch suggestions (`findings:ai_remediate` permission required).
+- **Response (201 Created)**:
+  ```json
+  {
+    "id": "remed_uuid",
+    "root_finding_id": "finding_uuid",
+    "attack_path_id": "path_uuid",
+    "cve_id": "CVE-2024-8888",
+    "cwe_id": "CWE-89",
+    "affected_version": "1.2.0",
+    "fixed_version": "1.2.1",
+    "title": "Remediation Plan: Parametrize SQL Queries",
+    "summary": "Replace concatenated SQL strings with parameterized queries using ORM.",
+    "technical_solution": "Use bound parameters in SQL query execution.",
+    "business_solution": "Prevents unauthorized database access.",
+    "risk_reduction_explanation": "Eliminates SQL injection vulnerability completely.",
+    "validation_strategy": "Re-run assessment plugin.",
+    "composite_risk_score": 85.0,
+    "ai_confidence_score": 0.96,
+    "effectiveness_confidence_score": 0.98,
+    "requires_backup": true,
+    "requires_downtime": false,
+    "rollback_available": true,
+    "model_used": "gpt-4o",
+    "provider_used": "OPENAI",
+    "prompt_version": 1,
+    "status": "GENERATED",
+    "steps": [
+      {
+        "id": "step_uuid",
+        "sequence_number": 1,
+        "step_type": "CODE_PATCH",
+        "title": "Parametrize SQL query in auth.py",
+        "description": "Refactor raw execute to use ORM query binding.",
+        "affected_component": "backend/app/api/v1/auth.py",
+        "recommended_action": "Update query to use bound parameters",
+        "validation_command": "pytest tests/test_auth.py",
+        "rollback_strategy": "Git revert commit",
+        "confidence_score": 0.95
+      }
+    ],
+    "patch_suggestions": [
+      {
+        "id": "patch_uuid",
+        "language": "PYTHON",
+        "file_type": "SOURCE_CODE",
+        "target_file_path": "backend/app/api/v1/auth.py",
+        "original_code_snippet": "cursor.execute(f'SELECT * FROM users WHERE name={name}')",
+        "proposed_patch_diff": "--- auth.py\n+++ auth.py\n-cursor.execute(f'SELECT * FROM users WHERE name={name}')\n+cursor.execute('SELECT * FROM users WHERE name=:name', {'name': name})",
+        "explanation": "Replaces string interpolation with parameter binding.",
+        "security_impact_notes": "Completely mitigates SQL injection.",
+        "confidence_score": 0.97
+      }
+    ],
+    "created_at": "2026-08-03T14:00:00Z"
+  }
+  ```
+
+#### `GET /ai/findings/{finding_id}/remediation`
+- **Summary**: Retrieve all synthesized remediation plans for a finding (`findings:read` permission required).
+
+#### `GET /ai/remediation/{id}`
+- **Summary**: Retrieve single remediation plan by ID with steps and patch suggestions (`findings:read` permission required).
+
+#### `GET /ai/remediation`
+- **Summary**: List organizational remediation history (`findings:read` permission required).
+
+#### `PATCH /ai/remediation/{id}/review`
+- **Summary**: Record SOC analyst review status (`APPROVED`, `REJECTED`, `UNDER_REVIEW`, `IMPLEMENTED`, `VERIFIED`, `VALIDATION_FAILED`) and notes (`findings:ai_remediate` permission required).
+
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol

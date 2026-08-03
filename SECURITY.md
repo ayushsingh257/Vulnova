@@ -115,6 +115,12 @@ Every target setup and scan creation request requires an explicit user confirmat
 - **MITRE ATT&CK Registry Validation**: Every step technique ID is validated against `KNOWN_MITRE_TECHNIQUES`. Unverified or non-standard technique IDs are flagged as `Unverified` to prevent malicious or hallucinated framework data.
 - **Analyst Review Feedback Non-Repudiation**: Analyst status reviews (`ACCEPTED`, `REJECTED`, `REVIEWED`) record reviewer identity (`reviewed_by`), notes (`review_notes`), and timestamps (`reviewed_at`) in `ai_attack_paths` and log audit events (`ai_attack_path.reviewed`).
 
+### AI Remediation Engine Security Controls (Phase 5.4)
+- **Granular RBAC Authorization**: Generating remediation plans or updating review status requires `findings:ai_remediate` permission (`SECURITY_ANALYST` role level 20+), while reading plans requires `findings:read` (`VIEWER` role level 10+).
+- **Strict Non-Executable Safety Policy**: Remediation recommendations and patch diff suggestions are stored as text strings. The service contains zero shell execution, git commit, or cloud API auto-mutation triggers, eliminating auto-remediation risks.
+- **7-Layer Evidence Grounding**: Remediation context is constructed across 7 verified intelligence layers (finding, evidence proof, asset graph, triage state, Phase 5.2 explanations, Phase 5.2 impact analysis, Phase 5.3 attack paths). Prompts strictly prohibit inventing fake fixes or unrelated dependencies.
+- **Analyst Review Non-Repudiation**: State transitions (`GENERATED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `IMPLEMENTED`, `VERIFIED`, `VALIDATION_FAILED`) require analyst authorization, recording `reviewed_by`, `review_notes`, and audit events (`ai_remediation.reviewed`).
+
 ---
 
 ## 🌐 7. Secure HTTP Headers & Browser Protections

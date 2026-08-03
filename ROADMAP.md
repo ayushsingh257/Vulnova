@@ -617,14 +617,27 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: AI attack path engine, MITRE ATT&CK validation, path confidence scoring, analyst feedback review, and RBAC authorization operational; pytest (208 passed), Ruff, Black, Mypy (strict) pass cleanly (`7289be1e`).
 - **Testing Requirements**: Attack path synthesis unit tests, MITRE technique validation tests, path confidence tests, tenant boundary isolation tests.
 
-### Phase 5.4: Contextual AI Remediation & Fix Generator Engine
-- **Objective**: Generate precise, production-ready code patches, framework configuration fixes (Nginx, Apache, FastAPI, Express, Django), and Infrastructure-as-Code (Terraform, Docker) snippets addressing the root causes of findings.
+### ✅ Phase 5.4: AI Remediation Engine & Intelligent Fix Recommendation System
+- **Objective**: Synthesize findings, risk intelligence, evidence artifacts, asset topology graph edges, triage state, Phase 5.2 explanations/impact analysis, and Phase 5.3 attack paths to generate explainable, multi-tier remediation plans, non-executable code/config patch diff suggestions, validation strategies, and rollback guidance under a strict Human Approval Safety Policy.
 - **Deliverables**:
-  - `AIRemediationEngine` (`app/application/ai/remediation_service.py`) producing syntactically correct code diffs and configuration patches.
-  - Patch validation and formatting helpers.
-- **Dependencies**: Phase 5.2.
-- **Completion Criteria**: Emits syntactically valid code diffs and configuration fixes for Python, JS, Go, Java, Nginx, and Docker.
-- **Testing Requirements**: Code remediation generation tests, patch syntax validation.
+  - Domain entities (`app/domain/entities/ai.py`): `AIRemediationPlan`, `AIRemediationStep`, `AIPatchSuggestion`, `RemediationStatus` (`GENERATED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `IMPLEMENTED`, `VERIFIED`, `VALIDATION_FAILED`, `FAILED`), and `RemediationType` (`CODE_PATCH`, `CONFIGURATION_CHANGE`, `DEPENDENCY_UPDATE`, `ARCHITECTURE_CHANGE`, `SECURITY_CONTROL`, `MANUAL_PROCESS`).
+  - Database ORM models (`app/infrastructure/database/models/ai_remediation.py`): `AIRemediationPlanModel` (`ai_remediation_plans`), `AIRemediationStepModel` (`ai_remediation_steps`), and `AIPatchSuggestionModel` (`ai_patch_suggestions`) implementing a 3-table normalized schema with CVE/CWE mapping, dual confidence metrics (`ai_confidence_score`, `effectiveness_confidence_score`), operational risk flags (`requires_backup`, `requires_downtime`, `rollback_available`), and SOC analyst review metadata (`review_notes`, `reviewed_by`, `reviewed_at`).
+  - `AIRemediationRepository` (`app/infrastructure/database/repositories/ai_remediation_repository.py`): Multi-tenant isolated queries for remediation plan persistence, eager loading via `selectinload`, pagination, and analyst review status tracking.
+  - `AIRemediationService` (`app/application/ai/remediation_service.py`): Evidence-grounded remediation synthesizer assembling context across 7 intelligence layers, enforcing non-executable patch diff safety, masking sensitive secrets via `mask_sensitive_prompt_context`, executing retry-once JSON repair recovery, and processing analyst review workflows.
+  - Pydantic v2 DTO schemas (`app/application/ai/dto.py`): `GenerateRemediationRequest`, `ReviewRemediationPlanRequest`, `AIPatchSuggestionDTO`, `RemediationStepDTO`, `AIRemediationPlanDTO`.
+  - REST API router endpoints (`app/api/v1/routers/ai.py`): `POST /api/v1/ai/findings/{id}/remediation`, `GET /api/v1/ai/findings/{id}/remediation`, `GET /api/v1/ai/remediation/{id}`, `GET /api/v1/ai/remediation`, `PATCH /api/v1/ai/remediation/{id}/review`.
+  - Configured `"findings:ai_remediate": Role.SECURITY_ANALYST` in `PERMISSION_MAP` (`app/domain/entities/role.py`) to guard remediation generation and review endpoints.
+  - Unit & Integration test suite (`tests/test_ai_remediation.py`) — 8 test functions (16 test cases across pytest-anyio runners) covering plan generation, risk score preservation, multi-layer context assembly, non-executable patch suggestions, sensitive data masking, tenant boundary isolation, retry-once JSON repair recovery, and analyst review workflow (including `VALIDATION_FAILED` status).
+- **Implementation Details**:
+  - **Feature Commit**: `164a866a`
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 152 source files passed (strict mode)
+    - **Pytest**: **224/224 passed**
+- **Dependencies**: Phase 5.2, Phase 5.3, Era 4.
+- **Completion Criteria**: AI remediation engine, 3-table normalized schema, non-executable patch safety model, dual confidence scoring, analyst review workflow, and RBAC authorization operational; pytest (224 passed), Ruff, Black, Mypy (strict) pass cleanly (`164a866a`).
+- **Testing Requirements**: Remediation generation unit tests, patch safety verification tests, context assembly tests, tenant boundary isolation tests.
 
 ### Phase 5.5: AI False-Positive Reduction & Noise Filtering Engine
 - **Objective**: Build an AI correlation engine analyzing response bodies, execution evidence, technology signatures, and historical scan findings to assign confidence scores and filter out scanner false positives before ticket creation.
