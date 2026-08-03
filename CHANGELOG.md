@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Replaced Gitleaks, Semgrep, and Trivy third-party action wrappers with direct CLI binary installations for reliability.
   - Installed Trivy via official APT repository instead of fragile `curl | sh` script.
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
+- **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
 - **Era 6 Phase 6.1 (Celery & Distributed Isolated Worker Sandbox Cluster)**:
