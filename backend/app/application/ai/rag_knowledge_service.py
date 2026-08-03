@@ -435,9 +435,7 @@ class AIRAGKnowledgeService:
                 str(doc.reviewed_by) if getattr(doc, "reviewed_by", None) else None
             ),
             reviewed_at=(
-                doc.reviewed_at.isoformat()
-                if doc.reviewed_at is not None
-                else None
+                doc.reviewed_at.isoformat() if doc.reviewed_at is not None else None
             ),
             created_at=(
                 doc.created_at.isoformat() if doc.created_at is not None else ""
