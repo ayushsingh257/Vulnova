@@ -98,6 +98,49 @@ class RiskMetrics:
     risk_level: str = "MEDIUM"  # CRITICAL, HIGH, MEDIUM, LOW
 
 
+class ScanProfileType(str, Enum):
+    """Pre-built enterprise scan profile types."""
+
+    QUICK_SCAN = "quick_scan"
+    WEB_SCAN = "web_scan"
+    API_SCAN = "api_scan"
+    INFRASTRUCTURE_SCAN = "infrastructure_scan"
+    OWASP_TOP_10 = "owasp_top_10"
+    OWASP_API_TOP_10 = "owasp_api_top_10"
+    FULL_ASSESSMENT = "full_assessment"
+    AUTHENTICATED_SCAN = "authenticated_scan"
+    PASSIVE_SCAN = "passive_scan"
+    CUSTOM_SCAN = "custom_scan"
+
+
+@dataclass
+class ScanPolicy:
+    """Execution policy parameters governing concurrency, scope, rate limits, and safety controls."""
+
+    concurrency_limit: int = 5
+    rate_limit_rps: int = 10
+    respect_robots_txt: bool = True
+    scope_include_patterns: List[str] = field(default_factory=list)
+    scope_exclude_patterns: List[str] = field(default_factory=list)
+    auth_headers: Dict[str, str] = field(default_factory=dict)
+    auth_cookies: Dict[str, str] = field(default_factory=dict)
+    max_crawl_depth: int = 3
+    max_requests: int = 500
+    timeout_seconds: float = 30.0
+    stop_on_critical: bool = False
+
+
+@dataclass
+class ScanProfile:
+    """Enterprise scan profile mapping a profile type to plugin IDs and default execution policy."""
+
+    id: str
+    name: str
+    description: str
+    plugin_ids: List[str] = field(default_factory=list)
+    default_policy: ScanPolicy = field(default_factory=ScanPolicy)
+
+
 @dataclass
 class PluginMetadata:
     """Metadata describing a security assessment plugin."""
@@ -121,6 +164,7 @@ class AssessmentContext:
     organization_id: UUID
     asset_nodes: List[AssetNode] = field(default_factory=list)
     asset_criticality: AssetCriticality = AssetCriticality.MEDIUM
+    policy: ScanPolicy = field(default_factory=ScanPolicy)
     options: Dict[str, Any] = field(default_factory=dict)
 
 

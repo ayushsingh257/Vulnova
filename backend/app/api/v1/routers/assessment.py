@@ -13,6 +13,7 @@ from app.application.assessment.dto import (
     CreateAssessmentRequest,
     FindingDTO,
     PluginMetadataDTO,
+    ScanProfileDTO,
 )
 from app.application.assessment.services import AssessmentService
 from app.infrastructure.database.models.user import UserModel
@@ -38,6 +39,24 @@ async def create_and_run_assessment(
     """
     service = AssessmentService(session)
     return await service.create_and_run_assessment(req, current_user)
+
+
+@router.get(
+    "/assessments/profiles",
+    response_model=List[ScanProfileDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("scans:read"))],
+)
+async def list_scan_profiles(
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> List[ScanProfileDTO]:
+    """List all available enterprise scan profiles and default execution policies.
+
+    Requires authentication and 'scans:read' RBAC permission.
+    """
+    service = AssessmentService(session)
+    return service.list_scan_profiles()
 
 
 @router.get(

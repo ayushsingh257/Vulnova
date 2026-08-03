@@ -37,6 +37,10 @@ class AssessmentJobModel(Base):
     )
     target_url: Mapped[str] = mapped_column(String(1024), nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    profile_id: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="full_assessment", index=True
+    )
+    policy_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
     enabled_plugins_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(
         JSON, nullable=True
     )

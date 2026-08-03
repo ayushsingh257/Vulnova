@@ -5,15 +5,47 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, HttpUrl
 
 
+class ScanPolicyDTO(BaseModel):
+    """DTO representing an execution policy configuration."""
+
+    concurrency_limit: int = 5
+    rate_limit_rps: int = 10
+    respect_robots_txt: bool = True
+    scope_include_patterns: List[str] = Field(default_factory=list)
+    scope_exclude_patterns: List[str] = Field(default_factory=list)
+    max_crawl_depth: int = 3
+    max_requests: int = 500
+    timeout_seconds: float = 30.0
+    stop_on_critical: bool = False
+
+
+class ScanProfileDTO(BaseModel):
+    """DTO describing an enterprise scan profile."""
+
+    id: str
+    name: str
+    description: str
+    plugin_ids: List[str] = Field(default_factory=list)
+    default_policy: ScanPolicyDTO
+
+
 class CreateAssessmentRequest(BaseModel):
     """Payload for triggering a security assessment scan."""
 
     target_url: HttpUrl = Field(
         description="Target web asset URL to scan (must be HTTP/HTTPS)"
     )
+    profile_id: Optional[str] = Field(
+        default="full_assessment",
+        description="Enterprise scan profile ID (e.g. 'web_scan', 'api_scan', 'full_assessment'). Defaults to 'full_assessment'.",
+    )
     plugins: Optional[List[str]] = Field(
         default=None,
-        description="Optional list of specific plugin IDs to execute. If omitted, all applicable registered plugins will run.",
+        description="Optional list of specific plugin IDs to execute. Used when profile_id is 'custom_scan' or to override profile default plugins.",
+    )
+    policy_override: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional execution policy overrides (concurrency_limit, rate_limit_rps, auth_headers, auth_cookies, scope_exclude_patterns, etc.)",
     )
 
 
@@ -63,7 +95,9 @@ class AssessmentJobResponse(BaseModel):
     id: str
     target_url: str
     status: str
+    profile_id: str = "full_assessment"
     enabled_plugins: List[str] = Field(default_factory=list)
+    policy: Optional[ScanPolicyDTO] = None
     total_findings: int = 0
     findings: List[FindingDTO] = Field(default_factory=list)
     duration_seconds: Optional[float] = None

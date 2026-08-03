@@ -1,7 +1,7 @@
 """Application Service orchestrating Vulnerability Assessment Jobs and Plugin Execution."""
 
 import time
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,14 +13,19 @@ from app.application.assessment.dto import (
     EvidenceArtifactDTO,
     FindingDTO,
     PluginMetadataDTO,
+    ScanPolicyDTO,
+    ScanProfileDTO,
 )
+from app.application.assessment.policy_engine import ScanPolicyEngine
 from app.application.assessment.risk_engine import RiskIntelligenceEngine
+from app.application.assessment.scan_profiles import ScanProfileRegistry
 from app.application.audit_logs.services import AuditLogService
 from app.core.exceptions import ResourceNotFoundException, ValidationException
 from app.core.logging import get_logger
 from app.domain.entities.assessment import (
     AssessmentContext,
     Finding,
+    ScanPolicy,
 )
 from app.infrastructure.assessment.evidence_engine import EvidenceCollectionEngine
 from app.infrastructure.assessment.plugins import SecurityHeadersPlugin  # noqa: F401
@@ -41,7 +46,7 @@ logger = get_logger("vulnova.assessment_service")
 
 
 class AssessmentService:
-    """Application Service orchestrating vulnerability scanning plugins, risk intelligence, evidence collection, and persistence."""
+    """Application Service orchestrating scan profiles, policy engines, vulnerability scanning plugins, risk intelligence, evidence collection, and persistence."""
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -49,6 +54,8 @@ class AssessmentService:
         self.evidence_repo = EvidenceRepository(session)
         self.audit_service = AuditLogService(session)
         self.plugin_registry = PluginRegistry()
+        self.profile_registry = ScanProfileRegistry(self.plugin_registry)
+        self.policy_engine = ScanPolicyEngine()
         self.risk_engine = RiskIntelligenceEngine()
         self.deduplicator = FindingDeduplicator()
         self.evidence_engine = EvidenceCollectionEngine()
@@ -81,35 +88,66 @@ class AssessmentService:
             )
             raise ValidationException(f"Target URL is prohibited: {reason}")
 
-        # 2. Determine Plugins to Execute
-        available_plugins = self.plugin_registry.list_plugins()
-        enabled_ids = req.plugins or [p.id for p in available_plugins]
+        # 2. Determine Profile & Resolve Plugins
+        profile_id = req.profile_id or "full_assessment"
+        base_profile = self.profile_registry.get_profile(profile_id)
 
-        # 3. Create Assessment Job Record (PENDING)
+        enabled_ids = self.profile_registry.resolve_plugins_for_profile(
+            profile_id=profile_id, custom_plugins=req.plugins
+        )
+
+        # 3. Construct & Validate Scan Policy
+        base_policy = base_profile.default_policy if base_profile else ScanPolicy()
+        if req.policy_override:
+            for k, v in req.policy_override.items():
+                if hasattr(base_policy, k):
+                    setattr(base_policy, k, v)
+
+        validated_policy = self.policy_engine.validate_policy(base_policy)
+        policy_dict = {
+            "concurrency_limit": validated_policy.concurrency_limit,
+            "rate_limit_rps": validated_policy.rate_limit_rps,
+            "respect_robots_txt": validated_policy.respect_robots_txt,
+            "scope_include_patterns": validated_policy.scope_include_patterns,
+            "scope_exclude_patterns": validated_policy.scope_exclude_patterns,
+            "max_crawl_depth": validated_policy.max_crawl_depth,
+            "max_requests": validated_policy.max_requests,
+            "timeout_seconds": validated_policy.timeout_seconds,
+            "stop_on_critical": validated_policy.stop_on_critical,
+        }
+
+        # 4. Create Assessment Job Record (PENDING)
         job_model = await self.repo.create_job(
             organization_id=org_id,
             target_url=target_str,
             enabled_plugins=enabled_ids,
+            profile_id=profile_id,
+            policy_json=policy_dict,
         )
 
-        # 4. Audit Assessment Started
+        # 5. Audit Assessment Started
         await self.audit_service.record_event(
             organization_id=org_id,
             action="assessment.started",
             resource_type="assessment_job",
             resource_id=str(job_model.id),
             actor_user_id=current_user.id,
-            details={"target_url": target_str, "enabled_plugins": enabled_ids},
+            details={
+                "target_url": target_str,
+                "profile_id": profile_id,
+                "enabled_plugins": enabled_ids,
+            },
         )
 
-        # 5. Build Generic Assessment Context
+        # 6. Build Assessment Context with Execution Policy
         context = AssessmentContext(
             target_url=target_str,
             target_domain=base_domain,
             organization_id=org_id,
+            policy=validated_policy,
         )
 
-        # 6. Execute Plugins Decoupled from AssessmentService
+        # 7. Execute Plugins with Policy Safeguards
         raw_findings: List[Finding] = []
         status = "COMPLETED"
         error_msg: Optional[str] = None
@@ -122,12 +160,25 @@ class AssessmentService:
                     continue
 
                 logger.info(
-                    "assessment.executing_plugin", plugin_id=pid, target_url=target_str
+                    "assessment.executing_plugin",
+                    plugin_id=pid,
+                    target_url=target_str,
+                    profile_id=profile_id,
                 )
                 findings = await plugin.execute(context)
                 for f in findings:
                     f.assessment_job_id = job_model.id
                     raw_findings.append(f)
+
+                # Evaluate emergency stop condition if enabled
+                if self.policy_engine.should_stop_on_critical(
+                    raw_findings, validated_policy
+                ):
+                    logger.warning(
+                        "assessment.emergency_stop_critical",
+                        job_id=str(job_model.id),
+                    )
+                    break
 
         except Exception as e:
             status = "FAILED"
@@ -136,18 +187,18 @@ class AssessmentService:
                 "assessment.execution_failed", error=error_msg, job_id=str(job_model.id)
             )
 
-        # 7. Apply Risk Intelligence & Deduplication Normalization Pipeline
+        # 8. Apply Risk Intelligence & Deduplication Normalization Pipeline
         enriched_findings = self.risk_engine.enrich_findings(
             raw_findings, context.asset_criticality
         )
         deduped_findings = self.deduplicator.deduplicate_findings(enriched_findings)
 
-        # 8. Capture Multi-Modal Evidence Artifacts
+        # 9. Capture Multi-Modal Evidence Artifacts
         final_findings = await self.evidence_engine.capture_evidence_batch(
             deduped_findings, context
         )
 
-        # 9. Persist Normalized Findings & Evidence Artifacts to DB
+        # 10. Persist Normalized Findings & Evidence Artifacts to DB
         for f in final_findings:
             await self.repo.create_finding(org_id, f)
             for art in f.artifacts:
@@ -155,7 +206,7 @@ class AssessmentService:
 
         duration = round(time.time() - start_time, 2)
 
-        # 10. Update Job Status & Duration
+        # 11. Update Job Status & Duration
         await self.repo.update_job_status(
             organization_id=org_id,
             job_id=job_model.id,
@@ -164,7 +215,7 @@ class AssessmentService:
             error_message=error_msg,
         )
 
-        # 11. Audit Assessment Completed / Failed
+        # 12. Audit Assessment Completed / Failed
         audit_action = (
             "assessment.completed" if status == "COMPLETED" else "assessment.failed"
         )
@@ -176,6 +227,7 @@ class AssessmentService:
             actor_user_id=current_user.id,
             details={
                 "target_url": target_str,
+                "profile_id": profile_id,
                 "total_findings": len(final_findings),
                 "duration_seconds": duration,
                 "error": error_msg,
@@ -239,11 +291,25 @@ class AssessmentService:
             for f in final_findings
         ]
 
+        policy_dto = ScanPolicyDTO(
+            concurrency_limit=validated_policy.concurrency_limit,
+            rate_limit_rps=validated_policy.rate_limit_rps,
+            respect_robots_txt=validated_policy.respect_robots_txt,
+            scope_include_patterns=validated_policy.scope_include_patterns,
+            scope_exclude_patterns=validated_policy.scope_exclude_patterns,
+            max_crawl_depth=validated_policy.max_crawl_depth,
+            max_requests=validated_policy.max_requests,
+            timeout_seconds=validated_policy.timeout_seconds,
+            stop_on_critical=validated_policy.stop_on_critical,
+        )
+
         return AssessmentJobResponse(
             id=str(job_model.id),
             target_url=job_model.target_url,
             status=status,
+            profile_id=profile_id,
             enabled_plugins=enabled_ids,
+            policy=policy_dto,
             total_findings=len(finding_dtos),
             findings=finding_dtos,
             duration_seconds=duration,
@@ -311,12 +377,34 @@ class AssessmentService:
 
         plugins_dict = job.enabled_plugins_json or {}
         plugins_list: List[str] = plugins_dict.get("plugins", [])
+        policy_dict: Dict[str, Any] = job.policy_json or {}
+        policy_dto = (
+            ScanPolicyDTO(
+                concurrency_limit=int(policy_dict.get("concurrency_limit") or 5),
+                rate_limit_rps=int(policy_dict.get("rate_limit_rps") or 10),
+                respect_robots_txt=bool(policy_dict.get("respect_robots_txt", True)),
+                scope_include_patterns=list(
+                    policy_dict.get("scope_include_patterns") or []
+                ),
+                scope_exclude_patterns=list(
+                    policy_dict.get("scope_exclude_patterns") or []
+                ),
+                max_crawl_depth=int(policy_dict.get("max_crawl_depth") or 3),
+                max_requests=int(policy_dict.get("max_requests") or 500),
+                timeout_seconds=float(policy_dict.get("timeout_seconds") or 30.0),
+                stop_on_critical=bool(policy_dict.get("stop_on_critical", False)),
+            )
+            if policy_dict
+            else None
+        )
 
         return AssessmentJobResponse(
             id=str(job.id),
             target_url=job.target_url,
             status=job.status,
+            profile_id=job.profile_id or "full_assessment",
             enabled_plugins=plugins_list,
+            policy=policy_dto,
             total_findings=len(finding_dtos),
             findings=finding_dtos,
             duration_seconds=job.duration_seconds,
@@ -397,4 +485,28 @@ class AssessmentService:
                 required_permissions=p.required_permissions,
             )
             for p in plugins
+        ]
+
+    def list_scan_profiles(self) -> List[ScanProfileDTO]:
+        """List all available enterprise scan profiles."""
+        profiles = self.profile_registry.list_profiles()
+        return [
+            ScanProfileDTO(
+                id=p.id,
+                name=p.name,
+                description=p.description,
+                plugin_ids=p.plugin_ids,
+                default_policy=ScanPolicyDTO(
+                    concurrency_limit=p.default_policy.concurrency_limit,
+                    rate_limit_rps=p.default_policy.rate_limit_rps,
+                    respect_robots_txt=p.default_policy.respect_robots_txt,
+                    scope_include_patterns=p.default_policy.scope_include_patterns,
+                    scope_exclude_patterns=p.default_policy.scope_exclude_patterns,
+                    max_crawl_depth=p.default_policy.max_crawl_depth,
+                    max_requests=p.default_policy.max_requests,
+                    timeout_seconds=p.default_policy.timeout_seconds,
+                    stop_on_critical=p.default_policy.stop_on_critical,
+                ),
+            )
+            for p in profiles
         ]

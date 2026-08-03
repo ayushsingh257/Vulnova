@@ -1,6 +1,6 @@
 """Repository for persisting and querying Assessment Jobs and Security Findings."""
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from sqlalchemy import select
@@ -27,12 +27,16 @@ class AssessmentRepository:
         organization_id: UUID,
         target_url: str,
         enabled_plugins: Optional[List[str]] = None,
+        profile_id: str = "full_assessment",
+        policy_json: Optional[Dict[str, Any]] = None,
     ) -> AssessmentJobModel:
-        """Create a new assessment job record."""
+        """Create a new assessment job record with profile and policy configuration."""
         job = AssessmentJobModel(
             organization_id=organization_id,
             target_url=target_url,
             status="PENDING",
+            profile_id=profile_id,
+            policy_json=policy_json,
             enabled_plugins_json={"plugins": enabled_plugins or []},
         )
         self.session.add(job)
