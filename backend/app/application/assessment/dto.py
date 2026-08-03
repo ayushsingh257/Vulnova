@@ -30,10 +30,22 @@ class ScanProfileDTO(BaseModel):
 
 
 class CreateAssessmentRequest(BaseModel):
-    """Payload for triggering a security assessment scan."""
+    """Payload for triggering a security assessment scan.
+
+    Phase 6.2: ``is_authorized_assessment`` is a mandatory legal declaration.
+    Scans will be rejected (HTTP 403) if this field is not set to ``True``.
+    """
 
     target_url: HttpUrl = Field(
         description="Target web asset URL to scan (must be HTTP/HTTPS)"
+    )
+    is_authorized_assessment: bool = Field(
+        ...,
+        description="Mandatory legal declaration confirming authorized security assessment consent. Must be True to proceed.",
+    )
+    authorization_scope: str = Field(
+        default="full",
+        description="Scope of authorization: 'full', 'passive_only', or 'custom'. Defaults to 'full'.",
     )
     profile_id: Optional[str] = Field(
         default="full_assessment",
@@ -315,7 +327,11 @@ class WorkerTaskExecutionDTO(BaseModel):
 
 
 class DispatchScanRequest(BaseModel):
-    """Request payload for dispatching a scan job to Celery priority queues."""
+    """Request payload for dispatching a scan job to Celery priority queues.
+
+    Phase 6.2: ``is_authorized_assessment`` is mandatory. Worker dispatch
+    flow will reject jobs without validated authorization metadata.
+    """
 
     scan_id: str = Field(..., description="UUID of security assessment job")
     profile_id: Optional[str] = Field(None, description="Optional scan profile ID")
@@ -323,6 +339,10 @@ class DispatchScanRequest(BaseModel):
     priority: Optional[str] = Field(
         "scans.default",
         description="Priority queue (scans.high, scans.default, scans.low)",
+    )
+    is_authorized_assessment: bool = Field(
+        ...,
+        description="Mandatory legal declaration confirming authorized assessment consent.",
     )
 
 
@@ -336,3 +356,56 @@ class WorkerClusterMetricsDTO(BaseModel):
     current_active_tasks: int
     avg_cpu_percent: float
     avg_memory_usage_mb: float
+
+
+# ── Phase 6.2: Target Scan Configuration & Authorization DTOs ──
+
+
+class ScanTargetCreateRequest(BaseModel):
+    """Request payload for registering a new scan target."""
+
+    name: str = Field(..., description="Human-readable name for the scan target")
+    target_url: HttpUrl = Field(
+        ..., description="Target web asset URL to register (must be HTTP/HTTPS)"
+    )
+    environment: str = Field(
+        default="PRODUCTION",
+        description="Deployment environment: PRODUCTION, STAGING, DEVELOPMENT, TESTING",
+    )
+
+
+class ScanTargetUpdateRequest(BaseModel):
+    """Request payload for updating an existing scan target."""
+
+    name: Optional[str] = Field(None, description="Updated human-readable name")
+    environment: Optional[str] = Field(
+        None, description="Updated environment classification"
+    )
+    status: Optional[str] = Field(
+        None, description="Updated status: ACTIVE, ARCHIVED, SUSPENDED"
+    )
+
+
+class ScanTargetResponse(BaseModel):
+    """Response DTO representing a registered scan target."""
+
+    id: str
+    organization_id: str
+    name: str
+    target_url: str
+    environment: str
+    status: str
+    is_ownership_verified: bool
+    ownership_verification_token: Optional[str] = None
+    created_by: Optional[str] = None
+    created_at: str
+    updated_at: Optional[str] = None
+
+
+class PolicyValidationResult(BaseModel):
+    """Result of the AssessmentPolicyEngine pre-scan authorization validation."""
+
+    is_allowed: bool
+    rejection_reason: Optional[str] = None
+    scan_target_id: Optional[str] = None
+    authorization_id: Optional[str] = None

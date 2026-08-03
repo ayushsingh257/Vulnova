@@ -79,9 +79,35 @@ class WorkerOrchestratorService:
     async def dispatch_scan_job(
         self, organization_id: UUID, requested_by: UUID, req: DispatchScanRequest
     ) -> WorkerTaskExecutionDTO:
-        """Dispatch scan job to Celery priority queue with container sandbox security validation."""
+        """Dispatch scan job to Celery priority queue with container sandbox security validation.
+
+        Phase 6.2: Rejects dispatch if ``is_authorized_assessment`` is not ``True``.
+        """
         scan_id = UUID(req.scan_id)
         priority = req.priority or "scans.default"
+
+        # 0. Enforce mandatory authorization contract (Phase 6.2)
+        if not req.is_authorized_assessment:
+            logger.warning(
+                "worker_dispatch.authorization_rejected",
+                scan_id=str(scan_id),
+                org_id=str(organization_id),
+                requested_by=str(requested_by),
+            )
+            await self.audit_service.record_event(
+                organization_id=organization_id,
+                action="worker_task.authorization_rejected",
+                resource_type="worker_task",
+                resource_id=str(scan_id),
+                actor_user_id=requested_by,
+                details={
+                    "scan_id": req.scan_id,
+                    "reason": "is_authorized_assessment not set to True",
+                },
+            )
+            raise ResourceNotFoundException(
+                "Scan dispatch rejected: authorized assessment consent is required."
+            )
 
         # 1. Validate sandbox environment security compliance
         task_id = f"task-{uuid4().hex[:12]}"

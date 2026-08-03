@@ -430,3 +430,34 @@ Phase 6.1 establishes Vulnova's distributed worker application and container san
 2. **Execution Isolation Safeguard**: Celery workers do NOT execute raw OS commands directly. All job executions pass through `Celery Worker -> Task Queue -> Sandbox Executor -> Job Dispatch`.
 3. **Multi-Tenant Database Auditing**: `WorkerNodeModel` (`worker_nodes`) and `WorkerTaskModel` (`worker_task_executions`) include `organization_id` and `requested_by` fields for multi-tenant isolation and capacity metrics calculation.
 
+---
+
+## 🎯 9. Target Scan Configuration & Authorized Assessment Contract Architecture (Phase 6.2)
+
+Phase 6.2 deploys a mandatory pre-scan legal authorization gate and scan target management subsystem:
+
+```text
+               [ API Request: POST /assessments ]
+                              │
+                              ▼
+                 [ AssessmentPolicyEngine ]
+    1. Check is_authorized_assessment == True (Consent)
+    2. Lookup target URL in scan_targets table (Registration)
+    3. Verify target status == ACTIVE (Lifecycle)
+    4. Validate SSRF Egress Firewall (Safety)
+    5. Persist authorization_declarations record (Audit)
+                              │
+               ┌──────────────┴──────────────┐
+               ▼                             ▼
+        [ REJECT (403) ]              [ ALLOW (201) ]
+  (Missing consent, unregistered,      (Passes to AssessmentService
+   archived, or SSRF prohibited)        & WorkerOrchestrator)
+```
+
+### Architectural Axioms:
+1. **Mandatory Authorization Consent**: Every assessment scan request must explicitly include `is_authorized_assessment=True`. Unconfirmed requests are hard-rejected with HTTP 403 Forbidden.
+2. **Scan Target Registration Gate**: Target URLs must be pre-registered in `scan_targets` under the requesting organization with `ACTIVE` status before scanning.
+3. **Immutable Consent Audit Trail**: Every authorization consent event persists a timestamped `authorization_declarations` record (`scan_target_id`, `declared_by`, `authorization_scope`, `ip_address`) for legal compliance.
+4. **Worker Dispatch Protection**: `WorkerOrchestratorService` enforces authorization metadata validation prior to Celery priority queue dispatching, preventing unauthorized background task executions.
+
+

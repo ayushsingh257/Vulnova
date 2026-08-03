@@ -148,6 +148,7 @@ async def test_worker_orchestrator_dispatch_and_cancel() -> None:
         profile_id="full_dast",
         target_url="http://example.com",
         priority="scans.high",
+        is_authorized_assessment=True,
     )
 
     mock_saved_task = WorkerTaskModel(

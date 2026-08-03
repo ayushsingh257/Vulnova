@@ -98,7 +98,13 @@ def test_assessment_service_ssrf_rejection() -> None:
             mock_user.id = uuid4()
             mock_user.organization_id = uuid4()
 
-            req = CreateAssessmentRequest(target_url="http://127.0.0.1/scan")
+            req = CreateAssessmentRequest(
+                target_url="http://127.0.0.1/scan",
+                is_authorized_assessment=True,
+            )
+            service.assessment_policy_engine.validate_scan_authorization = AsyncMock(
+                return_value=MagicMock(is_allowed=True, rejection_reason=None)
+            )
             with pytest.raises(ValidationException) as exc_info:
                 await service.create_and_run_assessment(req, mock_user)
 
@@ -123,6 +129,10 @@ def test_assessment_service_run_success(monkeypatch: pytest.MonkeyPatch) -> None
             mock_user.id = uuid4()
             mock_user.organization_id = uuid4()
 
+            service.assessment_policy_engine.validate_scan_authorization = AsyncMock(
+                return_value=MagicMock(is_allowed=True, rejection_reason=None)
+            )
+
             # Mock Repository job
             mock_job = MagicMock()
             mock_job.id = uuid4()
@@ -142,7 +152,10 @@ def test_assessment_service_run_success(monkeypatch: pytest.MonkeyPatch) -> None
             mock_plugin.metadata = mock_meta
             service.plugin_registry.register(mock_plugin)
 
-            req = CreateAssessmentRequest(target_url="https://example.com")
+            req = CreateAssessmentRequest(
+                target_url="https://example.com",
+                is_authorized_assessment=True,
+            )
             res = await service.create_and_run_assessment(req, mock_user)
 
             assert res.target_url == "https://example.com"

@@ -47,6 +47,10 @@ from app.infrastructure.database.models.asset_graph import (
 from app.infrastructure.database.models.audit_log import AuditLogModel
 from app.infrastructure.database.models.organization import OrganizationModel
 from app.infrastructure.database.models.refresh_token import RefreshTokenModel
+from app.infrastructure.database.models.scan_target import (
+    AuthorizationDeclarationModel,
+    ScanTargetModel,
+)
 from app.infrastructure.database.models.trend import (
     AssetChangeEventModel,
     AssetSnapshotModel,
@@ -96,6 +100,8 @@ __all__ = [
     "FindingSuppressionRuleModel",
     "AssetSnapshotModel",
     "AssetChangeEventModel",
+    "ScanTargetModel",
+    "AuthorizationDeclarationModel",
     "WorkerNodeModel",
     "WorkerTaskModel",
 ]

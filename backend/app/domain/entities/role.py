@@ -109,6 +109,8 @@ PERMISSION_MAP: Dict[str, Role] = {
     "workers:read": Role.VIEWER,
     "workers:manage": Role.ADMIN,
     "scans:dispatch": Role.SECURITY_ANALYST,
+    # ── Scan Authorization & Target Management (Phase 6.2) ──
+    "scans:authorize": Role.SECURITY_ANALYST,
     # ── Reports ──
     "reports:read": Role.VIEWER,
     "reports:generate": Role.SECURITY_ANALYST,

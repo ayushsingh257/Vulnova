@@ -6,6 +6,9 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.assessment.assessment_policy_engine import (
+    AssessmentPolicyEngine,
+)
 from app.application.assessment.continuous_monitoring import (
     ContinuousMonitoringService,
 )
@@ -27,7 +30,11 @@ from app.application.assessment.policy_engine import ScanPolicyEngine
 from app.application.assessment.risk_engine import RiskIntelligenceEngine
 from app.application.assessment.scan_profiles import ScanProfileRegistry
 from app.application.audit_logs.services import AuditLogService
-from app.core.exceptions import ResourceNotFoundException, ValidationException
+from app.core.exceptions import (
+    ForbiddenException,
+    ResourceNotFoundException,
+    ValidationException,
+)
 from app.core.logging import get_logger
 from app.domain.entities.assessment import (
     AssessmentContext,
@@ -69,6 +76,7 @@ class AssessmentService:
         self.correlation_engine = AssessmentCorrelationEngine()
         self.monitoring_service = ContinuousMonitoringService(session)
         self.triage_service = FindingTriageService(session)
+        self.assessment_policy_engine = AssessmentPolicyEngine(session)
 
     async def create_and_run_assessment(
         self, req: CreateAssessmentRequest, current_user: UserModel
@@ -78,6 +86,19 @@ class AssessmentService:
         target_str = str(req.target_url).rstrip("/")
         base_domain = extract_base_domain(target_str)
         org_id = current_user.organization_id
+
+        # 0. Pre-validate Authorized Assessment Contract (Phase 6.2)
+        authorization = await self.assessment_policy_engine.validate_scan_authorization(
+            organization_id=org_id,
+            target_url=target_str,
+            is_authorized_assessment=req.is_authorized_assessment,
+            declared_by=current_user.id,
+            authorization_scope=req.authorization_scope,
+        )
+        if not authorization.is_allowed:
+            raise ForbiddenException(
+                f"Scan authorization rejected: {authorization.rejection_reason}"
+            )
 
         # 1. Pre-validate SSRF Egress Safety
         is_safe, reason = is_safe_target_url(target_str)

@@ -830,6 +830,48 @@ All API errors return a standardized JSON error format:
 
 ---
 
+### M. Scan Target Management & Authorization (`/scan-targets`) (Phase 6.2)
+
+#### `POST /scan-targets`
+- **Summary**: Register a new scan target for the authenticated organization (`targets:create` permission required).
+- **Request Body**:
+  ```json
+  {
+    "name": "Production E-Commerce API",
+    "target_url": "https://api.example.com",
+    "environment": "PRODUCTION"
+  }
+  ```
+- **Response (201 Created)**:
+  ```json
+  {
+    "id": "target_uuid",
+    "organization_id": "org_uuid",
+    "name": "Production E-Commerce API",
+    "target_url": "https://api.example.com",
+    "environment": "PRODUCTION",
+    "status": "ACTIVE",
+    "is_ownership_verified": false,
+    "ownership_verification_token": "vulnova-verify-a1b2c3d4e5f67890",
+    "created_at": "2026-08-03T20:00:00Z"
+  }
+  ```
+
+#### `GET /scan-targets`
+- **Summary**: List all registered scan targets for the organization (`targets:read` permission required). Supports optional `?status=ACTIVE` query parameter filter.
+
+#### `GET /scan-targets/{target_id}`
+- **Summary**: Get details of a specific scan target by UUID (`targets:read` permission required).
+
+#### `PUT /scan-targets/{target_id}`
+- **Summary**: Update name, environment, or status of a scan target (`targets:update` permission required).
+
+#### `DELETE /scan-targets/{target_id}`
+- **Summary**: Archive (soft-delete) a scan target (`targets:delete` permission required). Sets status to `ARCHIVED`. Archived targets cannot be scanned.
+
+
+---
+
 ## ⚡ 4. WebSocket Streaming Protocol
 
 ### Connection: `GET /api/v1/ws/scans/{scan_id}`

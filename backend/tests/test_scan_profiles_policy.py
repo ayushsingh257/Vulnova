@@ -171,8 +171,13 @@ def test_assessment_service_profile_execution(monkeypatch: pytest.MonkeyPatch) -
 
             monkeypatch.setattr("httpx.AsyncClient", lambda **kwargs: mock_client)
 
+            service.assessment_policy_engine.validate_scan_authorization = AsyncMock(
+                return_value=MagicMock(is_allowed=True, rejection_reason=None)
+            )
+
             req = CreateAssessmentRequest(
                 target_url="https://example.com",
+                is_authorized_assessment=True,
                 profile_id=ScanProfileType.WEB_SCAN.value,
                 policy_override={"rate_limit_rps": 15},
             )

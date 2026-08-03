@@ -179,3 +179,19 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
 3. **Multi-Tenant & RBAC Isolation**:
    - Database tables `worker_nodes` and `worker_task_executions` enforce `organization_id = tenant_id` isolation.
    - REST API endpoints enforce RBAC permissions (`workers:read`, `workers:manage`, `scans:dispatch`).
+
+---
+
+## 🎯 10. Authorized Security Assessment Contract & Pre-Scan Policy Gate (Phase 6.2)
+
+1. **Mandatory Authorization Consent Contract**:
+   - Every vulnerability assessment request requires explicit confirmation of `is_authorized_assessment=True`.
+   - Requests lacking affirmative authorization consent are rejected immediately with HTTP 403 Forbidden.
+2. **Scan Target Registration Gate**:
+   - Target URLs must be pre-registered in `scan_targets` under the requesting organization before scanning.
+   - Only targets with `status = 'ACTIVE'` can be scanned. Targets marked `ARCHIVED` or `SUSPENDED` are rejected.
+3. **Immutable Consent Audit Trail**:
+   - Every authorization event generates a timestamped, immutable record in `authorization_declarations` (`organization_id`, `scan_target_id`, `declared_by`, `authorization_scope`, `ip_address`).
+   - Ensures legal traceability and compliance with CFAA / Computer Misuse Act guidelines.
+4. **Worker Task Authorization Validation**:
+   - `WorkerOrchestratorService.dispatch_scan_job()` verifies `is_authorized_assessment=True` before queuing background jobs.

@@ -82,18 +82,36 @@ CREATE TABLE scan_profiles (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Scan Targets
+-- Scan Targets (Phase 6.2 Target Scan Configuration)
 CREATE TABLE scan_targets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     target_url TEXT NOT NULL,
     environment VARCHAR(50) DEFAULT 'PRODUCTION',
+    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
     is_ownership_verified BOOLEAN NOT NULL DEFAULT FALSE,
     ownership_verification_token VARCHAR(255),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_scan_targets_org ON scan_targets(organization_id);
+CREATE INDEX idx_scan_targets_org_url ON scan_targets(organization_id, target_url);
+
+-- Authorization Declarations (Phase 6.2 Authorized Assessment Contract Audit Storage)
+CREATE TABLE authorization_declarations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    scan_target_id UUID NOT NULL REFERENCES scan_targets(id) ON DELETE CASCADE,
+    declared_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    is_authorized BOOLEAN NOT NULL,
+    authorization_scope VARCHAR(50) NOT NULL DEFAULT 'full',
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_auth_decl_org_target ON authorization_declarations(organization_id, scan_target_id);
+
 
 -- Assessment Jobs (Phase 4.1 & Phase 4.7 Enterprise Policy Engine)
 CREATE TABLE assessment_jobs (

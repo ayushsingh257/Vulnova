@@ -737,12 +737,29 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Distributed Celery worker engine, sandbox security manager, priority task queues, worker node/task database schema, orchestrator service, REST endpoints, and RBAC permissions operational; pytest (290 passed), Ruff, Black, Mypy (strict) pass cleanly.
 - **Testing Requirements**: Celery app config tests, sandbox container boundary tests, task execution flow tests, repository CRUD tests, orchestrator dispatch tests, tenant boundary isolation tests.
 
-### Phase 6.2: Target Scan Configuration & Authorized Assessment Contract
-- **Objective**: Scan profile selection and mandatory "Authorized Security Assessment Confirmation" verification.
-- **Deliverables**: Scan creation router with legal scope declaration validation and policy engine checks.
+### ✅ Phase 6.2: Target Scan Configuration & Authorized Assessment Contract
+- **Objective**: Deploy mandatory legal authorization contract gate, scan target registration system (`scan_targets`), authorization declaration audit storage (`authorization_declarations`), `AssessmentPolicyEngine` pre-scan validator, scan target management REST API router (`/api/v1/scan-targets`), updated `CreateAssessmentRequest` and `DispatchScanRequest` DTOs with mandatory `is_authorized_assessment` consent declaration, configured RBAC permission (`scans:authorize`), and comprehensive test suite (`test_scan_target_authorization.py`).
+- **Deliverables**:
+  - Domain entities (`app/domain/entities/scan_target.py`): `ScanTarget`, `AuthorizedAssessmentContract`, `TargetEnvironment` (`PRODUCTION`, `STAGING`, `DEVELOPMENT`, `TESTING`), `TargetStatus` (`ACTIVE`, `ARCHIVED`, `SUSPENDED`), `AuthorizationScope` (`FULL`, `PASSIVE_ONLY`, `CUSTOM`).
+  - Database ORM models (`app/infrastructure/database/models/scan_target.py`): `ScanTargetModel` (`scan_targets`) and `AuthorizationDeclarationModel` (`authorization_declarations`) with multi-tenant isolation (`organization_id`, `created_by`, `declared_by`).
+  - `ScanTargetRepository` (`app/infrastructure/database/repositories/scan_target_repository.py`): Target CRUD operations, URL-based lookup, soft-delete via archiving, authorization declaration audit record persistence, and latest authorization retrieval.
+  - `AssessmentPolicyEngine` (`app/application/assessment/assessment_policy_engine.py`): Pre-scan authorization gate enforcing: (1) Mandatory legal consent `is_authorized_assessment=True`, (2) Registered target lookup in `scan_targets`, (3) Target `ACTIVE` status check, (4) SSRF egress safety validation, and (5) Audit event & declaration persistence.
+  - Service Integration:
+    - `AssessmentService.create_and_run_assessment()`: Injected `AssessmentPolicyEngine` validation step before SSRF and plugin execution. Hard-rejects unauthorized scans with HTTP 403 Forbidden.
+    - `WorkerOrchestratorService.dispatch_scan_job()`: Enforces mandatory `is_authorized_assessment=True` declaration before Celery task dispatching. Rejects unauthorized worker jobs.
+  - Updated Pydantic v2 DTOs (`app/application/assessment/dto.py`): Added `is_authorized_assessment` (required) & `authorization_scope` to `CreateAssessmentRequest`; added `is_authorized_assessment` (required) to `DispatchScanRequest`; added `ScanTargetCreateRequest`, `ScanTargetUpdateRequest`, `ScanTargetResponse`, and `PolicyValidationResult`.
+  - REST API router endpoints (`app/api/v1/routers/scan_targets.py`): `POST /api/v1/scan-targets` (create target), `GET /api/v1/scan-targets` (list org targets), `GET /api/v1/scan-targets/{id}` (get target details), `PUT /api/v1/scan-targets/{id}` (update target), `DELETE /api/v1/scan-targets/{id}` (archive target).
+  - Configured RBAC permissions (`scans:authorize`) in `PERMISSION_MAP` (`app/domain/entities/role.py`).
+  - Comprehensive unit & integration test suite (`tests/test_scan_target_authorization.py`) — 25 test functions covering domain entities, ORM tables, repository CRUD, `AssessmentPolicyEngine` authorization gate, worker dispatch enforcement, DTO validation, and API router.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 174 source files passed (strict mode)
+    - **Pytest**: **315/315 passed** (290 previous + 25 new)
 - **Dependencies**: Phase 6.1, Phase 4.7.
-- **Completion Criteria**: Scans reject execution if user authorization declaration is missing or out-of-scope.
-- **Testing Requirements**: Legal authorization declaration validation tests, policy check tests.
+- **Completion Criteria**: Target registration system, mandatory authorization contract gate, policy engine, worker dispatch validation, REST endpoints, and RBAC permissions operational; pytest (315 passed), Ruff, Black, Mypy (strict) pass cleanly.
+- **Testing Requirements**: Domain entity tests, ORM table tests, repository CRUD tests, policy engine gate tests, worker dispatch authorization tests, DTO backward compatibility tests.
 
 ### Phase 6.3: Scan Execution Lifecycle State Machine & Retry Engine
 - **Objective**: Implement robust state transitions (`QUEUED` -> `CRAWLING` -> `ASSESSING` -> `AI_ANALYSIS` -> `COMPLETED`), retry engines, task deduplication, and distributed locking.

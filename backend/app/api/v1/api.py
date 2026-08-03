@@ -9,6 +9,7 @@ from app.api.v1.routers import (
     auth,
     discovery,
     organizations,
+    scan_targets,
     status,
     trends,
     triage,
@@ -29,4 +30,7 @@ api_v1_router.include_router(assets.router)
 api_v1_router.include_router(trends.router)
 api_v1_router.include_router(triage.router)
 api_v1_router.include_router(ai.router)
+api_v1_router.include_router(
+    scan_targets.router, prefix="/scan-targets", tags=["Scan Target Management"]
+)
 api_v1_router.include_router(workers.router, prefix="/workers", tags=["Workers"])
