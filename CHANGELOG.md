@@ -19,6 +19,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 4 Phase 4.8 (Multi-Source Finding Correlation & Asset Inventory Engine)** (`17d8fb06`):
+  - Created `AssessmentCorrelationEngine` (`app/application/assessment/correlation_engine.py`) synthesizing discovery endpoints, technology stack fingerprints, and normalized security findings into a unified asset risk posture.
+  - Linked findings to matching `AssetNode` entries in tenant Asset Graph (`finding.asset_node_id`), maintaining `asset_node_id` as optional for backward compatibility.
+  - Reused composite risk metrics computed by `RiskIntelligenceEngine` to calculate aggregate risk posture metadata (`composite_risk_score`, `max_severity`, `total_findings_count`, `findings_by_severity`) on asset nodes without graph node duplication.
+  - Implemented `AssetInventoryRepository` (`app/infrastructure/database/repositories/asset_inventory_repository.py`) providing tenant-isolated queries for inventory nodes, technology mappings (`RUNS_TECH`), and linked vulnerability findings.
+  - Implemented `AssetInventoryService` (`app/application/assessment/asset_inventory_service.py`) and DTOs (`AssetInventoryDTO`, `AssetInventoryResponse`, `AssetDetailResponse`).
+  - Added REST API router endpoints (`app/api/v1/routers/assets.py`): `GET /api/v1/assets/inventory`, `GET /api/v1/assets/{asset_id}`, `GET /api/v1/assets/{asset_id}/findings`, and `GET /api/v1/assets/{asset_id}/technologies`.
+  - Added `"assets:read": Role.VIEWER` permission to `PERMISSION_MAP` (`app/domain/entities/role.py`).
+  - Integrated `AssessmentCorrelationEngine` into `AssessmentService.create_and_run_assessment` pipeline (`Plugins -> Risk Engine -> Deduplication -> Evidence Engine -> Correlation Engine -> DB Persistence`).
+  - Added unit & integration test suite (`tests/test_correlation_inventory.py`) — 3 new tests covering correlation engine node matching, tenant isolation, and inventory lookups. Total backend test suite now stands at **158 passing tests**.
 - **Era 4 Phase 4.7 (Enterprise Scan Profile & Execution Policy Engine)** (`ba93cf3d`):
   - Created `ScanProfileRegistry` (`app/application/assessment/scan_profiles.py`) mapping 10 pre-configured enterprise scan profiles (`Quick Scan`, `Web Scan`, `API Scan`, `Infrastructure Scan`, `OWASP Top 10`, `OWASP API Top 10`, `Full Assessment`, `Authenticated Scan`, `Passive Scan`, `Custom Scan`) to registered plugin IDs without duplicating plugin metadata.
   - Implemented standalone, execution-layer independent `ScanPolicyEngine` (`app/application/assessment/policy_engine.py`) enforcing concurrency caps, rate limits (requests/sec), `robots.txt` compliance, scope include/exclude wildcard patterns, custom auth header/cookie injection, and emergency `stop_on_critical` triggers. Designed for future Era 6 distributed worker reuse.
