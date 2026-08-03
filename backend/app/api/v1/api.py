@@ -10,6 +10,7 @@ from app.api.v1.routers import (
     organizations,
     status,
     trends,
+    triage,
     users,
 )
 
@@ -24,3 +25,4 @@ api_v1_router.include_router(discovery.router)
 api_v1_router.include_router(assessment.router)
 api_v1_router.include_router(assets.router)
 api_v1_router.include_router(trends.router)
+api_v1_router.include_router(triage.router)

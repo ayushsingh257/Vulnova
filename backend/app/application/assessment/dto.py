@@ -196,3 +196,69 @@ class PostureTimelineResponse(BaseModel):
 
     total_events: int
     events: List[AssetChangeEventDTO] = Field(default_factory=list)
+
+
+class TriageFindingRequest(BaseModel):
+    """Request model for triaging a single security finding."""
+
+    status: str  # CONFIRMED, FALSE_POSITIVE, RISK_ACCEPTED, REMEDIATED, REOPENED
+    comment: Optional[str] = None
+    risk_accepted_until: Optional[str] = None
+
+
+class BulkTriageRequest(BaseModel):
+    """Request model for bulk triaging multiple security findings."""
+
+    finding_ids: List[str]
+    status: str
+    comment: Optional[str] = None
+
+
+class CreateSuppressionRuleRequest(BaseModel):
+    """Request model for creating an automated false-positive finding suppression rule."""
+
+    name: str
+    rule_type: str  # EXACT_CWE, TARGET_PATTERN, PLUGIN_ID, COMPOSITE
+    reason: str
+    plugin_id: Optional[str] = None
+    cwe_id: Optional[str] = None
+    target_pattern: Optional[str] = None
+    expires_at: Optional[str] = None
+
+
+class FindingTriageHistoryDTO(BaseModel):
+    """DTO representing a single historical finding triage record."""
+
+    id: str
+    finding_id: str
+    actor_user_id: Optional[str] = None
+    previous_status: str
+    new_status: str
+    comment: Optional[str] = None
+    risk_accepted_until: Optional[str] = None
+    created_at: str
+
+
+class SuppressionRuleDTO(BaseModel):
+    """DTO representing an automated finding suppression rule."""
+
+    id: str
+    name: str
+    rule_type: str
+    reason: str
+    plugin_id: Optional[str] = None
+    cwe_id: Optional[str] = None
+    target_pattern: Optional[str] = None
+    is_active: bool = True
+    created_by_user_id: Optional[str] = None
+    expires_at: Optional[str] = None
+    created_at: str
+
+
+class TriageResponse(BaseModel):
+    """Response model for finding triage operations."""
+
+    finding_id: str
+    previous_status: str
+    new_status: str
+    message: str

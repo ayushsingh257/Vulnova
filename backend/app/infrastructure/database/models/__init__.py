@@ -16,6 +16,10 @@ from app.infrastructure.database.models.trend import (
     AssetChangeEventModel,
     AssetSnapshotModel,
 )
+from app.infrastructure.database.models.triage import (
+    FindingSuppressionRuleModel,
+    FindingTriageHistoryModel,
+)
 from app.infrastructure.database.models.user import UserModel
 
 __all__ = [
@@ -30,4 +34,6 @@ __all__ = [
     "SecurityFindingModel",
     "AssetSnapshotModel",
     "AssetChangeEventModel",
+    "FindingTriageHistoryModel",
+    "FindingSuppressionRuleModel",
 ]

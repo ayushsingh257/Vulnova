@@ -153,3 +153,22 @@ class AssessmentRepository:
         stmt = stmt.order_by(SecurityFindingModel.created_at.desc())
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+
+    async def get_finding_by_id(
+        self, organization_id: UUID, finding_id: UUID
+    ) -> Optional[SecurityFindingModel]:
+        """Fetch a security finding by ID enforcing multi-tenant isolation."""
+        stmt = select(SecurityFindingModel).where(
+            SecurityFindingModel.id == finding_id,
+            SecurityFindingModel.organization_id == organization_id,
+        )
+        try:
+            result = await self.session.execute(stmt)
+            res = (
+                result.scalar_one_or_none()
+                if hasattr(result, "scalar_one_or_none")
+                else None
+            )
+            return res if isinstance(res, SecurityFindingModel) else None
+        except Exception:
+            return None

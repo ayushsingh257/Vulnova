@@ -22,6 +22,7 @@ from app.application.assessment.dto import (
     ScanPolicyDTO,
     ScanProfileDTO,
 )
+from app.application.assessment.finding_triage_service import FindingTriageService
 from app.application.assessment.policy_engine import ScanPolicyEngine
 from app.application.assessment.risk_engine import RiskIntelligenceEngine
 from app.application.assessment.scan_profiles import ScanProfileRegistry
@@ -52,7 +53,7 @@ logger = get_logger("vulnova.assessment_service")
 
 
 class AssessmentService:
-    """Application Service orchestrating scan profiles, policy engines, vulnerability scanning plugins, risk intelligence, evidence collection, finding correlation, continuous monitoring, and persistence."""
+    """Application Service orchestrating scan profiles, policy engines, vulnerability scanning plugins, risk intelligence, evidence collection, finding correlation, continuous monitoring, automated suppression, finding triage, and persistence."""
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -67,6 +68,7 @@ class AssessmentService:
         self.evidence_engine = EvidenceCollectionEngine()
         self.correlation_engine = AssessmentCorrelationEngine()
         self.monitoring_service = ContinuousMonitoringService(session)
+        self.triage_service = FindingTriageService(session)
 
     async def create_and_run_assessment(
         self, req: CreateAssessmentRequest, current_user: UserModel
@@ -207,11 +209,16 @@ class AssessmentService:
         )
 
         # 10. Correlate Findings with Asset Graph & Update Posture
-        final_findings = await self.correlation_engine.correlate_findings(
+        correlated_findings = await self.correlation_engine.correlate_findings(
             evidenced_findings, context, self.session
         )
 
-        # 11. Persist Correlated Findings & Evidence Artifacts to DB
+        # 11. Evaluate Automated Finding Suppression Rules
+        final_findings = await self.triage_service.evaluate_suppression_rules(
+            org_id, correlated_findings
+        )
+
+        # 12. Persist Correlated Findings & Evidence Artifacts to DB
         for f in final_findings:
             await self.repo.create_finding(org_id, f)
             for art in f.artifacts:
