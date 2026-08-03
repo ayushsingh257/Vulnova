@@ -535,6 +535,168 @@ class FindingRAGContextResponse(BaseModel):
     """Response containing assembled RAG context block tailored for a finding."""
 
     finding_id: str
-    formatted_context_block: str
     retrieved_chunks_count: int
-    sources_cited: List[str]
+    formatted_context_block: str
+    sources_cited: List[str] = Field(default_factory=list)
+
+
+# ── Phase 5.7: Enterprise AI Security Copilot DTO Schemas ──
+
+
+class CreateCopilotSessionRequest(BaseModel):
+    """Request payload for initializing a new Copilot investigation session."""
+
+    title: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Session title (e.g. 'Investigating CVE-2024-1111')",
+    )
+    focused_finding_id: Optional[str] = Field(
+        None, description="UUID of security finding to focus investigation on"
+    )
+    model_alias: Optional[str] = Field(
+        "default", description="LLM provider model alias"
+    )
+    temperature: float = Field(0.2, ge=0.0, le=1.0)
+
+
+class UpdateCopilotSessionRequest(BaseModel):
+    """Request payload for updating session title, status, or focus."""
+
+    title: Optional[str] = Field(None, max_length=255)
+    status: Optional[str] = Field(None, description="ACTIVE, ARCHIVED, CLOSED")
+    focused_finding_id: Optional[str] = None
+
+
+class CopilotSessionDTO(BaseModel):
+    """DTO representing a Copilot investigation session."""
+
+    id: str
+    organization_id: str
+    user_id: str
+    title: str
+    status: str
+    focused_finding_id: Optional[str] = None
+    model_alias: str
+    temperature: float
+    total_tokens: int
+    message_count: int
+    created_at: str
+    updated_at: str
+
+
+class SendCopilotMessageRequest(BaseModel):
+    """Request payload for sending an analyst message to the Copilot assistant."""
+
+    content: str = Field(
+        ..., min_length=1, max_length=4000, description="Analyst query or instruction"
+    )
+    focused_finding_id: Optional[str] = Field(
+        None, description="Optional focus override for finding context"
+    )
+    enable_rag: bool = Field(
+        True, description="Whether to auto-retrieve RAG knowledge chunks"
+    )
+    model_alias: Optional[str] = None
+
+
+class CopilotCitationDTO(BaseModel):
+    """DTO representing a grounding source citation referenced in an AI response."""
+
+    source_type: str  # OWASP, CWE, CAPEC, CVE_NVD, VENDOR_ADVISORY, INTERNAL_POLICY
+    title: str
+    external_ref_id: Optional[str] = None
+    source_url: Optional[str] = None
+    similarity_score: Optional[float] = None
+
+
+class CopilotToolCallDTO(BaseModel):
+    """DTO representing an internal read-only tool invocation by the AI assistant."""
+
+    tool_name: str
+    input_params: Dict[str, Any] = Field(default_factory=dict)
+    execution_status: str  # SUCCESS, FAILED, DENIED
+    summary: Optional[str] = None
+
+
+class CopilotMessageDTO(BaseModel):
+    """DTO representing a Copilot chat message with grounding & explainability metadata."""
+
+    id: str
+    session_id: str
+    organization_id: str
+    role: str  # USER, ASSISTANT, SYSTEM, TOOL
+    content: str
+    agent_type: str  # SECURITY_ANALYST, EXPLAINER, ATTACK_PATH, REMEDIATION, FALSE_POSITIVE, KNOWLEDGE_RAG
+    token_count: int
+    # Grounding & Explainability Metadata
+    response_confidence_score: Optional[float] = None
+    sources_used: List[Dict[str, Any]] = Field(default_factory=list)
+    knowledge_chunks_used: List[Dict[str, Any]] = Field(default_factory=list)
+    tools_called: List[Dict[str, Any]] = Field(default_factory=list)
+    reasoning_summary: Optional[str] = None
+    model_used: Optional[str] = None
+    prompt_version: str = "1.0"
+    response_evaluation_metadata: Dict[str, Any] = Field(default_factory=dict)
+    created_at: str
+
+
+class CopilotContextMemoryDTO(BaseModel):
+    """DTO representing key-value investigation context memory."""
+
+    id: str
+    session_id: str
+    memory_key: str
+    memory_value_json: Dict[str, Any]
+    memory_type: str
+    created_at: str
+    updated_at: str
+
+
+class CopilotChatResponse(BaseModel):
+    """Response payload returned when sending a message to the AI Security Copilot."""
+
+    session_id: str
+    user_message: CopilotMessageDTO
+    assistant_message: CopilotMessageDTO
+    agent_type: str
+    sources_used: List[CopilotCitationDTO]
+    tools_executed: List[CopilotToolCallDTO]
+    response_confidence_score: Optional[float] = None
+    total_session_tokens: int
+
+
+class SubmitCopilotFeedbackRequest(BaseModel):
+    """Request payload for submitting SOC analyst response feedback."""
+
+    session_id: str
+    message_id: str
+    rating: int = Field(
+        ..., ge=1, le=5, description="Analyst rating from 1 (poor) to 5 (excellent)"
+    )
+    is_helpful: bool = Field(
+        True, description="Whether the copilot response was helpful"
+    )
+    feedback_category: Optional[str] = Field(
+        None,
+        max_length=100,
+        description="e.g., ACCURACY, REASONING, CITATION, REMEDIATION",
+    )
+    feedback_notes: Optional[str] = Field(
+        None, max_length=1000, description="Detailed analyst evaluation feedback"
+    )
+
+
+class CopilotFeedbackDTO(BaseModel):
+    """DTO representing recorded analyst feedback."""
+
+    id: str
+    session_id: str
+    message_id: str
+    organization_id: str
+    user_id: str
+    rating: int
+    is_helpful: bool
+    feedback_category: Optional[str] = None
+    feedback_notes: Optional[str] = None
+    created_at: str

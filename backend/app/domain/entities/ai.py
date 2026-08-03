@@ -580,3 +580,139 @@ class RAGSearchResult:
     source_url: Optional[str] = None
     source_author: Optional[str] = None
     chunk_metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+# ── Phase 5.7: Enterprise AI Security Copilot Domain Entities ──
+
+
+class CopilotSessionStatus(str, Enum):
+    """Lifecycle states for Copilot conversation sessions."""
+
+    ACTIVE = "ACTIVE"
+    ARCHIVED = "ARCHIVED"
+    CLOSED = "CLOSED"
+
+
+class CopilotMessageRole(str, Enum):
+    """Roles for messages within a Copilot session."""
+
+    USER = "USER"
+    ASSISTANT = "ASSISTANT"
+    SYSTEM = "SYSTEM"
+    TOOL = "TOOL"
+
+
+class CopilotAgentType(str, Enum):
+    """Specialized internal AI agent personas handling analyst queries."""
+
+    ORCHESTRATOR = "ORCHESTRATOR"
+    SECURITY_ANALYST = "SECURITY_ANALYST"
+    EXPLAINER = "EXPLAINER"
+    ATTACK_PATH = "ATTACK_PATH"
+    REMEDIATION = "REMEDIATION"
+    FALSE_POSITIVE = "FALSE_POSITIVE"
+    KNOWLEDGE_RAG = "KNOWLEDGE_RAG"
+
+
+class CopilotContextMemoryType(str, Enum):
+    """Categories of persistent key-value memory for copilot investigation context."""
+
+    INVESTIGATION_STATE = "INVESTIGATION_STATE"
+    FOCUSED_ENTITY = "FOCUSED_ENTITY"
+    USER_PREFERENCE = "USER_PREFERENCE"
+    REASONING_SUMMARY = "REASONING_SUMMARY"
+
+
+class CopilotToolStatus(str, Enum):
+    """Execution status for internal tool invocations."""
+
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    DENIED = "DENIED"
+
+
+@dataclass
+class CopilotSession:
+    """Domain entity representing a multi-turn AI Security Copilot conversation session."""
+
+    organization_id: UUID
+    user_id: UUID
+    title: str = "New Security Investigation"
+    status: CopilotSessionStatus = CopilotSessionStatus.ACTIVE
+    focused_finding_id: Optional[UUID] = None
+    model_alias: str = "default"
+    temperature: float = 0.2
+    total_tokens: int = 0
+    message_count: int = 0
+    id: UUID = field(default_factory=uuid4)
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class CopilotMessage:
+    """Domain entity representing a chat message with grounding & explainability metadata."""
+
+    session_id: UUID
+    organization_id: UUID
+    role: CopilotMessageRole
+    content: str
+    agent_type: CopilotAgentType = CopilotAgentType.SECURITY_ANALYST
+    token_count: int = 0
+    # Grounding & Explainability Metadata
+    response_confidence_score: Optional[float] = None
+    sources_used: List[Dict[str, Any]] = field(default_factory=list)
+    knowledge_chunks_used: List[Dict[str, Any]] = field(default_factory=list)
+    tools_called: List[Dict[str, Any]] = field(default_factory=list)
+    reasoning_summary: Optional[str] = None
+    model_used: Optional[str] = None
+    prompt_version: str = "1.0"
+    response_evaluation_metadata: Dict[str, Any] = field(default_factory=dict)
+    id: UUID = field(default_factory=uuid4)
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class CopilotContextMemory:
+    """Domain entity representing persistent key-value context memory for an investigation session."""
+
+    session_id: UUID
+    organization_id: UUID
+    memory_key: str
+    memory_value_json: Dict[str, Any]
+    memory_type: CopilotContextMemoryType = CopilotContextMemoryType.INVESTIGATION_STATE
+    id: UUID = field(default_factory=uuid4)
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class CopilotToolExecution:
+    """Domain entity representing an audit execution log of an internal read-only tool call."""
+
+    session_id: UUID
+    organization_id: UUID
+    tool_name: str
+    input_params_json: Dict[str, Any]
+    output_summary_json: Dict[str, Any]
+    execution_status: CopilotToolStatus = CopilotToolStatus.SUCCESS
+    latency_ms: int = 0
+    message_id: Optional[UUID] = None
+    id: UUID = field(default_factory=uuid4)
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class CopilotFeedback:
+    """Domain entity representing SOC analyst evaluation feedback on a copilot response."""
+
+    session_id: UUID
+    message_id: UUID
+    organization_id: UUID
+    user_id: UUID
+    rating: int  # 1 to 5 stars
+    is_helpful: bool
+    feedback_category: Optional[str] = None
+    feedback_notes: Optional[str] = None
+    id: UUID = field(default_factory=uuid4)
+    created_at: datetime = field(default_factory=datetime.utcnow)

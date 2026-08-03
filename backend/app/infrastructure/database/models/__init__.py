@@ -18,6 +18,13 @@ from app.infrastructure.database.models.ai_confidence import (
     AIFindingConfidenceAnalysisModel,
     AIFindingSimilarityMatchModel,
 )
+from app.infrastructure.database.models.ai_copilot import (
+    CopilotContextMemoryModel,
+    CopilotFeedbackModel,
+    CopilotMessageModel,
+    CopilotSessionModel,
+    CopilotToolExecutionModel,
+)
 from app.infrastructure.database.models.ai_knowledge import (
     RAGSearchLogModel,
     SecurityKnowledgeChunkModel,
@@ -60,10 +67,6 @@ __all__ = [
     "AssetRelationshipModel",
     "AssessmentJobModel",
     "SecurityFindingModel",
-    "AssetSnapshotModel",
-    "AssetChangeEventModel",
-    "FindingTriageHistoryModel",
-    "FindingSuppressionRuleModel",
     "LLMProviderModel",
     "LLMModelRegistryModel",
     "PromptTemplateModel",
@@ -80,4 +83,13 @@ __all__ = [
     "SecurityKnowledgeDocumentModel",
     "SecurityKnowledgeChunkModel",
     "RAGSearchLogModel",
+    "CopilotSessionModel",
+    "CopilotMessageModel",
+    "CopilotContextMemoryModel",
+    "CopilotToolExecutionModel",
+    "CopilotFeedbackModel",
+    "FindingTriageHistoryModel",
+    "FindingSuppressionRuleModel",
+    "AssetSnapshotModel",
+    "AssetChangeEventModel",
 ]

@@ -7,6 +7,9 @@ from app.infrastructure.database.repositories.ai_attack_path_repository import (
 from app.infrastructure.database.repositories.ai_confidence_repository import (
     AIConfidenceRepository,
 )
+from app.infrastructure.database.repositories.ai_copilot_repository import (
+    AICopilotRepository,
+)
 from app.infrastructure.database.repositories.ai_knowledge_repository import (
     AIRAGRepository,
 )
@@ -34,4 +37,5 @@ __all__ = [
     "AIRemediationRepository",
     "AIConfidenceRepository",
     "AIRAGRepository",
+    "AICopilotRepository",
 ]

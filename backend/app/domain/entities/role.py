@@ -100,6 +100,11 @@ PERMISSION_MAP: Dict[str, Role] = {
     "knowledge:read": Role.VIEWER,
     "knowledge:write": Role.SECURITY_ANALYST,
     "knowledge:delete": Role.ADMIN,
+    # ── Enterprise AI Security Copilot (Phase 5.7) ──
+    "copilot:read": Role.VIEWER,
+    "copilot:chat": Role.SECURITY_ANALYST,
+    "copilot:manage": Role.SECURITY_ANALYST,
+    "copilot:feedback": Role.SECURITY_ANALYST,
     # ── Reports ──
     "reports:read": Role.VIEWER,
     "reports:generate": Role.SECURITY_ANALYST,

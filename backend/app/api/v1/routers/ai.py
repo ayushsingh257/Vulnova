@@ -19,6 +19,11 @@ from app.application.ai.dto import (
     AIImpactAnalysisDTO,
     AIRemediationPlanDTO,
     AIUsageSummaryDTO,
+    CopilotChatResponse,
+    CopilotFeedbackDTO,
+    CopilotMessageDTO,
+    CopilotSessionDTO,
+    CreateCopilotSessionRequest,
     CreatePromptTemplateRequest,
     CreateProviderRequest,
     FindingRAGContextRequest,
@@ -40,6 +45,9 @@ from app.application.ai.dto import (
     ReviewConfidenceAnalysisRequest,
     ReviewKnowledgeDocumentRequest,
     ReviewRemediationPlanRequest,
+    SendCopilotMessageRequest,
+    SubmitCopilotFeedbackRequest,
+    UpdateCopilotSessionRequest,
 )
 from app.application.ai.explainer_service import AIFindingExplainerService
 from app.application.ai.impact_analysis_service import ImpactAnalysisService
@@ -974,4 +982,226 @@ async def get_finding_rag_context(
         finding_id=_UUID(finding_id),
         top_k=top_k,
         min_similarity=min_sim,
+    )
+
+
+# ── Phase 5.7: Enterprise AI Security Copilot Endpoints ──
+
+
+@router.post(
+    "/copilot/sessions",
+    response_model=CopilotSessionDTO,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("copilot:manage"))],
+)
+async def create_copilot_session(
+    req: CreateCopilotSessionRequest,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> CopilotSessionDTO:
+    """Initialize a new multi-turn AI Security Copilot investigation session.
+
+    Requires authentication and 'copilot:manage' RBAC permission (SECURITY_ANALYST+).
+    """
+    from app.application.ai.copilot_service import SecurityCopilotService
+
+    service = SecurityCopilotService(session)
+    return await service.create_session(
+        organization_id=current_user.organization_id,
+        user_id=current_user.id,
+        req=req,
+    )
+
+
+@router.get(
+    "/copilot/sessions",
+    response_model=List[CopilotSessionDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("copilot:read"))],
+)
+async def list_copilot_sessions(
+    status_filter: Optional[str] = Query(
+        None,
+        alias="status",
+        description="Filter by session status (ACTIVE, ARCHIVED, CLOSED)",
+    ),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> List[CopilotSessionDTO]:
+    """List Copilot investigation sessions for organization with pagination.
+
+    Requires authentication and 'copilot:read' RBAC permission (VIEWER+).
+    """
+    from app.application.ai.copilot_service import SecurityCopilotService
+
+    service = SecurityCopilotService(session)
+    sessions, _ = await service.list_sessions(
+        organization_id=current_user.organization_id,
+        user_id=current_user.id,
+        status=status_filter,
+        limit=limit,
+        offset=offset,
+    )
+    return sessions
+
+
+@router.get(
+    "/copilot/sessions/{session_id}",
+    response_model=CopilotSessionDTO,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("copilot:read"))],
+)
+async def get_copilot_session(
+    session_id: str = Path(..., description="UUID of the Copilot session"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> CopilotSessionDTO:
+    """Retrieve single Copilot investigation session details by ID.
+
+    Requires authentication and 'copilot:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    from app.application.ai.copilot_service import SecurityCopilotService
+
+    service = SecurityCopilotService(session)
+    return await service.get_session(
+        organization_id=current_user.organization_id,
+        session_id=_UUID(session_id),
+    )
+
+
+@router.patch(
+    "/copilot/sessions/{session_id}",
+    response_model=CopilotSessionDTO,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("copilot:manage"))],
+)
+async def update_copilot_session(
+    req: UpdateCopilotSessionRequest,
+    session_id: str = Path(..., description="UUID of the session to update"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> CopilotSessionDTO:
+    """Update Copilot session title, status, or focused finding ID.
+
+    Requires authentication and 'copilot:manage' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    from app.application.ai.copilot_service import SecurityCopilotService
+
+    service = SecurityCopilotService(session)
+    return await service.update_session(
+        organization_id=current_user.organization_id,
+        session_id=_UUID(session_id),
+        req=req,
+    )
+
+
+@router.delete(
+    "/copilot/sessions/{session_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("copilot:manage"))],
+)
+async def delete_copilot_session(
+    session_id: str = Path(..., description="UUID of the session to delete"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> None:
+    """Delete Copilot investigation session and associated message history.
+
+    Requires authentication and 'copilot:manage' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    from app.application.ai.copilot_service import SecurityCopilotService
+
+    service = SecurityCopilotService(session)
+    await service.delete_session(
+        organization_id=current_user.organization_id,
+        session_id=_UUID(session_id),
+    )
+
+
+@router.post(
+    "/copilot/sessions/{session_id}/messages",
+    response_model=CopilotChatResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("copilot:chat"))],
+)
+async def send_copilot_message(
+    req: SendCopilotMessageRequest,
+    session_id: str = Path(..., description="UUID of active Copilot session"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> CopilotChatResponse:
+    """Send an analyst message to the Copilot assistant and receive grounded AI response with explainability metadata.
+
+    Requires authentication and 'copilot:chat' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    from app.application.ai.copilot_service import SecurityCopilotService
+
+    service = SecurityCopilotService(session)
+    return await service.send_message(
+        organization_id=current_user.organization_id,
+        user_id=current_user.id,
+        session_id=_UUID(session_id),
+        req=req,
+    )
+
+
+@router.get(
+    "/copilot/sessions/{session_id}/messages",
+    response_model=List[CopilotMessageDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("copilot:read"))],
+)
+async def list_copilot_session_messages(
+    session_id: str = Path(..., description="UUID of active Copilot session"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> List[CopilotMessageDTO]:
+    """Retrieve full message history for a Copilot investigation session.
+
+    Requires authentication and 'copilot:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    from app.application.ai.copilot_service import SecurityCopilotService
+
+    service = SecurityCopilotService(session)
+    messages = await service.copilot_repo.list_session_messages(
+        organization_id=current_user.organization_id,
+        session_id=_UUID(session_id),
+    )
+    return [service._map_msg_to_dto(m) for m in messages]
+
+
+@router.post(
+    "/copilot/feedback",
+    response_model=CopilotFeedbackDTO,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("copilot:feedback"))],
+)
+async def submit_copilot_feedback(
+    req: SubmitCopilotFeedbackRequest,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> CopilotFeedbackDTO:
+    """Record SOC analyst rating (1-5 stars) and evaluation feedback for a Copilot response.
+
+    Requires authentication and 'copilot:feedback' RBAC permission (SECURITY_ANALYST+).
+    """
+    from app.application.ai.copilot_service import SecurityCopilotService
+
+    service = SecurityCopilotService(session)
+    return await service.submit_feedback(
+        organization_id=current_user.organization_id,
+        user_id=current_user.id,
+        req=req,
     )
