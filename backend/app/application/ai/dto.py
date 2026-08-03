@@ -1,8 +1,8 @@
 """Pydantic v2 DTO Schemas for Multi-Provider LLM Gateway, Prompt Orchestrator & AI Analysis Engine."""
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class CreateProviderRequest(BaseModel):
@@ -402,3 +402,139 @@ class AIFindingConfidenceAnalysisDTO(BaseModel):
     feedback_timestamp: Optional[str] = None
     error_message: Optional[str] = None
     created_at: str
+
+
+# ── Phase 5.6: Security Knowledge Base & RAG Vector Engine DTOs ──
+
+
+class IngestKnowledgeDocumentRequest(BaseModel):
+    """Request payload for ingesting a security reference document or company policy."""
+
+    title: str = Field(..., min_length=3, max_length=255)
+    source_type: str = Field(
+        ...,
+        description="OWASP, CWE, CAPEC, CVE_NVD, VENDOR_ADVISORY, INTERNAL_POLICY, CUSTOM",
+    )
+    content_text: str = Field(
+        ..., min_length=10, description="Full text content of document"
+    )
+    ingestion_source: str = Field("MANUAL_UPLOAD")
+    external_ref_id: Optional[str] = Field(None, max_length=100)
+    description: Optional[str] = Field(None, max_length=1000)
+    version: str = Field("1.0", max_length=50)
+    chunk_size_tokens: Optional[int] = Field(None, ge=64, le=4096)
+    chunk_overlap_tokens: Optional[int] = Field(None, ge=0, le=512)
+    embedding_model: str = Field("text-embedding-3-small")
+    source_url: Optional[str] = Field(None, max_length=500)
+    source_author: Optional[str] = Field(None, max_length=255)
+    published_date: Optional[str] = Field(None, max_length=50)
+    last_updated_date: Optional[str] = Field(None, max_length=50)
+    is_global: bool = Field(
+        False,
+        description="If True (and user is admin), document is global public benchmark",
+    )
+    metadata_json: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ReviewKnowledgeDocumentRequest(BaseModel):
+    """Request payload for analyst governance approval of a security knowledge document."""
+
+    status: str = Field(..., description="APPROVED, REJECTED, ARCHIVED")
+    review_notes: Optional[str] = Field(None, max_length=1000)
+
+
+class KnowledgeChunkDTO(BaseModel):
+    """DTO representing an individual text chunk with vector metadata & source citations."""
+
+    id: str
+    document_id: str
+    chunk_index: int
+    content_text: str
+    token_count: int
+    organization_id: Optional[str] = None
+    embedding_model: str
+    embedding_dimension: int
+    source_url: Optional[str] = None
+    source_author: Optional[str] = None
+    chunk_metadata: Dict[str, Any] = Field(default_factory=dict)
+    created_at: str
+
+
+class KnowledgeDocumentDTO(BaseModel):
+    """DTO representing a security knowledge document master record."""
+
+    id: str
+    organization_id: Optional[str] = None
+    source_type: str
+    ingestion_source: str
+    title: str
+    external_ref_id: Optional[str] = None
+    description: Optional[str] = None
+    version: str
+    status: str
+    chunk_size_tokens: int
+    chunk_overlap_tokens: int
+    chunk_count: int
+    token_count: int
+    embedding_model: str
+    embedding_dimension: int
+    source_url: Optional[str] = None
+    source_author: Optional[str] = None
+    published_date: Optional[str] = None
+    last_updated_date: Optional[str] = None
+    metadata_json: Dict[str, Any] = Field(default_factory=dict)
+    error_message: Optional[str] = None
+    created_by: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    created_at: str
+    updated_at: str
+
+
+class RAGSearchRequest(BaseModel):
+    """Request payload for executing semantic vector similarity search."""
+
+    query: str = Field(..., min_length=2, max_length=2000)
+    top_k: int = Field(5, ge=1, le=20)
+    min_similarity: float = Field(0.70, ge=0.0, le=1.0)
+    source_type: Optional[str] = None
+
+
+class RAGSearchResultDTO(BaseModel):
+    """DTO representing a vector similarity search result with source attribution."""
+
+    chunk_id: str
+    document_id: str
+    document_title: str
+    source_type: str
+    content_text: str
+    similarity_score: float
+    external_ref_id: Optional[str] = None
+    source_url: Optional[str] = None
+    source_author: Optional[str] = None
+    chunk_metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class RAGSearchResponse(BaseModel):
+    """Response envelope for a RAG vector similarity search."""
+
+    query: str
+    results_count: int
+    results: List[RAGSearchResultDTO]
+    search_latency_ms: int
+
+
+class FindingRAGContextRequest(BaseModel):
+    """Request payload for generating tailored RAG context for a security finding."""
+
+    top_k: int = Field(5, ge=1, le=10)
+    min_similarity: float = Field(0.65, ge=0.0, le=1.0)
+
+
+class FindingRAGContextResponse(BaseModel):
+    """Response containing assembled RAG context block tailored for a finding."""
+
+    finding_id: str
+    formatted_context_block: str
+    retrieved_chunks_count: int
+    sources_cited: List[str]

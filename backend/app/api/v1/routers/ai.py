@@ -21,17 +21,24 @@ from app.application.ai.dto import (
     AIUsageSummaryDTO,
     CreatePromptTemplateRequest,
     CreateProviderRequest,
+    FindingRAGContextRequest,
+    FindingRAGContextResponse,
     GenerateAttackPathRequest,
     GenerateConfidenceAnalysisRequest,
     GenerateExplanationRequest,
     GenerateImpactAnalysisRequest,
     GenerateRemediationRequest,
+    IngestKnowledgeDocumentRequest,
+    KnowledgeDocumentDTO,
     LLMModelDTO,
     LLMProviderConfigDTO,
     PromptTemplateDTO,
+    RAGSearchRequest,
+    RAGSearchResponse,
     RegisterModelRequest,
     ReviewAttackPathRequest,
     ReviewConfidenceAnalysisRequest,
+    ReviewKnowledgeDocumentRequest,
     ReviewRemediationPlanRequest,
 )
 from app.application.ai.explainer_service import AIFindingExplainerService
@@ -763,4 +770,208 @@ async def review_confidence_analysis(
         analysis_id=_UUID(analysis_id),
         reviewer_id=current_user.id,
         req=req,
+    )
+
+
+# ── Phase 5.6: Security Knowledge Base & RAG Vector Engine Endpoints ──
+
+
+@router.post(
+    "/knowledge/documents",
+    response_model=KnowledgeDocumentDTO,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("knowledge:write"))],
+)
+async def ingest_knowledge_document(
+    req: IngestKnowledgeDocumentRequest,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> KnowledgeDocumentDTO:
+    """Ingest a security reference document or company policy into the vector store.
+
+    Requires authentication and 'knowledge:write' RBAC permission (SECURITY_ANALYST+).
+    """
+    from app.application.ai.rag_knowledge_service import AIRAGKnowledgeService
+
+    service = AIRAGKnowledgeService(session)
+    is_admin = current_user.role in ["ADMIN", "OWNER"]
+    return await service.ingest_document(
+        organization_id=current_user.organization_id,
+        req=req,
+        actor_id=current_user.id,
+        is_admin=is_admin,
+    )
+
+
+@router.get(
+    "/knowledge/documents",
+    response_model=List[KnowledgeDocumentDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("knowledge:read"))],
+)
+async def list_knowledge_documents(
+    source_type: Optional[str] = Query(
+        None, description="Filter by source_type (OWASP, CWE, INTERNAL_POLICY, etc.)"
+    ),
+    status_filter: Optional[str] = Query(
+        None, alias="status", description="Filter by ingestion status"
+    ),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> List[KnowledgeDocumentDTO]:
+    """List security knowledge documents accessible to tenant with pagination.
+
+    Requires authentication and 'knowledge:read' RBAC permission (VIEWER+).
+    """
+    from app.application.ai.rag_knowledge_service import AIRAGKnowledgeService
+
+    service = AIRAGKnowledgeService(session)
+    docs, _ = await service.list_documents(
+        organization_id=current_user.organization_id,
+        source_type=source_type,
+        status=status_filter,
+        limit=limit,
+        offset=offset,
+    )
+    return docs
+
+
+@router.get(
+    "/knowledge/documents/{document_id}",
+    response_model=KnowledgeDocumentDTO,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("knowledge:read"))],
+)
+async def get_knowledge_document(
+    document_id: str = Path(..., description="UUID of the knowledge document"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> KnowledgeDocumentDTO:
+    """Retrieve single knowledge document details by ID.
+
+    Requires authentication and 'knowledge:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    from app.application.ai.rag_knowledge_service import AIRAGKnowledgeService
+
+    service = AIRAGKnowledgeService(session)
+    return await service.get_document(
+        organization_id=current_user.organization_id,
+        document_id=_UUID(document_id),
+    )
+
+
+@router.patch(
+    "/knowledge/documents/{document_id}/review",
+    response_model=KnowledgeDocumentDTO,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("knowledge:write"))],
+)
+async def review_knowledge_document(
+    req: ReviewKnowledgeDocumentRequest,
+    document_id: str = Path(
+        ..., description="UUID of the knowledge document to review"
+    ),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> KnowledgeDocumentDTO:
+    """Record analyst governance approval status for a knowledge document.
+
+    Requires authentication and 'knowledge:write' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    from app.application.ai.rag_knowledge_service import AIRAGKnowledgeService
+
+    service = AIRAGKnowledgeService(session)
+    return await service.review_document(
+        organization_id=current_user.organization_id,
+        document_id=_UUID(document_id),
+        req=req,
+        reviewer_id=current_user.id,
+    )
+
+
+@router.delete(
+    "/knowledge/documents/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("knowledge:delete"))],
+)
+async def delete_knowledge_document(
+    document_id: str = Path(..., description="UUID of the document to delete"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> None:
+    """Delete knowledge document and associated vector chunks.
+
+    Requires authentication and 'knowledge:delete' RBAC permission (ADMIN+).
+    """
+    from uuid import UUID as _UUID
+
+    from app.application.ai.rag_knowledge_service import AIRAGKnowledgeService
+
+    service = AIRAGKnowledgeService(session)
+    await service.delete_document(
+        organization_id=current_user.organization_id,
+        document_id=_UUID(document_id),
+        actor_id=current_user.id,
+    )
+
+
+@router.post(
+    "/rag/search",
+    response_model=RAGSearchResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("knowledge:read"))],
+)
+async def search_knowledge_base(
+    req: RAGSearchRequest,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> RAGSearchResponse:
+    """Execute semantic vector similarity search across active security knowledge base chunks.
+
+    Requires authentication and 'knowledge:read' RBAC permission (VIEWER+).
+    """
+    from app.application.ai.rag_knowledge_service import AIRAGKnowledgeService
+
+    service = AIRAGKnowledgeService(session)
+    return await service.search_knowledge_base(
+        organization_id=current_user.organization_id,
+        req=req,
+        actor_id=current_user.id,
+    )
+
+
+@router.post(
+    "/findings/{finding_id}/rag-context",
+    response_model=FindingRAGContextResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def get_finding_rag_context(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    req: Optional[FindingRAGContextRequest] = None,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> FindingRAGContextResponse:
+    """Generate tailored RAG knowledge context block for a security finding.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    from app.application.ai.rag_knowledge_service import AIRAGKnowledgeService
+
+    service = AIRAGKnowledgeService(session)
+    top_k = req.top_k if req else 5
+    min_sim = req.min_similarity if req else 0.65
+    return await service.build_finding_rag_context(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+        top_k=top_k,
+        min_similarity=min_sim,
     )

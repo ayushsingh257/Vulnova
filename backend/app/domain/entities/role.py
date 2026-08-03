@@ -96,6 +96,10 @@ PERMISSION_MAP: Dict[str, Role] = {
     "findings:ai_remediate": Role.SECURITY_ANALYST,
     "findings:ai_confidence": Role.SECURITY_ANALYST,
     "findings:export": Role.SECURITY_ANALYST,
+    # ── Security Knowledge Base & RAG Engine (Phase 5.6) ──
+    "knowledge:read": Role.VIEWER,
+    "knowledge:write": Role.SECURITY_ANALYST,
+    "knowledge:delete": Role.ADMIN,
     # ── Reports ──
     "reports:read": Role.VIEWER,
     "reports:generate": Role.SECURITY_ANALYST,

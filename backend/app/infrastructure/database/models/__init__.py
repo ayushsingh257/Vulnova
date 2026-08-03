@@ -18,6 +18,11 @@ from app.infrastructure.database.models.ai_confidence import (
     AIFindingConfidenceAnalysisModel,
     AIFindingSimilarityMatchModel,
 )
+from app.infrastructure.database.models.ai_knowledge import (
+    RAGSearchLogModel,
+    SecurityKnowledgeChunkModel,
+    SecurityKnowledgeDocumentModel,
+)
 from app.infrastructure.database.models.ai_remediation import (
     AIPatchSuggestionModel,
     AIRemediationPlanModel,
@@ -72,4 +77,7 @@ __all__ = [
     "AIPatchSuggestionModel",
     "AIFindingConfidenceAnalysisModel",
     "AIFindingSimilarityMatchModel",
+    "SecurityKnowledgeDocumentModel",
+    "SecurityKnowledgeChunkModel",
+    "RAGSearchLogModel",
 ]

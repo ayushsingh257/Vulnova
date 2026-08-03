@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
 
@@ -467,3 +467,116 @@ class AIFindingConfidenceAnalysis:
     feedback_timestamp: Optional[datetime] = None
     error_message: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+# ── Phase 5.6 Domain Entities: RAG Knowledge Engine & Vector Store ──
+
+
+class KnowledgeDocumentSourceType(str, Enum):
+    """Source taxonomy of security reference documents."""
+
+    OWASP = "OWASP"
+    CWE = "CWE"
+    CAPEC = "CAPEC"
+    CVE_NVD = "CVE_NVD"
+    VENDOR_ADVISORY = "VENDOR_ADVISORY"
+    INTERNAL_POLICY = "INTERNAL_POLICY"
+    CUSTOM = "CUSTOM"
+
+
+class KnowledgeIngestionStatus(str, Enum):
+    """Lifecycle and governance approval status of security knowledge documents."""
+
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    APPROVED = "APPROVED"
+    INDEXED = "INDEXED"
+    REJECTED = "REJECTED"
+    FAILED = "FAILED"
+    ARCHIVED = "ARCHIVED"
+
+
+class IngestionSource(str, Enum):
+    """Provenance tracking for security document ingestion origins."""
+
+    MANUAL_UPLOAD = "MANUAL_UPLOAD"
+    API_IMPORT = "API_IMPORT"
+    NVD_SYNC = "NVD_SYNC"
+    OWASP_SYNC = "OWASP_SYNC"
+    VENDOR_FEED = "VENDOR_FEED"
+    INTERNAL_SYNC = "INTERNAL_SYNC"
+
+
+class VectorIndexType(str, Enum):
+    """Supported pgvector indexing algorithms."""
+
+    HNSW = "HNSW"
+    IVFFLAT = "IVFFLAT"
+
+
+@dataclass
+class SecurityKnowledgeDocument:
+    """Domain entity representing a security reference document or internal organizational policy."""
+
+    title: str
+    source_type: KnowledgeDocumentSourceType
+    ingestion_source: IngestionSource = IngestionSource.MANUAL_UPLOAD
+    organization_id: Optional[UUID] = None  # None = Global public benchmark
+    external_ref_id: Optional[str] = None  # e.g., 'CWE-89', 'OWASP-A03:2021'
+    description: Optional[str] = None
+    version: str = "1.0"
+    status: KnowledgeIngestionStatus = KnowledgeIngestionStatus.PENDING
+    chunk_size_tokens: int = 512
+    chunk_overlap_tokens: int = 64
+    chunk_count: int = 0
+    token_count: int = 0
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimension: int = 1536
+    source_url: Optional[str] = None
+    source_author: Optional[str] = None
+    published_date: Optional[str] = None
+    last_updated_date: Optional[str] = None
+    metadata_json: Dict[str, Any] = field(default_factory=dict)
+    error_message: Optional[str] = None
+    created_by: Optional[UUID] = None
+    reviewed_by: Optional[UUID] = None
+    reviewed_at: Optional[datetime] = None
+    id: UUID = field(default_factory=uuid4)
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class SecurityKnowledgeChunk:
+    """Domain entity representing an individual text chunk with vector embedding & source citations."""
+
+    document_id: UUID
+    chunk_index: int
+    content_text: str
+    token_count: int
+    organization_id: Optional[UUID] = None
+    embedding: Optional[List[float]] = None
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimension: int = 1536
+    source_url: Optional[str] = None
+    source_author: Optional[str] = None
+    chunk_metadata: Dict[str, Any] = field(default_factory=dict)
+    id: UUID = field(default_factory=uuid4)
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class RAGSearchResult:
+    """Domain entity representing a vector similarity match with citation metadata."""
+
+    chunk_id: UUID
+    document_id: UUID
+    document_title: str
+    source_type: KnowledgeDocumentSourceType
+    content_text: str
+    similarity_score: float
+    external_ref_id: Optional[str] = None
+    source_url: Optional[str] = None
+    source_author: Optional[str] = None
+    chunk_metadata: Dict[str, Any] = field(default_factory=dict)
