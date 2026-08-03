@@ -213,6 +213,17 @@ All logs are emitted using `structlog` as formatted JSON:
 4. **5-Table Normalized Schema**: Copilot data MUST be stored across 5 normalized relational tables (`ai_copilot_sessions`, `ai_copilot_messages`, `ai_copilot_context_memories`, `ai_copilot_tool_executions`, `ai_copilot_feedback`) with composite indexes on `(organization_id, user_id)` and `(session_id, role)`.
 5. **Strict Multi-Tenant & Prompt Security Boundary**: Session, message history, key-value memory, and tool execution queries MUST validate `organization_id = tenant_id`. User inputs and security findings pass through `mask_sensitive_prompt_context`.
 
+---
+
+## ⚡ 17. Distributed Scanning Orchestration & Worker Sandbox Architecture
+
+1. **Celery Worker Priority Task Queues**: Celery worker tasks (`celery_app.py`) are routed across designated priority queues: `scans.high`, `scans.default`, `scans.low`, and `ai.priority`. Task routing uses `task_ack_late=True` and `worker_prefetch_multiplier=1` for reliable job processing.
+2. **Container Sandbox Security Isolation**: Worker task executions MUST enforce OCI container sandbox resource caps: `cpu_limit_vcpu=1.0`, `memory_limit_mb=512`, `read_only_rootfs=True`, `no_new_privs=True`, unprivileged UID/GID `10001`, dropped `ALL` capabilities, and network egress filtering.
+3. **Execution Isolation Safeguard**: Celery Workers MUST NOT execute direct raw OS commands. Execution flows strictly: `Celery Worker -> Task Queue -> Sandbox Executor -> Job Dispatch`.
+4. **Multi-Tenant Database Tracking**: `WorkerNodeModel` (`worker_nodes`) and `WorkerTaskModel` (`worker_task_executions`) include `organization_id` and `requested_by` fields for multi-tenant isolation and capacity metrics calculation.
+5. **RBAC & Audit Trail**: Worker cluster operations enforce permissions (`workers:read`, `workers:manage`, `scans:dispatch`) and audit events (`worker_task.dispatched`, `worker_task.cancelled`).
+
+
 
 
 

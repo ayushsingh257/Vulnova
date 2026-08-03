@@ -711,12 +711,31 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 
 ## ⚡ Era 6: Distributed Scanning Orchestration & Worker Sandbox
 
-### Phase 6.1: Celery & Distributed Isolated Worker Sandbox Cluster
-- **Objective**: Deploy distributed Celery worker clusters running unprivileged scanner container sandboxes with strict resource caps (1 vCPU, 512MB RAM), priority queues, and network egress filtering.
-- **Deliverables**: `backend/app/tasks/scan_tasks.py`, Celery worker sandbox configuration, Redis queue broker integration.
+### ✅ Phase 6.1: Celery & Distributed Isolated Worker Sandbox Cluster
+- **Objective**: Deploy an enterprise-grade distributed Celery worker application (`celery_app.py`), worker sandbox security manager (`sandbox_config.py`), priority task queues (`scans.high`, `scans.default`, `scans.low`, `ai.priority`), worker orchestration service (`WorkerOrchestratorService`), worker cluster node tracking schema (`worker_nodes` & `worker_task_executions`), REST API endpoints for worker cluster monitoring and scan job dispatching, and comprehensive test suite (`test_celery_worker_sandbox.py`).
+- **Deliverables**:
+  - Domain entities (`app/domain/entities/worker.py`): `WorkerNode`, `WorkerTaskExecution`, `SandboxResourceLimits` (1 vCPU, 512MB RAM, `no_new_privs=True`, unprivileged UID/GID 10001, read-only rootfs, dropped capabilities), `WorkerStatus` (`IDLE`, `BUSY`, `OFFLINE`, `PAUSED`, `UNHEALTHY`), `WorkerTaskPriority` (`HIGH`, `DEFAULT`, `LOW`, `PRIORITY_AI`), `WorkerTaskState` (`PENDING`, `STARTED`, `SUCCESS`, `FAILURE`, `RETRY`, `CANCELLED`).
+  - Infrastructure worker engine (`app/infrastructure/workers/`):
+    - `celery_config.py`: Priority queue routes (`scans.high`, `scans.default`, `scans.low`, `ai.priority`), Redis broker and result backend URL configuration, JSON serialization, `task_ack_late=True`, `worker_prefetch_multiplier=1`.
+    - `celery_app.py`: Celery application factory (`Celery("vulnova_workers")`) with worker signal handlers (`worker_ready`, `worker_shutdown`, `task_prerun`, `task_postrun`, `task_failure`).
+    - `sandbox_config.py`: `WorkerSandboxManager` enforcing container sandbox security limits (1 vCPU, 512MB RAM, `no_new_privs=True`, UID/GID 10001, read-only rootfs, dropped capabilities, egress network filtering).
+    - `tasks.py`: Distributed Celery task definitions (`execute_scan_job_task`, `cancel_scan_job_task`, `cleanup_scan_artifacts_task`). Celery worker execution flow: `Celery Worker -> Task Queue -> Sandbox Executor -> Job Dispatch` (zero direct OS command execution).
+  - Database ORM models (`app/infrastructure/database/models/worker.py`): `WorkerNodeModel` (`worker_nodes`) and `WorkerTaskModel` (`worker_task_executions`) with multi-tenant isolation (`organization_id`, `requested_by`).
+  - `WorkerRepository` (`app/infrastructure/database/repositories/worker_repository.py`): Node heartbeat registration, capacity lookup, task state auditing, and metrics calculation.
+  - `WorkerOrchestratorService` (`app/application/assessment/worker_orchestrator.py`): Manages task dispatching to Celery priority queues, cluster status monitoring, capacity metrics computation, task cancellation, and structured audit logging (`worker_task.dispatched`, `worker_task.cancelled`).
+  - Pydantic v2 DTO schemas (`app/application/assessment/dto.py`): `WorkerNodeDTO`, `WorkerTaskExecutionDTO`, `DispatchScanRequest`, `WorkerClusterMetricsDTO`, `SandboxConfigDTO`.
+  - REST API router endpoints (`app/api/v1/routers/workers.py`): `POST /api/v1/workers/heartbeat`, `GET /api/v1/workers/nodes`, `GET /api/v1/workers/metrics`, `POST /api/v1/workers/jobs/dispatch`, `POST /api/v1/workers/tasks/{id}/cancel`, `GET /api/v1/workers/tasks/{id}`.
+  - Configured RBAC permissions (`workers:read`, `workers:manage`, `scans:dispatch`) in `PERMISSION_MAP` (`app/domain/entities/role.py`).
+  - Unit & Integration test suite (`tests/test_celery_worker_sandbox.py`) — 7 test functions (11 test cases) covering Celery app configuration, sandbox resource limits, task execution flow, worker repository CRUD, orchestrator dispatch/cancellation, cluster metrics, and tenant boundary isolation. Total backend test suite now stands at **290 passing tests**.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 172 source files passed (strict mode)
+    - **Pytest**: **290/290 passed**
 - **Dependencies**: Era 4, Era 5.
-- **Completion Criteria**: Workers execute tasks in isolated sandbox container environments with distributed queue management.
-- **Testing Requirements**: Sandbox container boundary verification test, Celery task queue integration tests.
+- **Completion Criteria**: Distributed Celery worker engine, sandbox security manager, priority task queues, worker node/task database schema, orchestrator service, REST endpoints, and RBAC permissions operational; pytest (290 passed), Ruff, Black, Mypy (strict) pass cleanly.
+- **Testing Requirements**: Celery app config tests, sandbox container boundary tests, task execution flow tests, repository CRUD tests, orchestrator dispatch tests, tenant boundary isolation tests.
 
 ### Phase 6.2: Target Scan Configuration & Authorized Assessment Contract
 - **Objective**: Scan profile selection and mandatory "Authorized Security Assessment Confirmation" verification.

@@ -164,3 +164,18 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
 - Report security vulnerabilities directly to `security@vulnova.local` (or designated channel).
 - Do not access, modify, or destroy customer or organizational data.
 - Allow 30 days for remediation prior to public disclosure.
+
+---
+
+## ⚡ 9. Container Sandbox & Worker Cluster Security Controls (Phase 6.1)
+
+1. **OCI Container Sandbox Security Constraints**:
+   - **Resource Caps**: Enforces `cpu_limit_vcpu=1.0`, `memory_limit_mb=512`, and process thread limits (`PidsLimit=100`) to prevent denial-of-service or container resource starvation.
+   - **Unprivileged Execution**: Runs under non-root UID/GID `10001:10001` with `no-new-privileges:true` security opt flag.
+   - **FileSystem & Capabilities**: Root filesystem is read-only (`ReadonlyRootfs=True`); all Linux capabilities are dropped (`CapDrop=["ALL"]`).
+   - **Egress Network Filtering**: Egress network connections are restricted to authorized target destinations.
+2. **Execution Isolation Safeguard**:
+   - Celery workers do NOT execute raw OS commands directly. All job executions pass through: `Celery Worker -> Task Queue -> Sandbox Executor -> Job Dispatch`.
+3. **Multi-Tenant & RBAC Isolation**:
+   - Database tables `worker_nodes` and `worker_task_executions` enforce `organization_id = tenant_id` isolation.
+   - REST API endpoints enforce RBAC permissions (`workers:read`, `workers:manage`, `scans:dispatch`).

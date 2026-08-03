@@ -262,3 +262,77 @@ class TriageResponse(BaseModel):
     previous_status: str
     new_status: str
     message: str
+
+
+# ── Phase 6.1: Celery & Distributed Isolated Worker Sandbox Cluster DTOs ──
+
+
+class SandboxConfigDTO(BaseModel):
+    """DTO representing worker container sandbox security caps."""
+
+    cpu_limit_vcpu: float = 1.0
+    memory_limit_mb: int = 512
+    read_only_rootfs: bool = True
+    no_new_privs: bool = True
+    run_as_uid: int = 10001
+
+
+class WorkerNodeDTO(BaseModel):
+    """DTO representing a registered Celery worker node in cluster."""
+
+    id: str
+    organization_id: str
+    worker_id: str
+    hostname: str
+    status: str
+    current_task_count: int
+    max_concurrency: int
+    memory_usage_mb: float
+    cpu_percent: float
+    queue_subscriptions: List[str] = Field(default_factory=list)
+    sandbox_limits: SandboxConfigDTO
+    last_heartbeat: str
+
+
+class WorkerTaskExecutionDTO(BaseModel):
+    """DTO representing an audit record of a task execution."""
+
+    id: str
+    task_id: str
+    scan_id: Optional[str] = None
+    organization_id: str
+    requested_by: str
+    worker_node_id: Optional[str] = None
+    priority: str
+    task_name: str
+    state: str
+    retry_count: int
+    runtime_ms: int
+    error_message: Optional[str] = None
+    created_at: str
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+
+
+class DispatchScanRequest(BaseModel):
+    """Request payload for dispatching a scan job to Celery priority queues."""
+
+    scan_id: str = Field(..., description="UUID of security assessment job")
+    profile_id: Optional[str] = Field(None, description="Optional scan profile ID")
+    target_url: Optional[str] = Field(None, description="Optional target URL")
+    priority: Optional[str] = Field(
+        "scans.default",
+        description="Priority queue (scans.high, scans.default, scans.low)",
+    )
+
+
+class WorkerClusterMetricsDTO(BaseModel):
+    """DTO representing overall worker cluster status and capacity metrics."""
+
+    organization_id: str
+    total_nodes: int
+    active_nodes: int
+    total_capacity: int
+    current_active_tasks: int
+    avg_cpu_percent: float
+    avg_memory_usage_mb: float

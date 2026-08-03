@@ -397,3 +397,36 @@ Adapter      Adapter       Adapter       Adapter
 4. **Immutable Security Prompt Templates**: Prompts (`PromptTemplateModel`) are versioned immutably to guarantee audit reproducibility.
 5. **Internal Gateway Foundation**: Downstream Era 5 agents (`AIFindingExplainerService`, `AttackPathSynthesizer`, `AIRemediationEngine`) consume `LLMGatewayService` internally rather than HTTP routing.
 
+---
+
+## ⚡ 8. Distributed Scanning Orchestration & Worker Sandbox Architecture (Phase 6.1)
+
+Phase 6.1 establishes Vulnova's distributed worker application and container sandbox security infrastructure:
+
+```text
+               [ Control Plane API Gateway ]
+                             │
+                             ▼
+              [ WorkerOrchestratorService ]
+              ├── Task Security Validation
+              ├── Container Sandbox Config (1 vCPU, 512MB RAM)
+              └── Multi-Tenant Audit Logging
+                             │
+                             ▼
+                [ Celery Priority Queues ]
+         ┌───────────────┼───────────────┬───────────────┐
+         ▼               ▼               ▼               ▼
+   [scans.high]   [scans.default]  [scans.low]    [ai.priority]
+         │               │               │               │
+         └───────────────┼───────────────┴───────────────┘
+                         │
+                         ▼
+        [ Celery Worker Sandbox Cluster ]
+       (UID 10001, Read-Only RootFS, Egress Filter)
+```
+
+### Architectural Axioms:
+1. **Container Sandbox Isolation**: Worker task executions enforce container sandbox resource limits (`cpu_limit_vcpu=1.0`, `memory_limit_mb=512`, `read_only_rootfs=True`, `no_new_privs=True`, unprivileged UID/GID `10001`, dropped `ALL` capabilities, and network egress filtering).
+2. **Execution Isolation Safeguard**: Celery workers do NOT execute raw OS commands directly. All job executions pass through `Celery Worker -> Task Queue -> Sandbox Executor -> Job Dispatch`.
+3. **Multi-Tenant Database Auditing**: `WorkerNodeModel` (`worker_nodes`) and `WorkerTaskModel` (`worker_task_executions`) include `organization_id` and `requested_by` fields for multi-tenant isolation and capacity metrics calculation.
+

@@ -13,6 +13,7 @@ from app.api.v1.routers import (
     trends,
     triage,
     users,
+    workers,
 )
 
 api_v1_router = APIRouter()
@@ -28,3 +29,4 @@ api_v1_router.include_router(assets.router)
 api_v1_router.include_router(trends.router)
 api_v1_router.include_router(triage.router)
 api_v1_router.include_router(ai.router)
+api_v1_router.include_router(workers.router, prefix="/workers", tags=["Workers"])

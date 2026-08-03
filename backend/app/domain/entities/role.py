@@ -105,6 +105,10 @@ PERMISSION_MAP: Dict[str, Role] = {
     "copilot:chat": Role.SECURITY_ANALYST,
     "copilot:manage": Role.SECURITY_ANALYST,
     "copilot:feedback": Role.SECURITY_ANALYST,
+    # ── Distributed Scanning Orchestration & Worker Sandbox (Phase 6.1) ──
+    "workers:read": Role.VIEWER,
+    "workers:manage": Role.ADMIN,
+    "scans:dispatch": Role.SECURITY_ANALYST,
     # ── Reports ──
     "reports:read": Role.VIEWER,
     "reports:generate": Role.SECURITY_ANALYST,

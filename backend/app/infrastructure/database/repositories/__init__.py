@@ -26,6 +26,7 @@ from app.infrastructure.database.repositories.refresh_token_repository import (
     RefreshTokenRepository,
 )
 from app.infrastructure.database.repositories.user_repository import UserRepository
+from app.infrastructure.database.repositories.worker_repository import WorkerRepository
 
 __all__ = [
     "OrganizationRepository",
@@ -38,4 +39,5 @@ __all__ = [
     "AIConfidenceRepository",
     "AIRAGRepository",
     "AICopilotRepository",
+    "WorkerRepository",
 ]

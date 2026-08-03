@@ -191,6 +191,14 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 - **Eager Loading Optimization**: `AICopilotRepository` utilizes SQLAlchemy `selectinload(CopilotSessionModel.messages)` and `selectinload(CopilotSessionModel.context_memories)` to fetch active investigation sessions, chat history, and persistent context memory in a single database round-trip.
 - **Grounding Explainability Indexing**: Grounding metadata columns (`response_confidence_score`, `sources_used`, `knowledge_chunks_used`, `tools_called`, `reasoning_summary`, `model_used`, `prompt_version`, `response_evaluation_metadata`) allow instant auditability of AI recommendations without secondary database joins.
 
+---
+
+## ⚡ 15. Distributed Worker Sandbox Cluster Performance & Storage Blueprint (Phase 6.1)
+
+- **Celery Priority Queue Configuration**: Worker tasks (`celery_app.py`) are distributed across designated priority queues: `scans.high`, `scans.default`, `scans.low`, and `ai.priority`. Using `task_ack_late=True` and `worker_prefetch_multiplier=1` ensures task redistribution if worker nodes restart.
+- **Container Sandbox Isolation**: Worker task executions enforce container sandbox resource caps: `cpu_limit_vcpu=1.0`, `memory_limit_mb=512`, `read_only_rootfs=True`, `no_new_privs=True`, unprivileged UID/GID `10001`, dropped `ALL` capabilities, and network egress filtering.
+- **Worker Cluster Schema Indexing**: `worker_nodes` and `worker_task_executions` include composite indexes `idx_worker_node_org_status`, `idx_worker_node_heartbeat`, `idx_worker_task_org_state`, and `idx_worker_task_scan` ensuring sub-5ms heartbeat registration and cluster metrics calculations.
+
 
 
 

@@ -646,6 +646,47 @@ CREATE TABLE ai_copilot_feedback (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_copilot_feedback_org ON ai_copilot_feedback(organization_id, rating);
+
+-- Worker Nodes Master Table (Phase 6.1)
+CREATE TABLE worker_nodes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    worker_id VARCHAR(100) NOT NULL UNIQUE,
+    hostname VARCHAR(255) NOT NULL DEFAULT 'localhost',
+    status VARCHAR(20) NOT NULL DEFAULT 'IDLE', -- 'IDLE', 'BUSY', 'OFFLINE', 'PAUSED', 'UNHEALTHY'
+    current_task_count INT NOT NULL DEFAULT 0,
+    max_concurrency INT NOT NULL DEFAULT 4,
+    memory_usage_mb DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    cpu_percent DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    queue_subscriptions JSONB NOT NULL DEFAULT '["scans.default"]'::jsonb,
+    sandbox_limits JSONB NOT NULL DEFAULT '{"cpu_limit_vcpu": 1.0, "memory_limit_mb": 512}'::jsonb,
+    last_heartbeat TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_worker_node_org_status ON worker_nodes(organization_id, status);
+CREATE INDEX idx_worker_node_heartbeat ON worker_nodes(last_heartbeat);
+
+-- Worker Task Executions Audit Table (Phase 6.1)
+CREATE TABLE worker_task_executions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    task_id VARCHAR(100) NOT NULL UNIQUE,
+    scan_id UUID REFERENCES assessment_jobs(id) ON DELETE SET NULL,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    requested_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    worker_node_id UUID REFERENCES worker_nodes(id) ON DELETE SET NULL,
+    priority VARCHAR(50) NOT NULL DEFAULT 'scans.default',
+    task_name VARCHAR(255) NOT NULL,
+    state VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- 'PENDING', 'STARTED', 'SUCCESS', 'FAILURE', 'CANCELLED'
+    retry_count INT NOT NULL DEFAULT 0,
+    runtime_ms INT NOT NULL DEFAULT 0,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE
+);
+CREATE INDEX idx_worker_task_org_state ON worker_task_executions(organization_id, state);
+CREATE INDEX idx_worker_task_scan ON worker_task_executions(scan_id);
 ```
 
 ---

@@ -782,6 +782,52 @@ All API errors return a standardized JSON error format:
 #### `POST /ai/copilot/feedback`
 - **Summary**: Record SOC analyst rating (1-5 stars) and evaluation feedback (`copilot:feedback` permission required).
 
+#### `POST /workers/heartbeat`
+- **Summary**: Register worker node or update heartbeat in cluster inventory (`workers:manage` permission required).
+
+#### `GET /workers/nodes`
+- **Summary**: List worker nodes in cluster for organization with optional status filtering (`workers:read` permission required).
+
+#### `GET /workers/metrics`
+- **Summary**: Compute overall worker cluster metrics and active capacity (`workers:read` permission required).
+- **Response (200 OK)**:
+  ```json
+  {
+    "organization_id": "org_uuid",
+    "total_nodes": 3,
+    "active_nodes": 3,
+    "total_capacity": 12,
+    "current_active_tasks": 2,
+    "avg_cpu_percent": 18.5,
+    "avg_memory_usage_mb": 256.0
+  }
+  ```
+
+#### `POST /workers/jobs/dispatch`
+- **Summary**: Dispatch scan job to Celery priority queues with container sandbox security validation (`scans:dispatch` permission required).
+- **Response (202 Accepted)**:
+  ```json
+  {
+    "id": "task_exec_uuid",
+    "task_id": "task-uuid-1234",
+    "scan_id": "scan_uuid",
+    "organization_id": "org_uuid",
+    "requested_by": "user_uuid",
+    "priority": "scans.default",
+    "task_name": "execute_scan_job_task",
+    "state": "PENDING",
+    "retry_count": 0,
+    "runtime_ms": 0,
+    "created_at": "2026-08-03T19:00:00Z"
+  }
+  ```
+
+#### `POST /workers/tasks/{task_id}/cancel`
+- **Summary**: Cancel running worker task execution and signal sandbox termination (`scans:dispatch` permission required).
+
+#### `GET /workers/tasks/{task_id}`
+- **Summary**: Retrieve task execution record by task_id with tenant boundary checks (`workers:read` permission required).
+
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol

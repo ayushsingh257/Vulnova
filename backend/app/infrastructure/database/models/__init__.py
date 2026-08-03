@@ -56,6 +56,10 @@ from app.infrastructure.database.models.triage import (
     FindingTriageHistoryModel,
 )
 from app.infrastructure.database.models.user import UserModel
+from app.infrastructure.database.models.worker import (
+    WorkerNodeModel,
+    WorkerTaskModel,
+)
 
 __all__ = [
     "OrganizationModel",
@@ -92,4 +96,6 @@ __all__ = [
     "FindingSuppressionRuleModel",
     "AssetSnapshotModel",
     "AssetChangeEventModel",
+    "WorkerNodeModel",
+    "WorkerTaskModel",
 ]
