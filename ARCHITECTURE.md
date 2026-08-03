@@ -273,6 +273,12 @@ The Phase 5.5 confidence subsystem delivers analyst-assisted finding classificat
 - **Non-Suppression Safety Policy**: AI evaluations serve as advisory analyst intelligence. Zero automated finding closure, deletion, or suppression code exists in the service.
 - **Score Calibration Feedback Loop**: Records calibration tracking metadata (`predicted_confidence_score`, `analyst_final_decision`, `confidence_accuracy_delta`, `feedback_timestamp`) during analyst review (`PATCH /api/v1/ai/confidence-analysis/{id}/review`).
 
+### H. Security Knowledge Base & RAG Vector Subsystem (Phase 5.6)
+The Phase 5.6 RAG subsystem provides vector-indexed security knowledge retrieval:
+- **AIRAGKnowledgeService**: Orchestrates document ingestion, source-type configurable text chunking (`OWASP`/`CWE`/`CAPEC`: 512/64, `CVE_NVD`: 256/32, `INTERNAL_POLICY`: 768/128), embedding vector generation, document governance approval workflows (`UNDER_REVIEW` -> `APPROVED` -> `INDEXED`), semantic vector similarity search, and tailored finding RAG context block formatting.
+- **PostgreSQL pgvector & HNSW Storage**: Stores 1536-dimensional embeddings in `security_knowledge_chunks` with HNSW cosine similarity indexing (`vector_cosine_ops`, `m=16`, `ef_construction=64`) across 3 normalized tables (`security_knowledge_documents`, `security_knowledge_chunks`, `rag_search_logs`).
+- **Hybrid Tenant Boundary Protection**: Enforces `organization_id IS NULL OR organization_id = tenant_id` to allow shared global benchmarks (OWASP/CWE) while isolating private tenant security policies.
+
 ### Event Bus Migration Path:
 The application uses an abstract `EventBusPort`. While initial phases utilize Celery + Redis Pub/Sub, the interface supports seamless drop-in adapters for **RabbitMQ (AMQP)**, **Apache Kafka**, or **NATS JetStream** without modifying domain logic.
 

@@ -55,7 +55,7 @@ Vulnova/
 │   │   │   ├── dependencies/        # FastAPI Auth & RBAC dependency injectors
 │   │   │   └── schemas/             # Pydantic v2 request/response models
 │   │   ├── application/             # Use Cases & Application Service Coordinators
-│   │   │   ├── ai/                  # LLMGatewayService (fallback, health cooldown, cost estimation), PromptOrchestratorService (context builder, secret masking), AIFindingExplainerService (JSON repair recovery), ImpactAnalysisService (CVSS/EPSS/topology context enrichment), AIAttackPathService (MITRE ATT&CK validation), AIRemediationService (non-executable patch suggestions, dual confidence scoring), AIConfidenceAnalysisService (evidence quality scoring, score calibration metadata, multi-signal duplicate similarity correlation), DTOs
+│   │   │   ├── ai/                  # LLMGatewayService (fallback, health cooldown, cost estimation), PromptOrchestratorService (context builder, secret masking), AIFindingExplainerService (JSON repair recovery), ImpactAnalysisService (CVSS/EPSS/topology context enrichment), AIAttackPathService (MITRE ATT&CK validation), AIRemediationService (non-executable patch suggestions, dual confidence scoring), AIConfidenceAnalysisService (evidence quality scoring, score calibration metadata), AIRAGKnowledgeService (pgvector HNSW search, source-type chunking, governance approval, finding RAG context block building), DTOs
 │   │   │   ├── assessment/          # AssessmentService, ScanProfileRegistry, ScanPolicyEngine, RiskIntelligenceEngine, FindingDeduplicator, AssessmentCorrelationEngine, AssetInventoryService, ContinuousMonitoringService, ChangeDetectionEngine, FindingTriageService, DTOs
 │   │   │   │   ├── scan_profiles.py # Enterprise Scan Profile Registry (10 predefined profiles)
 │   │   │   │   ├── policy_engine.py # Stateless Execution Policy Engine (rate limiting, concurrency, scope, auth, stop-on-critical)
@@ -66,13 +66,13 @@ Vulnova/
 │   │   │   ├── use_cases/           # Scan launch, finding triage, report generation workflows
 │   │   │   └── services/            # Domain service orchestrators
 │   │   ├── domain/                  # Pure Business Logic (No external framework dependencies)
-│   │   │   ├── entities/            # User, Organization, Target, Finding, CVSS, EPSS, Evidence, ScanProfile, ScanPolicy, AssetSnapshot, AssetChangeEvent, TriageRecord, LLMProvider, LLMModel, PromptTemplate, AIFindingExplanation, AIImpactAnalysis, AttackPath, AttackPathStep, AIRemediationPlan, AIRemediationStep, AIPatchSuggestion, AIFindingConfidenceAnalysis, AIFindingSimilarityMatch entities
+│   │   │   ├── entities/            # User, Organization, Target, Finding, CVSS, EPSS, Evidence, ScanProfile, ScanPolicy, AssetSnapshot, AssetChangeEvent, TriageRecord, LLMProvider, LLMModel, PromptTemplate, AIFindingExplanation, AIImpactAnalysis, AttackPath, AttackPathStep, AIRemediationPlan, AIRemediationStep, AIPatchSuggestion, AIFindingConfidenceAnalysis, AIFindingSimilarityMatch, SecurityKnowledgeDocument, SecurityKnowledgeChunk, RAGSearchResult entities
 │   │   │   ├── value_objects/       # CVSSScore, TargetURL, SeverityLabel value objects
 │   │   │   └── ports/               # Abstract Interfaces (ScannerPort, AIProviderPort, EventBusPort)
 │   │   ├── infrastructure/          # Adapters & External System Implementations
 │   │   │   ├── assessment/          # 10 DAST Security Plugins, PluginRegistry, EvidenceCollectionEngine
 │   │   │   ├── storage/             # EvidenceArtifactStorage (local filesystem & cloud object store adapter)
-│   │   │   ├── db/                  # Async SQLAlchemy models (AssetSnapshotModel, LLMProviderModel, LLMModelRegistryModel, PromptTemplateModel, LLMRequestLogModel, AIFindingExplanationModel, AIImpactAnalysisModel, AIAttackPathModel, AIAttackPathStepModel, AIRemediationPlanModel, AIRemediationStepModel, AIPatchSuggestionModel, AIFindingConfidenceAnalysisModel, AIFindingSimilarityMatchModel), Alembic migrations, Repositories (LLMGatewayRepository, FindingTriageRepository, AIAnalysisRepository, AIAttackPathRepository, AIRemediationRepository, AIConfidenceRepository)
+│   │   │   ├── db/                  # Async SQLAlchemy models (AssetSnapshotModel, LLMProviderModel, LLMModelRegistryModel, PromptTemplateModel, LLMRequestLogModel, AIFindingExplanationModel, AIImpactAnalysisModel, AIAttackPathModel, AIAttackPathStepModel, AIRemediationPlanModel, AIRemediationStepModel, AIPatchSuggestionModel, AIFindingConfidenceAnalysisModel, AIFindingSimilarityMatchModel, SecurityKnowledgeDocumentModel, SecurityKnowledgeChunkModel, RAGSearchLogModel), Alembic migrations, Repositories (LLMGatewayRepository, FindingTriageRepository, AIAnalysisRepository, AIAttackPathRepository, AIRemediationRepository, AIConfidenceRepository, AIRAGRepository)
 │   │   │   ├── cache/               # Redis caching client & token bucket rate limiter
 │   │   │   ├── messaging/           # Celery task definitions & Event Bus publisher
 │   │   │   ├── ai/                  # Multi-provider LLM gateway REST adapters (OpenAI, Anthropic, Google, Ollama) & BaseLLMAdapter
@@ -81,7 +81,7 @@ Vulnova/
 │   │   └── workers/                 # Celery background worker task entrypoints
 │   ├── migrations/                  # Alembic database migration scripts
 │   ├── scripts/                     # Local seed scripts & DB maintenance utilities
-│   └── tests/                       # Pytest unit, integration, and security test suite (244 passed)
+│   └── tests/                       # Pytest unit, integration, and security test suite (260 passed)
 │
 ├── plugins/                         # Modular Security Assessment Plugins
 │   ├── sqli_assessment/             # SQL Injection Plugin (plugin.yaml, plugin.py, payloads.json)

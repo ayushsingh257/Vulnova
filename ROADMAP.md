@@ -661,14 +661,27 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: AI confidence engine, 2-table normalized schema, non-suppression safety policy, evidence quality scoring, score calibration tracking, multi-signal similarity correlation, analyst review workflow, and RBAC authorization operational; pytest (244 passed), Ruff, Black, Mypy (strict) pass cleanly (`9c06a519`).
 - **Testing Requirements**: Confidence generation unit tests, false positive classification tests, evidence quality scoring tests, similarity correlation tests, calibration tracking tests.
 
-### Phase 5.6: Security Knowledge Base & RAG Vector Engine (pgvector)
-- **Objective**: Build a Retrieval-Augmented Generation (RAG) knowledge base indexing OWASP Cheat Sheets, CWE definitions, CAPEC attack patterns, CVE/NVD databases, vendor advisories, and internal documentation into PostgreSQL `pgvector`.
+### ✅ Phase 5.6: Security Knowledge Base & RAG Vector Engine (pgvector)
+- **Objective**: Build an enterprise-grade Retrieval-Augmented Generation (RAG) Security Knowledge Base & Vector Engine (`AIRAGKnowledgeService`) powered by PostgreSQL `pgvector` (`vector(1536)`). Ingests, chunks, embeds, and indexes security reference standards (OWASP Cheat Sheets, CWE definitions, CAPEC attack patterns, CVE/NVD databases, vendor advisories) and organization-specific internal security policies with source-type configurable text chunking parameters, embedding model migration metadata, source citation tracking, RAG evaluation metrics, governance approval workflows, and hybrid tenant boundary isolation (`organization_id IS NULL OR organization_id = tenant_id`).
 - **Deliverables**:
-  - `VectorKnowledgeStore` (`app/infrastructure/ai/vector_store.py`) implementing embedding generation and semantic similarity search via `pgvector`.
-  - Knowledge base ingest pipeline for security advisories and standards.
-- **Dependencies**: Phase 5.1, Phase 1.6.
-- **Completion Criteria**: Semantic search retrieves relevant security standards and advisories to augment LLM prompts.
-- **Testing Requirements**: Vector retrieval accuracy tests, RAG similarity search benchmark tests.
+  - Domain entities (`app/domain/entities/ai.py`): `SecurityKnowledgeDocument`, `SecurityKnowledgeChunk`, `RAGSearchResult`, `KnowledgeDocumentSourceType` (`OWASP`, `CWE`, `CAPEC`, `CVE_NVD`, `VENDOR_ADVISORY`, `INTERNAL_POLICY`, `CUSTOM`), `KnowledgeIngestionStatus` (`PENDING`, `PROCESSING`, `UNDER_REVIEW`, `APPROVED`, `INDEXED`, `REJECTED`, `FAILED`, `ARCHIVED`), `IngestionSource` (`MANUAL_UPLOAD`, `API_IMPORT`, `NVD_SYNC`, `OWASP_SYNC`, `VENDOR_FEED`, `INTERNAL_SYNC`), and `VectorIndexType` (`HNSW`, `IVFFLAT`).
+  - Database ORM models (`app/infrastructure/database/models/ai_knowledge.py`): `SecurityKnowledgeDocumentModel` (`security_knowledge_documents`), `SecurityKnowledgeChunkModel` (`security_knowledge_chunks`), and `RAGSearchLogModel` (`rag_search_logs`) implementing a 3-table normalized relational schema with HNSW vector indexing (`vector_cosine_ops`), embedding model metadata (`embedding_model`, `embedding_dimension`), source citation tracking (`source_url`, `source_author`, `published_date`, `last_updated_date`), and RAG evaluation metrics (`retrieval_quality_score`, `average_similarity_score`, `analyst_feedback`).
+  - `AIRAGRepository` (`app/infrastructure/database/repositories/ai_knowledge_repository.py`): Multi-tenant isolated queries for document management, chunk persistence, cosine similarity calculation (`<=>`), pagination, governance status updates, and search analytics logging.
+  - `AIRAGKnowledgeService` (`app/application/ai/rag_knowledge_service.py`): Application service orchestrating source-type chunking (`OWASP`/`CWE`/`CAPEC`: 512/64, `CVE_NVD`: 256/32, `INTERNAL_POLICY`: 768/128), deterministic unit-vector embedding generation, human review governance workflows (`review_document`), semantic vector search (`search_knowledge_base`), and finding RAG context building (`build_finding_rag_context`) with secret prompt context masking (`mask_sensitive_prompt_context`).
+  - Pydantic v2 DTO schemas (`app/application/ai/dto.py`): `IngestKnowledgeDocumentRequest`, `ReviewKnowledgeDocumentRequest`, `KnowledgeChunkDTO`, `KnowledgeDocumentDTO`, `RAGSearchRequest`, `RAGSearchResultDTO`, `RAGSearchResponse`, `FindingRAGContextRequest`, `FindingRAGContextResponse`.
+  - REST API router endpoints (`app/api/v1/routers/ai.py`): `POST /api/v1/ai/knowledge/documents`, `GET /api/v1/ai/knowledge/documents`, `GET /api/v1/ai/knowledge/documents/{id}`, `PATCH /api/v1/ai/knowledge/documents/{id}/review`, `DELETE /api/v1/ai/knowledge/documents/{id}`, `POST /api/v1/ai/rag/search`, `POST /api/v1/ai/findings/{id}/rag-context`.
+  - Configured RBAC permissions (`knowledge:read`, `knowledge:write`, `knowledge:delete`) in `PERMISSION_MAP` (`app/domain/entities/role.py`).
+  - Unit & Integration test suite (`tests/test_ai_rag_knowledge_engine.py`) — 8 test functions (16 test cases across pytest-anyio runners) covering source-type chunking defaults, deterministic vector generation, global OWASP ingestion, internal policy governance approval workflow, semantic vector search, tenant boundary isolation, finding RAG context block formatting, secret prompt masking, and document deletion.
+- **Implementation Details**:
+  - **Feature Commit**: `256f50ff`
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 158 source files passed (strict mode)
+    - **Pytest**: **260/260 passed**
+- **Dependencies**: Phase 5.1, Phase 5.2, Phase 5.3, Phase 5.4, Phase 5.5, Era 4.
+- **Completion Criteria**: RAG vector engine, 3-table normalized schema, HNSW vector indexing, source-type chunking, embedding model metadata, citation tracking, governance approval workflow, semantic vector search, and RBAC authorization operational; pytest (260 passed), Ruff, Black, Mypy (strict) pass cleanly (`256f50ff`).
+- **Testing Requirements**: Document ingestion tests, source-type chunking tests, vector search tests, governance review workflow tests, tenant boundary isolation tests.
 
 ### Phase 5.7: Enterprise AI Security Copilot & Interactive Assistant
 - **Objective**: Implement an interactive conversational AI Security Copilot capable of answering natural language security queries, explaining JWT/SQLi findings, rendering attack chains, generating remediation code, comparing scan runs, summarizing organizational risk, and drafting executive reports or Jira tickets.

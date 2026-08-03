@@ -192,6 +192,18 @@ All logs are emitted using `structlog` as formatted JSON:
 4. **Multi-Signal Similarity Engine**: Finding duplicate correlation MUST evaluate 8 distinct matching signals (`CVE`, `CWE`, `ENDPOINT`, `ASSET_NODE`, `PLUGIN_ID`, `VULNERABILITY_TITLE`, `AFFECTED_COMPONENT`, `ATTACK_TECHNIQUE`) to compute similarity scores (0.0–1.0).
 5. **8-Layer Intelligence Context Assembly**: Context MUST be constructed across 8 verified intelligence layers (finding, evidence, asset topology, triage history, Phase 5.2 explanation, Phase 5.2 impact, Phase 5.3 attack path, Phase 5.4 remediation plan) with secret prompt context masking (`mask_sensitive_prompt_context`).
 
+---
+
+## 🤖 15. Security Knowledge Base & RAG Vector Engine Architecture
+
+1. **PostgreSQL pgvector & HNSW Similarity Indexing**: RAG vector services (`AIRAGKnowledgeService`) store 1536-dimensional embeddings in `security_knowledge_chunks.embedding` using PostgreSQL `pgvector` with HNSW cosine similarity indexing (`vector_cosine_ops`, `m=16`, `ef_construction=64`).
+2. **Source-Type Configurable Chunking**: Document text splitting MUST apply source-type chunking parameters: `OWASP`/`CWE`/`CAPEC` (512/64), `CVE_NVD` (256/32), `INTERNAL_POLICY` (768/128), and `CUSTOM` (configurable).
+3. **Embedding Model Metadata & Future Migration**: Documents and chunks MUST preserve `embedding_model` (e.g. `"text-embedding-3-small"`) and `embedding_dimension` (e.g. `1536`) to support smooth vector model migrations.
+4. **Source Citation Tracking**: Vector chunks MUST track citation provenance (`source_url`, `source_author`, `published_date`, `last_updated_date`) for exact citation formatting in Phase 5.7 AI Copilot responses.
+5. **Governance Approval Workflow**: Internal security policy uploads start in `UNDER_REVIEW` and require explicit analyst approval (`PATCH /api/v1/ai/knowledge/documents/{id}/review`) before becoming active `INDEXED` AI knowledge.
+6. **Hybrid Tenant Isolation Boundary**: Queries MUST enforce `organization_id IS NULL OR organization_id = tenant_id` to allow shared access to global public standards while isolating private tenant policies.
+
+
 
 
 

@@ -127,6 +127,12 @@ Every target setup and scan creation request requires an explicit user confirmat
 - **8-Layer Intelligence Grounding**: Confidence context is constructed across 8 verified intelligence layers (finding, evidence, asset topology, triage history, Phase 5.2 explanation, Phase 5.2 impact, Phase 5.3 attack path, Phase 5.4 remediation plan) with prompt injection protection (`<untrusted_security_context>`) and secret context masking (`mask_sensitive_prompt_context`).
 - **Analyst Review Calibration Non-Repudiation**: Analyst status reviews record reviewer identity (`reviewed_by`), notes (`review_notes`), timestamps, and calibration metadata (`predicted_confidence_score`, `analyst_final_decision`, `confidence_accuracy_delta`) in audit logs (`ai_confidence.reviewed`).
 
+### Security Knowledge Base & RAG Vector Engine Security Controls (Phase 5.6)
+- **Granular RBAC Authorization**: Ingesting documents or reviewing status requires `knowledge:write` permission (`SECURITY_ANALYST` role level 20+), deleting documents requires `knowledge:delete` (`ADMIN` role level 30+), and searching requires `knowledge:read` (`VIEWER` role level 10+).
+- **Hybrid Tenant Boundary Protection**: Tenant isolation strictly enforces `organization_id IS NULL OR organization_id = tenant_id`. Private organizational policies uploaded by tenant A are invisible to tenant B.
+- **Document Governance Approval Workflow**: Internal security policies uploaded to tenant knowledge bases start in `UNDER_REVIEW` and require explicit analyst approval (`PATCH /api/v1/ai/knowledge/documents/{id}/review`) before vector indexing into search stores.
+- **Secret Prompt Masking & Prompt Injection Defense**: Ingested document content and RAG query strings pass through `mask_sensitive_prompt_context`. Retreived RAG context blocks are wrapped in `<rag_knowledge_context>` tags to isolate reference text from LLM system prompts.
+
 ---
 
 ## 🌐 7. Secure HTTP Headers & Browser Protections

@@ -494,18 +494,76 @@ CREATE TABLE ai_finding_similarity_matches (
 CREATE INDEX idx_ai_sim_org_source ON ai_finding_similarity_matches(organization_id, source_finding_id);
 CREATE INDEX idx_ai_sim_score ON ai_finding_similarity_matches(similarity_score);
 
--- Vector Embeddings for Knowledge Base & RAG
-CREATE TABLE security_embeddings (
+-- Security Knowledge Documents Master Table (Phase 5.6)
+CREATE TABLE security_knowledge_documents (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    source_type VARCHAR(100) NOT NULL, -- 'OWASP', 'CWE', 'ADVISORY'
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE, -- NULL = Global public benchmark
+    source_type VARCHAR(50) NOT NULL, -- 'OWASP', 'CWE', 'CAPEC', 'CVE_NVD', 'VENDOR_ADVISORY', 'INTERNAL_POLICY', 'CUSTOM'
+    ingestion_source VARCHAR(50) NOT NULL DEFAULT 'MANUAL_UPLOAD', -- 'MANUAL_UPLOAD', 'API_IMPORT', 'NVD_SYNC', 'OWASP_SYNC', 'VENDOR_FEED', 'INTERNAL_SYNC'
     title VARCHAR(255) NOT NULL,
+    external_ref_id VARCHAR(100), -- 'CWE-89', 'OWASP-A03:2021'
+    description TEXT,
+    version VARCHAR(50) NOT NULL DEFAULT '1.0',
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- 'PENDING', 'PROCESSING', 'UNDER_REVIEW', 'APPROVED', 'INDEXED', 'REJECTED', 'FAILED', 'ARCHIVED'
+    chunk_size_tokens INT NOT NULL DEFAULT 512,
+    chunk_overlap_tokens INT NOT NULL DEFAULT 64,
+    chunk_count INT NOT NULL DEFAULT 0,
+    token_count INT NOT NULL DEFAULT 0,
+    embedding_model VARCHAR(100) NOT NULL DEFAULT 'text-embedding-3-small',
+    embedding_dimension INT NOT NULL DEFAULT 1536,
+    source_url VARCHAR(500),
+    source_author VARCHAR(255),
+    published_date VARCHAR(50),
+    last_updated_date VARCHAR(50),
+    metadata_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+    error_message TEXT,
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_sec_doc_org ON security_knowledge_documents(organization_id);
+CREATE INDEX idx_sec_doc_source ON security_knowledge_documents(source_type);
+CREATE INDEX idx_sec_doc_status ON security_knowledge_documents(status);
+
+-- Security Knowledge Chunks Detail Table with pgvector (Phase 5.6)
+CREATE TABLE security_knowledge_chunks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    document_id UUID NOT NULL REFERENCES security_knowledge_documents(id) ON DELETE CASCADE,
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    chunk_index INT NOT NULL,
     content_text TEXT NOT NULL,
-    embedding vector(1536), -- Vector dimensions
+    token_count INT NOT NULL,
+    embedding vector(1536), -- pgvector 1536-dimensional embedding
+    embedding_model VARCHAR(100) NOT NULL DEFAULT 'text-embedding-3-small',
+    embedding_dimension INT NOT NULL DEFAULT 1536,
+    source_url VARCHAR(500),
+    source_author VARCHAR(255),
+    chunk_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
--- HNSW Vector Index for Similarity Search
-CREATE INDEX idx_security_embeddings_vector ON security_embeddings 
-USING hnsw (embedding vector_cosine_ops);
+CREATE INDEX idx_sec_chunk_doc ON security_knowledge_chunks(document_id, chunk_index);
+CREATE INDEX idx_sec_chunk_org ON security_knowledge_chunks(organization_id);
+CREATE INDEX idx_sec_chunk_embedding_hnsw ON security_knowledge_chunks USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
+
+-- RAG Search Logs Audit & Performance Table (Phase 5.6)
+CREATE TABLE rag_search_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    query_text TEXT NOT NULL,
+    top_k INT NOT NULL DEFAULT 5,
+    min_similarity DOUBLE PRECISION NOT NULL DEFAULT 0.70,
+    results_count INT NOT NULL,
+    matched_chunk_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+    search_latency_ms INT NOT NULL,
+    retrieval_quality_score DOUBLE PRECISION,
+    average_similarity_score DOUBLE PRECISION,
+    analyst_feedback TEXT,
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_rag_log_org ON rag_search_logs(organization_id, created_at);
 ```
 
 ---

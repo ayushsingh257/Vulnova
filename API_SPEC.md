@@ -613,6 +613,80 @@ All API errors return a standardized JSON error format:
 #### `PATCH /ai/confidence-analysis/{id}/review`
 - **Summary**: Record SOC analyst review feedback and track AI confidence score calibration metadata (`findings:ai_confidence` permission required).
 
+#### `POST /ai/knowledge/documents`
+- **Summary**: Ingest security reference document or company policy into vector store (`knowledge:write` permission required).
+- **Response (201 Created)**:
+  ```json
+  {
+    "id": "doc_uuid",
+    "organization_id": null,
+    "source_type": "OWASP",
+    "ingestion_source": "MANUAL_UPLOAD",
+    "title": "OWASP SQL Injection Prevention Cheat Sheet",
+    "external_ref_id": "OWASP-A03:2021",
+    "description": "Official OWASP guidelines.",
+    "version": "2.0",
+    "status": "INDEXED",
+    "chunk_size_tokens": 512,
+    "chunk_overlap_tokens": 64,
+    "chunk_count": 5,
+    "token_count": 2200,
+    "embedding_model": "text-embedding-3-small",
+    "embedding_dimension": 1536,
+    "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+    "source_author": "OWASP Foundation",
+    "published_date": "2026-01-01",
+    "last_updated_date": "2026-06-01",
+    "metadata_json": {},
+    "error_message": null,
+    "created_by": "user_uuid",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2026-08-03T14:00:00Z",
+    "updated_at": "2026-08-03T14:00:00Z"
+  }
+  ```
+
+#### `GET /ai/knowledge/documents`
+- **Summary**: List security knowledge documents accessible to tenant with pagination (`knowledge:read` permission required).
+
+#### `GET /ai/knowledge/documents/{document_id}`
+- **Summary**: Retrieve single knowledge document details by ID (`knowledge:read` permission required).
+
+#### `PATCH /ai/knowledge/documents/{document_id}/review`
+- **Summary**: Record analyst governance approval status (`APPROVED`, `REJECTED`, `INDEXED`, `ARCHIVED`) (`knowledge:write` permission required).
+
+#### `DELETE /ai/knowledge/documents/{document_id}`
+- **Summary**: Delete knowledge document and associated vector chunks (`knowledge:delete` permission required).
+
+#### `POST /ai/rag/search`
+- **Summary**: Execute semantic vector similarity search across active security knowledge base chunks (`knowledge:read` permission required).
+- **Response (200 OK)**:
+  ```json
+  {
+    "query": "SQL injection prevention",
+    "results_count": 1,
+    "results": [
+      {
+        "chunk_id": "chunk_uuid",
+        "document_id": "doc_uuid",
+        "document_title": "OWASP SQL Injection Prevention Cheat Sheet",
+        "source_type": "OWASP",
+        "content_text": "Use parameterized queries and prepared statements to prevent SQL injection vulnerabilities.",
+        "similarity_score": 0.9254,
+        "external_ref_id": "OWASP-A03:2021",
+        "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+        "source_author": "OWASP Foundation",
+        "chunk_metadata": {"source_type": "OWASP"}
+      }
+    ],
+    "search_latency_ms": 4
+  }
+  ```
+
+#### `POST /ai/findings/{finding_id}/rag-context`
+- **Summary**: Generate tailored RAG knowledge context block for a security finding (`findings:read` permission required).
+
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol

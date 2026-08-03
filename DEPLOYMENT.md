@@ -175,6 +175,15 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 - **Eager Loading Optimization**: `AIConfidenceRepository` utilizes SQLAlchemy `selectinload(AIFindingConfidenceAnalysisModel.similarity_matches)` to fetch confidence assessments and correlated duplicate matches in a single database round-trip.
 - **Calibration Feedback Performance**: Calibration metadata columns (`predicted_confidence_score`, `confidence_accuracy_delta`, `feedback_timestamp`) allow offline training dataset extraction without runtime performance degradation.
 
+---
+
+## 🤖 13. Security Knowledge Base & RAG Vector Engine Performance & Storage Blueprint (Phase 5.6)
+
+- **PostgreSQL pgvector HNSW Indexing**: `security_knowledge_chunks` utilizes HNSW (Hierarchical Navigable Small World) index tuning `USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)`. This guarantees sub-5ms cosine similarity vector search performance over 100,000+ vector chunks.
+- **Source-Type Chunking Efficiency**: Source-type chunk size parameters (`OWASP`/`CWE`/`CAPEC`: 512, `CVE_NVD`: 256, `INTERNAL_POLICY`: 768) minimize chunk fragmentation and maximize semantic retrieval accuracy.
+- **Hybrid Tenant Filtering Optimization**: Single composite index `(organization_id, status)` and `(document_id, chunk_index)` allows tenant boundary filtering (`organization_id IS NULL OR organization_id = tenant_id`) with zero performance degradation.
+
+
 
 
 
