@@ -42,8 +42,9 @@ class SecretEncryptionService:
         if not plain_text:
             return ""
         try:
-            cipher_bytes = self.fernet.encrypt(plain_text.encode("utf-8"))
-            return cipher_bytes.decode("utf-8")
+            cipher_bytes: bytes = self.fernet.encrypt(plain_text.encode("utf-8"))
+            result: str = cipher_bytes.decode("utf-8")
+            return result
         except Exception as e:
             logger.error("secret_encryption.failed", error=str(e))
             raise SecurityException("Failed to encrypt secret.") from e
@@ -53,8 +54,9 @@ class SecretEncryptionService:
         if not cipher_text:
             return ""
         try:
-            plain_bytes = self.fernet.decrypt(cipher_text.encode("utf-8"))
-            return plain_bytes.decode("utf-8")
+            plain_bytes: bytes = self.fernet.decrypt(cipher_text.encode("utf-8"))
+            result: str = plain_bytes.decode("utf-8")
+            return result
         except Exception as e:
             logger.error("secret_decryption.failed", error=str(e))
             raise SecurityException("Failed to decrypt secret.") from e
