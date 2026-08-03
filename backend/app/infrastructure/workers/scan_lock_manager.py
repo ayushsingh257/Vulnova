@@ -36,9 +36,9 @@ class DistributedScanLockManager:
         if self._redis_client is not None:
             return self._redis_client
         try:
-            import redis.asyncio as aioredis
+            import redis.asyncio as aioredis  # type: ignore[import-untyped,import-not-found,unused-ignore]
 
-            client = aioredis.from_url(  # type: ignore[no-untyped-call]
+            client = aioredis.from_url(  # type: ignore[no-untyped-call,attr-defined,unused-ignore]
                 self.redis_url, decode_responses=True, socket_timeout=2.0
             )
             # Test ping
