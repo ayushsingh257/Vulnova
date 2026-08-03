@@ -35,6 +35,7 @@ class AssessmentRepository:
             organization_id=organization_id,
             target_url=target_url,
             status="PENDING",
+            execution_state="QUEUED",
             profile_id=profile_id,
             policy_json=policy_json,
             enabled_plugins_json={"plugins": enabled_plugins or []},
@@ -57,13 +58,90 @@ class AssessmentRepository:
             return None
 
         job.status = status
+        job.execution_state = status
         if duration_seconds is not None:
             job.duration_seconds = duration_seconds
         if error_message is not None:
             job.error_message = error_message
+            job.last_error = error_message
 
         await self.session.flush()
         return job
+
+    async def update_execution_state(
+        self,
+        organization_id: UUID,
+        job_id: UUID,
+        execution_state: str,
+        current_step: Optional[str] = None,
+        duration_seconds: Optional[float] = None,
+        error_message: Optional[str] = None,
+    ) -> Optional[AssessmentJobModel]:
+        """Update an assessment job's granular execution state machine and step metadata."""
+        from datetime import datetime, timezone
+
+        job = await self.get_job_by_id(organization_id, job_id)
+        if not job:
+            return None
+
+        job.execution_state = execution_state
+        job.status = execution_state  # Keep legacy status field in sync
+
+        if current_step is not None:
+            job.current_step = current_step
+        if duration_seconds is not None:
+            job.duration_seconds = duration_seconds
+        if error_message is not None:
+            job.error_message = error_message
+            job.last_error = error_message
+
+        now = datetime.now(timezone.utc)
+        if (
+            execution_state in ("CRAWLING", "ASSESSING", "AI_ANALYSIS")
+            and not job.started_at
+        ):
+            job.started_at = now
+        elif execution_state in ("COMPLETED", "FAILED", "CANCELLED"):
+            job.completed_at = now
+
+        await self.session.flush()
+        return job
+
+    async def increment_retry_count(
+        self,
+        organization_id: UUID,
+        job_id: UUID,
+        error_message: str,
+    ) -> Optional[AssessmentJobModel]:
+        """Increment retry attempt counter and transition job state to RETRYING."""
+        job = await self.get_job_by_id(organization_id, job_id)
+        if not job:
+            return None
+
+        job.retry_count += 1
+        job.execution_state = "RETRYING"
+        job.status = "RETRYING"
+        job.last_error = error_message
+        job.error_message = error_message
+        await self.session.flush()
+        return job
+
+    async def list_active_jobs_for_target(
+        self,
+        organization_id: UUID,
+        target_url: str,
+    ) -> List[AssessmentJobModel]:
+        """List active jobs for target URL within organization."""
+        normalized_url = target_url.strip().rstrip("/")
+        stmt = select(AssessmentJobModel).where(
+            AssessmentJobModel.organization_id == organization_id,
+            AssessmentJobModel.target_url == normalized_url,
+            AssessmentJobModel.execution_state.in_(
+                ["QUEUED", "CRAWLING", "ASSESSING", "AI_ANALYSIS", "RETRYING"]
+            ),
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
 
     async def create_finding(
         self, organization_id: UUID, finding: Finding

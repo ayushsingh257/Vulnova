@@ -13,6 +13,7 @@ from app.application.assessment.dto import (
     CreateAssessmentRequest,
     FindingDTO,
     PluginMetadataDTO,
+    ScanLifecycleStateDTO,
     ScanProfileDTO,
 )
 from app.application.assessment.services import AssessmentService
@@ -120,3 +121,116 @@ async def list_findings(
     return await service.list_findings(
         current_user, severity=severity, category=category
     )
+
+
+# ── Phase 6.3: Scan Execution Lifecycle & Retry Endpoints ──
+
+
+@router.get(
+    "/assessments/{assessment_id}/state",
+    response_model=ScanLifecycleStateDTO,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("scans:read"))],
+)
+async def get_scan_lifecycle_state(
+    assessment_id: UUID,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> ScanLifecycleStateDTO:
+    """Retrieve detailed state machine status, step, and retry metrics for a scan job.
+
+    Requires authentication and 'scans:read' RBAC permission.
+    """
+    from app.core.exceptions import ResourceNotFoundException
+    from app.infrastructure.database.repositories.assessment_repository import (
+        AssessmentRepository,
+    )
+
+    repo = AssessmentRepository(session)
+    job = await repo.get_job_by_id(current_user.organization_id, assessment_id)
+    if job is None:
+        raise ResourceNotFoundException(
+            f"Assessment job '{assessment_id}' not found in organization."
+        )
+
+    exec_state = job.execution_state or "QUEUED"
+    is_term = exec_state in ("COMPLETED", "FAILED", "CANCELLED")
+
+    return ScanLifecycleStateDTO(
+        job_id=str(job.id),
+        organization_id=str(job.organization_id),
+        target_url=job.target_url,
+        execution_state=exec_state,
+        status=job.status,
+        current_step=job.current_step,
+        retry_count=job.retry_count,
+        max_retries=job.max_retries,
+        last_error=job.last_error,
+        started_at=job.started_at.isoformat() if job.started_at else None,
+        completed_at=job.completed_at.isoformat() if job.completed_at else None,
+        is_terminal=is_term,
+    )
+
+
+@router.post(
+    "/assessments/{assessment_id}/retry",
+    response_model=AssessmentJobResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("scans:retry"))],
+)
+async def retry_assessment_job(
+    assessment_id: UUID,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AssessmentJobResponse:
+    """Manually trigger retry for a failed or cancelled assessment job.
+
+    Requires authentication and 'scans:retry' RBAC permission.
+    """
+    from app.application.assessment.scan_lifecycle_manager import (
+        ScanLifecycleManagerService,
+    )
+    from app.domain.entities.scan_lifecycle import ScanExecutionState
+
+    manager = ScanLifecycleManagerService(session)
+    await manager.transition_state(
+        organization_id=current_user.organization_id,
+        job_id=assessment_id,
+        target_state=ScanExecutionState.QUEUED,
+        current_step="Manual Retry Triggered",
+        actor_id=current_user.id,
+    )
+    await session.commit()
+    service = AssessmentService(session)
+    return await service.get_assessment_job(assessment_id, current_user)
+
+
+@router.post(
+    "/assessments/{assessment_id}/cancel",
+    response_model=AssessmentJobResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("scans:cancel"))],
+)
+async def cancel_assessment_job(
+    assessment_id: UUID,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AssessmentJobResponse:
+    """Signal abort and transition active assessment job to CANCELLED.
+
+    Requires authentication and 'scans:cancel' RBAC permission. Releases target locks.
+    """
+    from app.application.assessment.scan_lifecycle_manager import (
+        ScanLifecycleManagerService,
+    )
+
+    manager = ScanLifecycleManagerService(session)
+    await manager.handle_scan_cancellation(
+        organization_id=current_user.organization_id,
+        job_id=assessment_id,
+        cancelled_by=current_user.id,
+        reason=f"Scan job cancelled by user '{current_user.email}'",
+    )
+    await session.commit()
+    service = AssessmentService(session)
+    return await service.get_assessment_job(assessment_id, current_user)

@@ -11,6 +11,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Index,
+    Integer,
     String,
     Text,
     func,
@@ -46,6 +47,21 @@ class AssessmentJobModel(Base):
     )
     duration_seconds: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     error_message: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+
+    # Phase 6.3 Scan Execution Lifecycle State Machine Extensions
+    execution_state: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="QUEUED", index=True
+    )
+    retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    max_retries: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    last_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    current_step: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    started_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    completed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

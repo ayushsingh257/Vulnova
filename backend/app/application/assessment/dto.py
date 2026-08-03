@@ -107,6 +107,10 @@ class AssessmentJobResponse(BaseModel):
     id: str
     target_url: str
     status: str
+    execution_state: str = "QUEUED"
+    retry_count: int = 0
+    max_retries: int = 3
+    current_step: Optional[str] = None
     profile_id: str = "full_assessment"
     enabled_plugins: List[str] = Field(default_factory=list)
     policy: Optional[ScanPolicyDTO] = None
@@ -115,6 +119,8 @@ class AssessmentJobResponse(BaseModel):
     duration_seconds: Optional[float] = None
     error_message: Optional[str] = None
     created_at: str
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
 
 
 class PluginMetadataDTO(BaseModel):
@@ -409,3 +415,47 @@ class PolicyValidationResult(BaseModel):
     rejection_reason: Optional[str] = None
     scan_target_id: Optional[str] = None
     authorization_id: Optional[str] = None
+
+
+# ── Phase 6.3: Scan Execution Lifecycle & Retry DTOs ──
+
+
+class ScanStateTransitionRequest(BaseModel):
+    """Request payload for manual state machine transition, retry, or cancellation."""
+
+    target_state: str = Field(
+        ...,
+        description="Target lifecycle state (QUEUED, CRAWLING, ASSESSING, AI_ANALYSIS, COMPLETED, FAILED, CANCELLED, RETRYING)",
+    )
+    current_step: Optional[str] = Field(None, description="Optional current step label")
+    reason: Optional[str] = Field(
+        None, description="Reason for manual state change or cancellation"
+    )
+
+
+class ScanLifecycleStateDTO(BaseModel):
+    """Detailed response DTO representing an assessment job's lifecycle state machine status."""
+
+    job_id: str
+    organization_id: str
+    target_url: str
+    execution_state: str
+    status: str
+    current_step: Optional[str] = None
+    retry_count: int = 0
+    max_retries: int = 3
+    last_error: Optional[str] = None
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+    is_terminal: bool = False
+
+
+class DistributedLockStatusDTO(BaseModel):
+    """Response DTO describing the distributed Redis lock status of a scan target."""
+
+    target_url: str
+    is_locked: bool
+    lock_key: str
+    owner_id: Optional[str] = None
+    acquired_at: Optional[str] = None
+    ttl_seconds: int = 3600

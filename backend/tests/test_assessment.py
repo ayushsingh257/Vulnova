@@ -137,8 +137,11 @@ def test_assessment_service_run_success(monkeypatch: pytest.MonkeyPatch) -> None
             mock_job = MagicMock()
             mock_job.id = uuid4()
             mock_job.target_url = "https://example.com"
+            mock_job.execution_state = "QUEUED"
             mock_job.created_at = "2026-08-02T16:00:00Z"
             service.repo.create_job = AsyncMock(return_value=mock_job)
+            service.repo.get_job_by_id = AsyncMock(return_value=mock_job)
+            service.repo.update_execution_state = AsyncMock(return_value=mock_job)
             service.repo.update_job_status = AsyncMock()
             service.repo.create_finding = AsyncMock()
 
@@ -161,7 +164,7 @@ def test_assessment_service_run_success(monkeypatch: pytest.MonkeyPatch) -> None
             assert res.target_url == "https://example.com"
             assert res.status == "COMPLETED"
             service.repo.create_job.assert_called_once()
-            service.repo.update_job_status.assert_called_once()
+            service.repo.update_execution_state.assert_called()
 
         loop.run_until_complete(_run())
     finally:

@@ -111,6 +111,8 @@ PERMISSION_MAP: Dict[str, Role] = {
     "scans:dispatch": Role.SECURITY_ANALYST,
     # ── Scan Authorization & Target Management (Phase 6.2) ──
     "scans:authorize": Role.SECURITY_ANALYST,
+    # ── Scan Execution Lifecycle State Machine & Retry Engine (Phase 6.3) ──
+    "scans:retry": Role.SECURITY_ANALYST,
     # ── Reports ──
     "reports:read": Role.VIEWER,
     "reports:generate": Role.SECURITY_ANALYST,

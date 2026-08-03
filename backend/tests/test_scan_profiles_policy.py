@@ -141,6 +141,7 @@ def test_assessment_service_profile_execution(monkeypatch: pytest.MonkeyPatch) -
             mock_job = MagicMock()
             mock_job.id = uuid4()
             mock_job.target_url = "https://example.com"
+            mock_job.execution_state = "QUEUED"
             mock_job.created_at = "2026-08-03T00:00:00Z"
             mock_job.profile_id = ScanProfileType.WEB_SCAN.value
             mock_job.policy_json = {
@@ -156,6 +157,8 @@ def test_assessment_service_profile_execution(monkeypatch: pytest.MonkeyPatch) -
             }
 
             service.repo.create_job = AsyncMock(return_value=mock_job)
+            service.repo.get_job_by_id = AsyncMock(return_value=mock_job)
+            service.repo.update_execution_state = AsyncMock(return_value=mock_job)
             service.repo.update_job_status = AsyncMock()
             service.repo.create_finding = AsyncMock()
 

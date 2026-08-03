@@ -28,6 +28,9 @@ from app.application.assessment.dto import (
 from app.application.assessment.finding_triage_service import FindingTriageService
 from app.application.assessment.policy_engine import ScanPolicyEngine
 from app.application.assessment.risk_engine import RiskIntelligenceEngine
+from app.application.assessment.scan_lifecycle_manager import (
+    ScanLifecycleManagerService,
+)
 from app.application.assessment.scan_profiles import ScanProfileRegistry
 from app.application.audit_logs.services import AuditLogService
 from app.core.exceptions import (
@@ -41,6 +44,7 @@ from app.domain.entities.assessment import (
     Finding,
     ScanPolicy,
 )
+from app.domain.entities.scan_lifecycle import ScanExecutionState
 from app.infrastructure.assessment.evidence_engine import EvidenceCollectionEngine
 from app.infrastructure.assessment.plugins import SecurityHeadersPlugin  # noqa: F401
 from app.infrastructure.assessment.registry import PluginRegistry
@@ -77,6 +81,9 @@ class AssessmentService:
         self.monitoring_service = ContinuousMonitoringService(session)
         self.triage_service = FindingTriageService(session)
         self.assessment_policy_engine = AssessmentPolicyEngine(session)
+        self.scan_lifecycle_manager = ScanLifecycleManagerService(
+            session, repo=self.repo
+        )
 
     async def create_and_run_assessment(
         self, req: CreateAssessmentRequest, current_user: UserModel
@@ -147,13 +154,29 @@ class AssessmentService:
             "stop_on_critical": validated_policy.stop_on_critical,
         }
 
-        # 4. Create Assessment Job Record (PENDING)
+        # 0.5. Acquire Distributed Target Lock (Phase 6.3)
+        await self.scan_lifecycle_manager.acquire_target_lock(
+            organization_id=org_id,
+            target_url=target_str,
+            ttl_seconds=3600,
+        )
+
+        # 4. Create Assessment Job Record (QUEUED)
         job_model = await self.repo.create_job(
             organization_id=org_id,
             target_url=target_str,
             enabled_plugins=enabled_ids,
             profile_id=profile_id,
             policy_json=policy_dict,
+        )
+
+        # Transition state: QUEUED -> CRAWLING
+        await self.scan_lifecycle_manager.transition_state(
+            organization_id=org_id,
+            job_id=job_model.id,
+            target_state=ScanExecutionState.CRAWLING,
+            current_step="Asset Crawling & Fingerprinting",
+            actor_id=current_user.id,
         )
 
         # 5. Audit Assessment Started
@@ -176,6 +199,15 @@ class AssessmentService:
             target_domain=base_domain,
             organization_id=org_id,
             policy=validated_policy,
+        )
+
+        # Transition state: CRAWLING -> ASSESSING
+        await self.scan_lifecycle_manager.transition_state(
+            organization_id=org_id,
+            job_id=job_model.id,
+            target_state=ScanExecutionState.ASSESSING,
+            current_step="Plugin Vulnerability Scanning",
+            actor_id=current_user.id,
         )
 
         # 7. Execute Plugins with Policy Safeguards
@@ -211,11 +243,25 @@ class AssessmentService:
                     )
                     break
 
+            # Transition state: ASSESSING -> AI_ANALYSIS
+            await self.scan_lifecycle_manager.transition_state(
+                organization_id=org_id,
+                job_id=job_model.id,
+                target_state=ScanExecutionState.AI_ANALYSIS,
+                current_step="Finding Risk Intelligence & Evidence Capture",
+                actor_id=current_user.id,
+            )
+
         except Exception as e:
             status = "FAILED"
             error_msg = str(e)
             logger.error(
                 "assessment.execution_failed", error=error_msg, job_id=str(job_model.id)
+            )
+            await self.scan_lifecycle_manager.handle_scan_failure(
+                organization_id=org_id,
+                job_id=job_model.id,
+                exception=e,
             )
 
         # 8. Apply Risk Intelligence & Deduplication Normalization Pipeline
@@ -252,13 +298,20 @@ class AssessmentService:
 
         duration = round(time.time() - start_time, 2)
 
-        # 11. Update Job Status & Duration
-        await self.repo.update_job_status(
+        # 11. Transition State to COMPLETED or FAILED & Release Target Lock
+        target_state = (
+            ScanExecutionState.COMPLETED
+            if status == "COMPLETED"
+            else ScanExecutionState.FAILED
+        )
+        await self.scan_lifecycle_manager.transition_state(
             organization_id=org_id,
             job_id=job_model.id,
-            status=status,
+            target_state=target_state,
+            current_step="Assessment Complete",
             duration_seconds=duration,
             error_message=error_msg,
+            actor_id=current_user.id,
         )
 
         # 12. Audit Assessment Completed / Failed

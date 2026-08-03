@@ -20,6 +20,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 6 Phase 6.3 (Scan Execution Lifecycle State Machine & Retry Engine)**:
+  - Created domain entities (`app/domain/entities/scan_lifecycle.py`): `ScanExecutionState` (`QUEUED`, `CRAWLING`, `ASSESSING`, `AI_ANALYSIS`, `COMPLETED`, `FAILED`, `CANCELLED`, `RETRYING`), `ScanStateTransitionEvent`, `RetryPolicy` (exponential backoff computation: `max_retries=3`, `base_delay=5s`, `backoff_factor=2.0`), `ScanLockMetadata`.
+  - Built Redis Distributed Lock Engine (`app/infrastructure/workers/scan_lock_manager.py`): `DistributedScanLockManager` using atomic Redis SETNX keys (`lock:scan:{org_id}:{target_url_sha256}`) with lock TTL auto-expiry, collision prevention, and fallback in-memory registry.
+  - Extended Database ORM models (`app/infrastructure/database/models/assessment.py`): Added `execution_state`, `retry_count`, `max_retries`, `last_error`, `current_step`, `started_at`, `completed_at` to `AssessmentJobModel`.
+  - Updated `AssessmentRepository` (`app/infrastructure/database/repositories/assessment_repository.py`): State machine persistence methods (`update_execution_state`, `increment_retry_count`, `list_active_jobs_for_target`).
+  - Created `ScanLifecycleManagerService` (`app/application/assessment/scan_lifecycle_manager.py`): Central state machine engine governing valid transition paths (`VALID_TRANSITIONS`), distributed lock acquisition/release, managed retries with backoff calculation, terminal failure handling, scan cancellation, and audit event recording (`scan.state_transition`, `scan.retry_scheduled`).
+  - Service & Worker Integration:
+    - Updated `AssessmentService.create_and_run_assessment()` to acquire target lock before job execution, advance states through `QUEUED` → `CRAWLING` → `ASSESSING` → `AI_ANALYSIS` → `COMPLETED`, handle transient errors, and release target locks.
+  - Updated Pydantic v2 DTO schemas (`app/application/assessment/dto.py`): Added `execution_state`, `retry_count`, `max_retries`, `current_step`, `started_at`, `completed_at` to `AssessmentJobResponse`; added `ScanStateTransitionRequest`, `ScanLifecycleStateDTO`, `DistributedLockStatusDTO`.
+  - Implemented REST API router endpoints (`app/api/v1/routers/assessment.py`): `GET /api/v1/assessments/{id}/state` (state machine status query), `POST /api/v1/assessments/{id}/retry` (manual retry trigger), `POST /api/v1/assessments/{id}/cancel` (scan cancellation).
+  - Configured RBAC permission (`"scans:retry": Role.SECURITY_ANALYST`) in `PERMISSION_MAP` (`app/domain/entities/role.py`).
+  - Created comprehensive test suite (`tests/test_scan_lifecycle_state_machine.py`) with 19 test functions covering domain entities, lock manager CRUD, state machine transition matrix, invalid transition error handling, retry engine backoff calculation, failure/cancel hooks, and API DTOs.
+  - Total backend test suite now stands at **347 passing tests** (328 previous + 19 new).
 - **Era 6 Phase 6.2 (Target Scan Configuration & Authorized Assessment Contract)**:
   - Created domain entities (`app/domain/entities/scan_target.py`): `ScanTarget`, `AuthorizedAssessmentContract`, `TargetEnvironment` (`PRODUCTION`, `STAGING`, `DEVELOPMENT`, `TESTING`), `TargetStatus` (`ACTIVE`, `ARCHIVED`, `SUSPENDED`), `AuthorizationScope` (`FULL`, `PASSIVE_ONLY`, `CUSTOM`).
   - Created database ORM models (`app/infrastructure/database/models/scan_target.py`): `ScanTargetModel` (`scan_targets`) and `AuthorizationDeclarationModel` (`authorization_declarations`) materializing the DATABASE.md DDL with multi-tenant isolation (`organization_id`, `created_by`, `declared_by`). Registered in models `__init__.py`.

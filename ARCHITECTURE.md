@@ -460,4 +460,40 @@ Phase 6.2 deploys a mandatory pre-scan legal authorization gate and scan target 
 3. **Immutable Consent Audit Trail**: Every authorization consent event persists a timestamped `authorization_declarations` record (`scan_target_id`, `declared_by`, `authorization_scope`, `ip_address`) for legal compliance.
 4. **Worker Dispatch Protection**: `WorkerOrchestratorService` enforces authorization metadata validation prior to Celery priority queue dispatching, preventing unauthorized background task executions.
 
+---
+
+## 🔄 10. Scan Execution Lifecycle State Machine & Retry Engine Architecture (Phase 6.3)
+
+Phase 6.3 establishes Vulnova's scan execution state machine, distributed Redis lock manager, and retry engine:
+
+```text
+               [ API / Worker Scan Request ]
+                             │
+                             ▼
+              [ DistributedScanLockManager ]
+              ├── Check Redis Lock (lock:scan:{org_id}:{target_sha256})
+              └── Reject Duplicate Executions (HTTP 409 Conflict)
+                             │
+                             ▼
+             [ ScanLifecycleManagerService ]
+       [QUEUED] ──► [CRAWLING] ──► [ASSESSING] ──► [AI_ANALYSIS] ──► [COMPLETED]
+          │             │              │                │
+          │         (Error)        (Error)          (Error)
+          │             │              │                │
+          ▼             └──────────────┼────────────────┘
+      [CANCELLED]                      ▼
+                            [RETRYING] (attempt < max)
+                                       │
+                                   (Exhausted)
+                                       ▼
+                                   [FAILED]
+```
+
+### Architectural Axioms:
+1. **Granular Execution Lifecycle**: Scans advance through explicit states (`QUEUED` → `CRAWLING` → `ASSESSING` → `AI_ANALYSIS` → `COMPLETED`). Out-of-order state jumps are rejected by a strict `VALID_TRANSITIONS` matrix.
+2. **Distributed Redis Target Locking**: `DistributedScanLockManager` uses atomic Redis SETNX keys (`lock:scan:{org_id}:{url_sha256}`) to prevent concurrent duplicate scan runs against identical target assets.
+3. **Exponential Backoff Retry Engine**: Transient scan failures trigger managed retries with exponential backoff (`base_delay=5s`, `backoff_factor=2.0`, `max_retries=3`).
+4. **Terminal Failure & Lock Cleanup**: Terminal failure or cancellation hooks release distributed locks automatically and record timestamped audit entries (`scan.state_transition`).
+
+
 

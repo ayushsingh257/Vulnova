@@ -113,21 +113,30 @@ CREATE TABLE authorization_declarations (
 CREATE INDEX idx_auth_decl_org_target ON authorization_declarations(organization_id, scan_target_id);
 
 
--- Assessment Jobs (Phase 4.1 & Phase 4.7 Enterprise Policy Engine)
+-- Assessment Jobs (Phase 4.1, Phase 4.7 & Phase 6.3 State Machine Extensions)
 CREATE TABLE assessment_jobs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     target_url TEXT NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'PENDING', -- 'PENDING', 'RUNNING', 'COMPLETED', 'FAILED'
-    profile_id VARCHAR(100) DEFAULT 'full_assessment', -- Stores selected enterprise scan profile (e.g. 'web_scan', 'api_scan')
-    policy_json JSONB, -- Stores execution policy configuration (concurrency, RPS rate limit, scope globs, auth, stop_on_critical)
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING', -- Synchronized legacy status field
+    execution_state VARCHAR(50) NOT NULL DEFAULT 'QUEUED', -- Granular state machine ('QUEUED', 'CRAWLING', 'ASSESSING', 'AI_ANALYSIS', 'COMPLETED', 'FAILED', 'CANCELLED', 'RETRYING')
+    retry_count INT NOT NULL DEFAULT 0,
+    max_retries INT NOT NULL DEFAULT 3,
+    last_error TEXT,
+    current_step VARCHAR(100),
+    profile_id VARCHAR(100) DEFAULT 'full_assessment',
+    policy_json JSONB,
     enabled_plugins_json JSONB,
     duration_seconds NUMERIC(10, 2),
     error_message TEXT,
+    started_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_assessment_jobs_org_status ON assessment_jobs(organization_id, status);
+CREATE INDEX idx_assessment_jobs_org_exec_state ON assessment_jobs(organization_id, execution_state);
+
 CREATE INDEX idx_assessment_jobs_org_profile ON assessment_jobs(organization_id, profile_id);
 
 -- Security Findings (Normalized, Evidence Enriched, & Asset Correlated - Phase 4.5, 4.6, 4.8)

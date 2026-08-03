@@ -869,6 +869,37 @@ All API errors return a standardized JSON error format:
 #### `DELETE /scan-targets/{target_id}`
 - **Summary**: Archive (soft-delete) a scan target (`targets:delete` permission required). Sets status to `ARCHIVED`. Archived targets cannot be scanned.
 
+---
+
+### N. Scan Lifecycle State Machine & Retry Engine (`/assessments`) (Phase 6.3)
+
+#### `GET /assessments/{assessment_id}/state`
+- **Summary**: Retrieve detailed state machine status, step, and retry metrics for a scan job (`scans:read` permission required).
+- **Response (200 OK)**:
+  ```json
+  {
+    "job_id": "job_uuid",
+    "organization_id": "org_uuid",
+    "target_url": "https://api.example.com",
+    "execution_state": "ASSESSING",
+    "status": "ASSESSING",
+    "current_step": "Plugin Vulnerability Scanning",
+    "retry_count": 0,
+    "max_retries": 3,
+    "last_error": null,
+    "started_at": "2026-08-03T20:30:00Z",
+    "completed_at": null,
+    "is_terminal": false
+  }
+  ```
+
+#### `POST /assessments/{assessment_id}/retry`
+- **Summary**: Manually trigger retry for a failed or cancelled assessment job (`scans:retry` permission required). Transitions state to `QUEUED`.
+
+#### `POST /assessments/{assessment_id}/cancel`
+- **Summary**: Signal abort and transition active assessment job to `CANCELLED` (`scans:cancel` permission required). Releases target lock.
+
+
 
 ---
 

@@ -761,12 +761,28 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Target registration system, mandatory authorization contract gate, policy engine, worker dispatch validation, REST endpoints, and RBAC permissions operational; pytest (315 passed), Ruff, Black, Mypy (strict) pass cleanly.
 - **Testing Requirements**: Domain entity tests, ORM table tests, repository CRUD tests, policy engine gate tests, worker dispatch authorization tests, DTO backward compatibility tests.
 
-### Phase 6.3: Scan Execution Lifecycle State Machine & Retry Engine
-- **Objective**: Implement robust state transitions (`QUEUED` -> `CRAWLING` -> `ASSESSING` -> `AI_ANALYSIS` -> `COMPLETED`), retry engines, task deduplication, and distributed locking.
-- **Deliverables**: Scan lifecycle manager service, Redis distributed locks, failure/cancel hooks, database status updater.
+### ✅ Phase 6.3: Scan Execution Lifecycle State Machine & Retry Engine
+- **Objective**: Deploy granular scan execution state machine (`ScanExecutionState`), state transition matrix validation (`VALID_TRANSITIONS`), atomic Redis distributed target lock manager (`DistributedScanLockManager`), managed retry engine with exponential backoff (`RetryPolicy`), failure and cancellation hooks, `AssessmentJobModel` ORM extensions, lifecycle REST API endpoints (`/api/v1/assessments/{id}/state`, `/retry`, `/cancel`), configured RBAC permission (`scans:retry`), and comprehensive test suite (`test_scan_lifecycle_state_machine.py`).
+- **Deliverables**:
+  - Domain entities (`app/domain/entities/scan_lifecycle.py`): `ScanExecutionState` (`QUEUED`, `CRAWLING`, `ASSESSING`, `AI_ANALYSIS`, `COMPLETED`, `FAILED`, `CANCELLED`, `RETRYING`), `ScanStateTransitionEvent`, `RetryPolicy` (exponential backoff: `max_retries=3`, `base_delay=5s`, `backoff_factor=2.0`), `ScanLockMetadata`.
+  - Infrastructure Redis Lock Engine (`app/infrastructure/workers/scan_lock_manager.py`): `DistributedScanLockManager` enforcing target lock keys (`lock:scan:{org_id}:{target_url_sha256}`), lock TTL auto-expiry, collision prevention, and fallback in-memory registry.
+  - Database ORM extensions (`app/infrastructure/database/models/assessment.py`): Added `execution_state`, `retry_count`, `max_retries`, `last_error`, `current_step`, `started_at`, `completed_at` to `AssessmentJobModel`.
+  - `AssessmentRepository` (`app/infrastructure/database/repositories/assessment_repository.py`): State transition persistence methods (`update_execution_state`, `increment_retry_count`, `list_active_jobs_for_target`).
+  - `ScanLifecycleManagerService` (`app/application/assessment/scan_lifecycle_manager.py`): Central state machine engine governing valid transition paths, distributed lock acquisition/release, managed retries with backoff calculation, terminal failure handling, scan cancellation, and audit event recording (`scan.state_transition`, `scan.retry_scheduled`).
+  - Service Integration (`app/application/assessment/services.py`): `AssessmentService.create_and_run_assessment()` acquires target lock before job execution, advances states through `QUEUED` → `CRAWLING` → `ASSESSING` → `AI_ANALYSIS` → `COMPLETED`, handles transient errors, and releases target lock upon completion/failure.
+  - Updated Pydantic v2 DTOs (`app/application/assessment/dto.py`): Added `execution_state`, `retry_count`, `max_retries`, `current_step`, `started_at`, `completed_at` to `AssessmentJobResponse`; added `ScanStateTransitionRequest`, `ScanLifecycleStateDTO`, `DistributedLockStatusDTO`.
+  - REST API router endpoints (`app/api/v1/routers/assessment.py`): `GET /api/v1/assessments/{id}/state` (lifecycle state query), `POST /api/v1/assessments/{id}/retry` (manual retry trigger), `POST /api/v1/assessments/{id}/cancel` (scan cancellation).
+  - Configured RBAC permission (`scans:retry`) in `PERMISSION_MAP` (`app/domain/entities/role.py`).
+  - Comprehensive unit & integration test suite (`tests/test_scan_lifecycle_state_machine.py`) — 19 test functions covering domain entities, lock manager CRUD, state machine transition matrix, invalid transition error handling, retry engine backoff calculation, failure/cancel hooks, and API DTOs.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 179 source files passed (strict mode)
+    - **Pytest**: **347/347 passed** (328 previous + 19 new)
 - **Dependencies**: Phase 6.2.
-- **Completion Criteria**: Scan state advances reliably, locks prevent duplicate executions, and handles retry/failure hooks cleanly.
-- **Testing Requirements**: Lifecycle state transition test suite, distributed lock concurrence tests.
+- **Completion Criteria**: Granular state machine, state transition matrix, atomic distributed locks, exponential backoff retries, lifecycle REST endpoints, and RBAC permissions operational; pytest (347 passed), Ruff, Black, Mypy (strict) pass cleanly.
+- **Testing Requirements**: State transition matrix tests, Redis lock collision tests, exponential backoff calculation tests, retry/failure hook tests, API state query tests.
 
 ### Phase 6.4: Real-Time Scan Progress & WebSocket Event Stream
 - **Objective**: WebSocket connection manager streaming live progress, target URLs, active plugin metrics, and finding alerts to connected clients.

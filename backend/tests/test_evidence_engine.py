@@ -220,9 +220,12 @@ def test_assessment_service_evidence_pipeline(
                 mock_job = MagicMock()
                 mock_job.id = uuid4()
                 mock_job.target_url = "https://example.com"
+                mock_job.execution_state = "QUEUED"
                 mock_job.created_at = "2026-08-02T22:00:00Z"
 
                 service.repo.create_job = AsyncMock(return_value=mock_job)
+                service.repo.get_job_by_id = AsyncMock(return_value=mock_job)
+                service.repo.update_execution_state = AsyncMock(return_value=mock_job)
                 service.repo.update_job_status = AsyncMock()
                 service.repo.create_finding = AsyncMock()
                 service.evidence_repo.create_artifact = AsyncMock()
