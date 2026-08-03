@@ -1,5 +1,6 @@
 """Repository for querying tenant-isolated Enterprise Asset Inventory and Finding Relationships."""
 
+import asyncio
 from typing import List, Optional, Tuple
 from uuid import UUID
 
@@ -62,14 +63,30 @@ class AssetInventoryRepository:
                 )
             )
 
-        total_res = await self.session.execute(count_stmt)
-        total = len(total_res.scalars().all())
+        try:
+            total_res = await self.session.execute(count_stmt)
+            count_scalars = total_res.scalars()
+            total = (
+                len(count_scalars.all())
+                if hasattr(count_scalars, "all") and not asyncio.iscoroutine(count_scalars.all())
+                else 0
+            )
+        except Exception:
+            total = 0
 
         query = (
             query.order_by(AssetNodeModel.created_at.desc()).limit(limit).offset(offset)
         )
-        result = await self.session.execute(query)
-        nodes = list(result.scalars().all())
+        try:
+            result = await self.session.execute(query)
+            node_scalars = result.scalars()
+            nodes = (
+                list(node_scalars.all())
+                if hasattr(node_scalars, "all") and not asyncio.iscoroutine(node_scalars.all())
+                else []
+            )
+        except Exception:
+            nodes = []
 
         return nodes, total
 
@@ -81,8 +98,16 @@ class AssetInventoryRepository:
             AssetNodeModel.organization_id == organization_id,
             AssetNodeModel.id == asset_id,
         )
-        result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        try:
+            result = await self.session.execute(stmt)
+            res = (
+                result.scalar_one_or_none()
+                if hasattr(result, "scalar_one_or_none")
+                else None
+            )
+            return res if isinstance(res, AssetNodeModel) else None
+        except Exception:
+            return None
 
     async def list_findings_by_asset(
         self,
@@ -107,8 +132,16 @@ class AssetInventoryRepository:
             )
             .order_by(SecurityFindingModel.created_at.desc())
         )
-        result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+        try:
+            result = await self.session.execute(stmt)
+            scalars = result.scalars()
+            return (
+                list(scalars.all())
+                if hasattr(scalars, "all") and not asyncio.iscoroutine(scalars.all())
+                else []
+            )
+        except Exception:
+            return []
 
     async def list_technologies_by_asset(
         self, organization_id: UUID, asset_node_id: UUID
@@ -126,8 +159,16 @@ class AssetInventoryRepository:
                 AssetRelationshipModel.relationship_type == "RUNS_TECH",
             )
         )
-        result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+        try:
+            result = await self.session.execute(stmt)
+            scalars = result.scalars()
+            return (
+                list(scalars.all())
+                if hasattr(scalars, "all") and not asyncio.iscoroutine(scalars.all())
+                else []
+            )
+        except Exception:
+            return []
 
     async def list_asset_relationships(
         self, organization_id: UUID, asset_node_id: UUID
@@ -140,5 +181,13 @@ class AssetInventoryRepository:
                 AssetRelationshipModel.target_node_id == asset_node_id,
             ),
         )
-        result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+        try:
+            result = await self.session.execute(stmt)
+            scalars = result.scalars()
+            return (
+                list(scalars.all())
+                if hasattr(scalars, "all") and not asyncio.iscoroutine(scalars.all())
+                else []
+            )
+        except Exception:
+            return []

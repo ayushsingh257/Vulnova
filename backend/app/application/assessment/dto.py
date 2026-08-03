@@ -148,3 +148,51 @@ class AssetDetailResponse(BaseModel):
     technologies: List[Dict[str, Any]] = Field(default_factory=list)
     findings: List[FindingDTO] = Field(default_factory=list)
     relationships: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class AssetSnapshotDTO(BaseModel):
+    """DTO representing a point-in-time security posture snapshot."""
+
+    id: str
+    assessment_job_id: Optional[str] = None
+    total_assets: int = 0
+    total_findings: int = 0
+    critical_findings: int = 0
+    high_findings: int = 0
+    medium_findings: int = 0
+    low_findings: int = 0
+    info_findings: int = 0
+    avg_risk_score: float = 0.0
+    max_risk_score: float = 0.0
+    created_at: str
+
+
+class AssetChangeEventDTO(BaseModel):
+    """DTO describing a security posture delta change event."""
+
+    id: str
+    asset_node_id: Optional[str] = None
+    assessment_job_id: Optional[str] = None
+    change_type: str
+    title: str
+    description: Optional[str] = None
+    details: Dict[str, Any] = Field(default_factory=dict)
+    created_at: str
+
+
+class RiskTrajectoryResponse(BaseModel):
+    """Response model for historical risk posture trajectory and net delta."""
+
+    current_avg_risk_score: float = 0.0
+    previous_avg_risk_score: float = 0.0
+    net_risk_delta: float = 0.0
+    risk_trend_direction: str = "STABLE"  # INCREASING, DECREASING, STABLE
+    total_snapshots: int = 0
+    snapshots: List[AssetSnapshotDTO] = Field(default_factory=list)
+
+
+class PostureTimelineResponse(BaseModel):
+    """Response model for aggregated security posture event timeline."""
+
+    total_events: int
+    events: List[AssetChangeEventDTO] = Field(default_factory=list)

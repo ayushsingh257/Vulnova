@@ -12,6 +12,10 @@ from app.infrastructure.database.models.asset_graph import (
 from app.infrastructure.database.models.audit_log import AuditLogModel
 from app.infrastructure.database.models.organization import OrganizationModel
 from app.infrastructure.database.models.refresh_token import RefreshTokenModel
+from app.infrastructure.database.models.trend import (
+    AssetChangeEventModel,
+    AssetSnapshotModel,
+)
 from app.infrastructure.database.models.user import UserModel
 
 __all__ = [
@@ -24,4 +28,6 @@ __all__ = [
     "AssetRelationshipModel",
     "AssessmentJobModel",
     "SecurityFindingModel",
+    "AssetSnapshotModel",
+    "AssetChangeEventModel",
 ]

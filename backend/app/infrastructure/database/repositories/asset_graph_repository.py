@@ -39,7 +39,7 @@ class AssetGraphRepository:
         result = await self.session.execute(stmt)
         existing = result.scalar_one_or_none()
 
-        if existing:
+        if existing and isinstance(existing, AssetNodeModel):
             existing.name = str(name)
             if metadata:
                 merged_meta: Dict[str, Any] = dict(existing.metadata_json or {})

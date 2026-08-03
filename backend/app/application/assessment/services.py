@@ -6,6 +6,9 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.assessment.continuous_monitoring import (
+    ContinuousMonitoringService,
+)
 from app.application.assessment.correlation_engine import (
     AssessmentCorrelationEngine,
 )
@@ -49,7 +52,7 @@ logger = get_logger("vulnova.assessment_service")
 
 
 class AssessmentService:
-    """Application Service orchestrating scan profiles, policy engines, vulnerability scanning plugins, risk intelligence, evidence collection, finding correlation, and persistence."""
+    """Application Service orchestrating scan profiles, policy engines, vulnerability scanning plugins, risk intelligence, evidence collection, finding correlation, continuous monitoring, and persistence."""
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -63,6 +66,7 @@ class AssessmentService:
         self.deduplicator = FindingDeduplicator()
         self.evidence_engine = EvidenceCollectionEngine()
         self.correlation_engine = AssessmentCorrelationEngine()
+        self.monitoring_service = ContinuousMonitoringService(session)
 
     async def create_and_run_assessment(
         self, req: CreateAssessmentRequest, current_user: UserModel
@@ -212,6 +216,11 @@ class AssessmentService:
             await self.repo.create_finding(org_id, f)
             for art in f.artifacts:
                 await self.evidence_repo.create_artifact(org_id, art)
+
+        # 12. Create Continuous Monitoring Posture Snapshot & Detect Changes
+        await self.monitoring_service.process_scan_run(
+            org_id, job_model.id, final_findings, context
+        )
 
         duration = round(time.time() - start_time, 2)
 

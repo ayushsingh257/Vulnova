@@ -9,6 +9,7 @@ from app.api.v1.routers import (
     discovery,
     organizations,
     status,
+    trends,
     users,
 )
 
@@ -22,3 +23,4 @@ api_v1_router.include_router(audit_logs.router)
 api_v1_router.include_router(discovery.router)
 api_v1_router.include_router(assessment.router)
 api_v1_router.include_router(assets.router)
+api_v1_router.include_router(trends.router)
