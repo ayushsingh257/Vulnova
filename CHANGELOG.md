@@ -19,6 +19,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 4 Phase 4.10 (Enterprise Finding Triage & Vulnerability Lifecycle Engine)** (`9d1f0174`):
+  - Created `FindingTriageHistoryModel` (`finding_triage_history` table) and `FindingSuppressionRuleModel` (`finding_suppression_rules` table) ORM models (`app/infrastructure/database/models/triage.py`). Preserves backward compatibility of original finding data, risk scores, evidence, and asset graph linkages.
+  - Implemented `FindingTriageRepository` (`app/infrastructure/database/repositories/finding_triage_repository.py`) enforcing tenant-isolated finding triage history persistence and automated suppression rule management.
+  - Built `FindingTriageService` (`app/application/assessment/finding_triage_service.py`) enabling security analyst finding triage state management (`UNREVIEWED`, `CONFIRMED`, `FALSE_POSITIVE`, `RISK_ACCEPTED`, `REMEDIATED`, `REOPENED`), bulk triage execution, automated false-positive suppression rule matching, and structured audit log recording (`finding.triaged`, `suppression_rule.created`, `suppression_rule.deleted`). Reuses existing `AuditLogService` pattern.
+  - Added DTO schemas (`app/application/assessment/dto.py`): `TriageFindingRequest`, `BulkTriageRequest`, `CreateSuppressionRuleRequest`, `FindingTriageHistoryDTO`, `SuppressionRuleDTO`, and `TriageResponse`.
+  - Implemented REST API router endpoints (`app/api/v1/routers/triage.py`): `PATCH /api/v1/findings/{id}/triage`, `POST /api/v1/findings/triage/bulk`, `GET /api/v1/findings/{id}/triage-history`, `POST /api/v1/findings/suppression-rules`, `GET /api/v1/findings/suppression-rules`, and `DELETE /api/v1/findings/suppression-rules/{id}`.
+  - Configured `"findings:suppress": Role.ADMIN` permission in `PERMISSION_MAP` (`app/domain/entities/role.py`) and guarded triage endpoints with RBAC role authorization.
+  - Integrated `FindingTriageService.evaluate_suppression_rules` into `AssessmentService.create_and_run_assessment` post-assessment pipeline execution.
+  - Added unit & integration test suite (`tests/test_finding_triage.py`) — 3 new tests covering triage workflows, automated suppression rule matching, and triage repository multi-tenant boundary isolation. Total backend test suite now stands at **164 passing tests**.
 - **Era 4 Phase 4.9 (Attack Surface Trend & Continuous Monitoring Engine)** (`88ebc528`):
   - Created `AssetSnapshotModel` (`asset_snapshots` table) and `AssetChangeEventModel` (`asset_change_events` table) ORM models (`app/infrastructure/database/models/trend.py`). Point-in-time snapshots are organization isolated (`organization_id`), assessment linked (`assessment_job_id`), and timestamped (`created_at`).
   - Created `AssetTrendRepository` (`app/infrastructure/database/repositories/asset_trend_repository.py`) managing tenant-isolated snapshot persistence and change event history lookups.
