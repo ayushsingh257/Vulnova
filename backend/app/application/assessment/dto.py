@@ -116,3 +116,35 @@ class PluginMetadataDTO(BaseModel):
     author: str
     supported_asset_types: List[str] = Field(default_factory=list)
     required_permissions: List[str] = Field(default_factory=list)
+
+
+class AssetInventoryDTO(BaseModel):
+    """DTO representing high-level enterprise asset inventory posture."""
+
+    id: str
+    node_type: str
+    name: str
+    value: str
+    risk_score: float = 0.0
+    risk_level: str = "LOW"
+    total_findings: int = 0
+    findings_by_severity: Dict[str, int] = Field(default_factory=dict)
+    technologies: List[str] = Field(default_factory=list)
+    created_at: str
+    updated_at: str
+
+
+class AssetInventoryResponse(BaseModel):
+    """Paginated response model for enterprise asset inventory posture."""
+
+    total: int
+    items: List[AssetInventoryDTO] = Field(default_factory=list)
+
+
+class AssetDetailResponse(BaseModel):
+    """Detailed response model for a single enterprise asset."""
+
+    asset: AssetInventoryDTO
+    technologies: List[Dict[str, Any]] = Field(default_factory=list)
+    findings: List[FindingDTO] = Field(default_factory=list)
+    relationships: List[Dict[str, Any]] = Field(default_factory=list)

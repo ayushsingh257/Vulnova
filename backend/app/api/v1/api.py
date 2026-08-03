@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.v1.routers import (
     api_keys,
     assessment,
+    assets,
     audit_logs,
     auth,
     discovery,
@@ -20,3 +21,4 @@ api_v1_router.include_router(organizations.router)
 api_v1_router.include_router(audit_logs.router)
 api_v1_router.include_router(discovery.router)
 api_v1_router.include_router(assessment.router)
+api_v1_router.include_router(assets.router)

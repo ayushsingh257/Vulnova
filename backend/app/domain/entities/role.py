@@ -84,6 +84,8 @@ PERMISSION_MAP: Dict[str, Role] = {
     "scans:create": Role.SECURITY_ANALYST,
     "scans:cancel": Role.SECURITY_ANALYST,
     "scans:delete": Role.ADMIN,
+    # ── Asset Inventory ──
+    "assets:read": Role.VIEWER,
     # ── Findings & Triage ──
     "findings:read": Role.VIEWER,
     "findings:triage": Role.SECURITY_ANALYST,

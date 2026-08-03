@@ -6,6 +6,9 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.assessment.correlation_engine import (
+    AssessmentCorrelationEngine,
+)
 from app.application.assessment.deduplication import FindingDeduplicator
 from app.application.assessment.dto import (
     AssessmentJobResponse,
@@ -46,7 +49,7 @@ logger = get_logger("vulnova.assessment_service")
 
 
 class AssessmentService:
-    """Application Service orchestrating scan profiles, policy engines, vulnerability scanning plugins, risk intelligence, evidence collection, and persistence."""
+    """Application Service orchestrating scan profiles, policy engines, vulnerability scanning plugins, risk intelligence, evidence collection, finding correlation, and persistence."""
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -59,6 +62,7 @@ class AssessmentService:
         self.risk_engine = RiskIntelligenceEngine()
         self.deduplicator = FindingDeduplicator()
         self.evidence_engine = EvidenceCollectionEngine()
+        self.correlation_engine = AssessmentCorrelationEngine()
 
     async def create_and_run_assessment(
         self, req: CreateAssessmentRequest, current_user: UserModel
@@ -194,11 +198,16 @@ class AssessmentService:
         deduped_findings = self.deduplicator.deduplicate_findings(enriched_findings)
 
         # 9. Capture Multi-Modal Evidence Artifacts
-        final_findings = await self.evidence_engine.capture_evidence_batch(
+        evidenced_findings = await self.evidence_engine.capture_evidence_batch(
             deduped_findings, context
         )
 
-        # 10. Persist Normalized Findings & Evidence Artifacts to DB
+        # 10. Correlate Findings with Asset Graph & Update Posture
+        final_findings = await self.correlation_engine.correlate_findings(
+            evidenced_findings, context, self.session
+        )
+
+        # 11. Persist Correlated Findings & Evidence Artifacts to DB
         for f in final_findings:
             await self.repo.create_finding(org_id, f)
             for art in f.artifacts:
