@@ -182,6 +182,17 @@ All logs are emitted using `structlog` as formatted JSON:
 4. **Vulnerability & Operational Risk Metadata**: Remediation plans MUST record vulnerability identifiers (`cve_id`, `cwe_id`), version targets (`affected_version`, `fixed_version`), and operational risk flags (`requires_backup`, `requires_downtime`, `rollback_available`).
 5. **Analyst Review State Machine**: Remediation plans MUST support lifecycle review transitions (`GENERATED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `IMPLEMENTED`, `VERIFIED`, `VALIDATION_FAILED`) and capture reviewer notes and timestamps via `PATCH /api/v1/ai/remediation/{id}/review`.
 
+---
+
+## 🤖 14. AI False Positive Filter & Finding Confidence Architecture
+
+1. **Strict Non-Suppression Analyst-Assisted Policy**: AI confidence services (`AIConfidenceAnalysisService`) evaluate finding authenticity (`TRUE_POSITIVE`, `FALSE_POSITIVE`, `NEEDS_REVIEW`), confidence score (0.0–1.0), and evidence quality score (0.0–1.0) as advisory intelligence for human analysts. The service MUST NOT automatically close, delete, or suppress findings.
+2. **Normalized 2-Table Relational Storage**: Confidence analyses MUST be stored across 2 normalized relational tables (`ai_finding_confidence_analyses` and `ai_finding_similarity_matches`) to support relational querying by classification and similarity score.
+3. **Score Calibration Feedback Tracking**: Analyst review feedback (`PATCH /api/v1/ai/confidence-analysis/{id}/review`) MUST track calibration metadata (`predicted_confidence_score`, `analyst_final_decision`, `confidence_accuracy_delta`, `feedback_timestamp`) to feed future AI Copilot learning loops.
+4. **Multi-Signal Similarity Engine**: Finding duplicate correlation MUST evaluate 8 distinct matching signals (`CVE`, `CWE`, `ENDPOINT`, `ASSET_NODE`, `PLUGIN_ID`, `VULNERABILITY_TITLE`, `AFFECTED_COMPONENT`, `ATTACK_TECHNIQUE`) to compute similarity scores (0.0–1.0).
+5. **8-Layer Intelligence Context Assembly**: Context MUST be constructed across 8 verified intelligence layers (finding, evidence, asset topology, triage history, Phase 5.2 explanation, Phase 5.2 impact, Phase 5.3 attack path, Phase 5.4 remediation plan) with secret prompt context masking (`mask_sensitive_prompt_context`).
+
+
 
 
 

@@ -639,14 +639,27 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: AI remediation engine, 3-table normalized schema, non-executable patch safety model, dual confidence scoring, analyst review workflow, and RBAC authorization operational; pytest (224 passed), Ruff, Black, Mypy (strict) pass cleanly (`164a866a`).
 - **Testing Requirements**: Remediation generation unit tests, patch safety verification tests, context assembly tests, tenant boundary isolation tests.
 
-### Phase 5.5: AI False-Positive Reduction & Noise Filtering Engine
-- **Objective**: Build an AI correlation engine analyzing response bodies, execution evidence, technology signatures, and historical scan findings to assign confidence scores and filter out scanner false positives before ticket creation.
+### ✅ Phase 5.5: AI False Positive Filter & Finding Confidence Intelligence Engine
+- **Objective**: Build an enterprise-grade AI False Positive Detection and Finding Confidence Intelligence Engine (`AIConfidenceAnalysisService`) that analyzes security findings across 8 intelligence layers (metadata, evidence proofs, asset topology, triage history, Phase 5.2 explanations/impact analysis, Phase 5.3 attack paths, and Phase 5.4 remediation plans) to determine classification (`TRUE_POSITIVE`, `FALSE_POSITIVE`, `NEEDS_REVIEW`), confidence score (0.0 - 1.0), evidence quality score (0.0 - 1.0), supporting & contradicting evidence reasoning, missing information, validation requirements, and duplicate finding similarity correlation across 8 distinct signals.
 - **Deliverables**:
-  - `FalsePositiveFilterEngine` (`app/application/ai/false_positive_filter.py`) calculating confidence ratings and flagging low-confidence scanner noise.
-  - Filtering policy configuration and audit records.
-- **Dependencies**: Phase 5.2, Phase 4.6.
-- **Completion Criteria**: Assigns confidence ratings (HIGH, MEDIUM, LOW) and filters out non-exploitable scanner noise prior to ticketing.
-- **Testing Requirements**: False-positive benchmark classification tests, noise reduction verification.
+  - Domain entities (`app/domain/entities/ai.py`): `AIFindingConfidenceAnalysis`, `AIFindingSimilarityMatch`, `FindingConfidenceClassification` (`TRUE_POSITIVE`, `FALSE_POSITIVE`, `NEEDS_REVIEW`), `AIConfidenceStatus` (`GENERATED`, `REVIEWED`, `ACCEPTED`, `REJECTED`, `STALE`, `FAILED`), and `SimilaritySignalType` (`CVE`, `CWE`, `ENDPOINT`, `ASSET_NODE`, `PLUGIN_ID`, `VULNERABILITY_TITLE`, `AFFECTED_COMPONENT`, `ATTACK_TECHNIQUE`).
+  - Database ORM models (`app/infrastructure/database/models/ai_confidence.py`): `AIFindingConfidenceAnalysisModel` (`ai_finding_confidence_analyses`) and `AIFindingSimilarityMatchModel` (`ai_finding_similarity_matches`) implementing a normalized 2-table schema with confidence score calibration metadata tracking (`predicted_confidence_score`, `analyst_final_decision`, `confidence_accuracy_delta`, `feedback_timestamp`).
+  - `AIConfidenceRepository` (`app/infrastructure/database/repositories/ai_confidence_repository.py`): Multi-tenant isolated queries for confidence analysis persistence, eager loading via `selectinload`, pagination, similarity correlation queries, and calibration feedback tracking.
+  - `AIConfidenceAnalysisService` (`app/application/ai/confidence_service.py`): Non-suppression analyst-assisted confidence engine assembling context across 8 intelligence layers, enforcing non-suppression safety policy (zero auto-closing or auto-suppression), masking secrets via `mask_sensitive_prompt_context`, executing retry-once JSON repair recovery, and running multi-signal duplicate similarity correlation.
+  - Pydantic v2 DTO schemas (`app/application/ai/dto.py`): `GenerateConfidenceAnalysisRequest`, `ReviewConfidenceAnalysisRequest`, `AIFindingSimilarityMatchDTO`, `AIFindingConfidenceAnalysisDTO`.
+  - REST API router endpoints (`app/api/v1/routers/ai.py`): `POST /api/v1/ai/findings/{id}/confidence-analysis`, `GET /api/v1/ai/findings/{id}/confidence-analysis`, `GET /api/v1/ai/confidence-analysis`, `POST /api/v1/ai/findings/{id}/similarity-check`, `GET /api/v1/ai/finding-similarity/{id}`, `PATCH /api/v1/ai/confidence-analysis/{id}/review`.
+  - Configured `"findings:ai_confidence": Role.SECURITY_ANALYST` in `PERMISSION_MAP` (`app/domain/entities/role.py`) to guard confidence generation, similarity checks, and analyst review endpoints.
+  - Unit & Integration test suite (`tests/test_ai_confidence_analysis.py`) — 10 test functions (20 test cases across pytest-anyio runners) covering true positive classification, false positive reasoning, evidence quality scoring, similarity correlation, context assembly, sensitive data masking, tenant isolation, retry-once JSON repair, human review workflow with calibration feedback, and non-suppression safety validation.
+- **Implementation Details**:
+  - **Feature Commit**: `9c06a519`
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 155 source files passed (strict mode)
+    - **Pytest**: **244/244 passed**
+- **Dependencies**: Phase 5.2, Phase 5.3, Phase 5.4, Era 4.
+- **Completion Criteria**: AI confidence engine, 2-table normalized schema, non-suppression safety policy, evidence quality scoring, score calibration tracking, multi-signal similarity correlation, analyst review workflow, and RBAC authorization operational; pytest (244 passed), Ruff, Black, Mypy (strict) pass cleanly (`9c06a519`).
+- **Testing Requirements**: Confidence generation unit tests, false positive classification tests, evidence quality scoring tests, similarity correlation tests, calibration tracking tests.
 
 ### Phase 5.6: Security Knowledge Base & RAG Vector Engine (pgvector)
 - **Objective**: Build a Retrieval-Augmented Generation (RAG) knowledge base indexing OWASP Cheat Sheets, CWE definitions, CAPEC attack patterns, CVE/NVD databases, vendor advisories, and internal documentation into PostgreSQL `pgvector`.

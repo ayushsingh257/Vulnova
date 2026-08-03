@@ -167,6 +167,15 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 - **Eager Loading Optimization**: `AIRemediationRepository` utilizes SQLAlchemy `selectinload(AIRemediationPlanModel.steps)` and `selectinload(AIRemediationPlanModel.patch_suggestions)` to fetch master plans, step sequences, and code patch diffs in a single query.
 - **Review State Machine Indexing**: Index on `ai_remediation_plans.status` supports fast filtering of plans by review state (`GENERATED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `IMPLEMENTED`, `VERIFIED`, `VALIDATION_FAILED`).
 
+---
+
+## 🤖 12. AI False Positive Filter & Confidence Engine Performance & Storage Blueprint (Phase 5.5)
+
+- **2-Table Relational Query Indexing**: `ai_finding_confidence_analyses` and `ai_finding_similarity_matches` feature composite PostgreSQL indexes `(organization_id, finding_id)`, `(organization_id, classification)`, `(organization_id, source_finding_id)`, and `(similarity_score)`. This enables sub-millisecond query performance for confidence assessments and similarity correlations.
+- **Eager Loading Optimization**: `AIConfidenceRepository` utilizes SQLAlchemy `selectinload(AIFindingConfidenceAnalysisModel.similarity_matches)` to fetch confidence assessments and correlated duplicate matches in a single database round-trip.
+- **Calibration Feedback Performance**: Calibration metadata columns (`predicted_confidence_score`, `confidence_accuracy_delta`, `feedback_timestamp`) allow offline training dataset extraction without runtime performance degradation.
+
+
 
 
 

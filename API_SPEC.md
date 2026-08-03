@@ -557,6 +557,62 @@ All API errors return a standardized JSON error format:
 #### `PATCH /ai/remediation/{id}/review`
 - **Summary**: Record SOC analyst review status (`APPROVED`, `REJECTED`, `UNDER_REVIEW`, `IMPLEMENTED`, `VERIFIED`, `VALIDATION_FAILED`) and notes (`findings:ai_remediate` permission required).
 
+#### `POST /ai/findings/{finding_id}/confidence-analysis`
+- **Summary**: Synthesize AI false-positive and confidence assessment (`findings:ai_confidence` permission required).
+- **Response (201 Created)**:
+  ```json
+  {
+    "id": "conf_uuid",
+    "finding_id": "finding_uuid",
+    "classification": "TRUE_POSITIVE",
+    "confidence_score": 0.95,
+    "evidence_quality_score": 0.92,
+    "reasoning": "High confidence SQL injection confirmed by error payload response.",
+    "supporting_evidence": "HTTP 500 error containing PostgreSQL syntax exception.",
+    "contradicting_evidence": "None noted.",
+    "missing_information": "None.",
+    "validation_requirements": "Re-run sqli_plugin with sleep payload.",
+    "recommendation": "Prioritize immediate patch deployment.",
+    "composite_risk_score": 85.0,
+    "model_used": "gpt-4o",
+    "provider_used": "OPENAI",
+    "prompt_version": 1,
+    "status": "GENERATED",
+    "similarity_matches": [
+      {
+        "id": "sim_uuid",
+        "source_finding_id": "finding_uuid",
+        "matched_finding_id": "cand_uuid",
+        "similarity_score": 0.85,
+        "similarity_reason": "Identical CVE identifier (CVE-2024-1111); Identical CWE category (CWE-89)",
+        "matched_signals": ["CVE", "CWE", "PLUGIN_ID"],
+        "status": "GENERATED",
+        "created_at": "2026-08-03T14:00:00Z"
+      }
+    ],
+    "predicted_confidence_score": null,
+    "analyst_final_decision": null,
+    "confidence_accuracy_delta": null,
+    "feedback_timestamp": null,
+    "created_at": "2026-08-03T14:00:00Z"
+  }
+  ```
+
+#### `GET /ai/findings/{finding_id}/confidence-analysis`
+- **Summary**: Retrieve latest confidence analysis assessment for a finding (`findings:read` permission required).
+
+#### `GET /ai/confidence-analysis`
+- **Summary**: List organizational confidence analysis history (`findings:read` permission required).
+
+#### `POST /ai/findings/{finding_id}/similarity-check`
+- **Summary**: Correlate finding against organizational history across 8 matching signals (`findings:ai_confidence` permission required).
+
+#### `GET /ai/finding-similarity/{finding_id}`
+- **Summary**: Retrieve existing similarity matches for a finding (`findings:read` permission required).
+
+#### `PATCH /ai/confidence-analysis/{id}/review`
+- **Summary**: Record SOC analyst review feedback and track AI confidence score calibration metadata (`findings:ai_confidence` permission required).
+
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol

@@ -445,6 +445,55 @@ CREATE TABLE ai_patch_suggestions (
 );
 CREATE INDEX idx_ai_patch_plan_lang ON ai_patch_suggestions(remediation_plan_id, language);
 
+-- AI Finding Confidence Analyses Master Table (Phase 5.5)
+CREATE TABLE ai_finding_confidence_analyses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    finding_id UUID NOT NULL REFERENCES security_findings(id) ON DELETE CASCADE,
+    classification VARCHAR(30) NOT NULL, -- 'TRUE_POSITIVE', 'FALSE_POSITIVE', 'NEEDS_REVIEW'
+    confidence_score DOUBLE PRECISION NOT NULL,
+    evidence_quality_score DOUBLE PRECISION NOT NULL,
+    reasoning TEXT NOT NULL,
+    supporting_evidence TEXT NOT NULL,
+    contradicting_evidence TEXT NOT NULL,
+    missing_information TEXT NOT NULL,
+    validation_requirements TEXT NOT NULL,
+    recommendation TEXT NOT NULL,
+    composite_risk_score DOUBLE PRECISION NOT NULL,
+    model_used VARCHAR(100) NOT NULL,
+    provider_used VARCHAR(50) NOT NULL,
+    prompt_version INT NOT NULL DEFAULT 1,
+    status VARCHAR(20) NOT NULL DEFAULT 'GENERATED', -- 'GENERATED', 'REVIEWED', 'ACCEPTED', 'REJECTED', 'STALE', 'FAILED'
+    review_notes TEXT,
+    reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    predicted_confidence_score DOUBLE PRECISION,
+    analyst_final_decision VARCHAR(30),
+    confidence_accuracy_delta DOUBLE PRECISION,
+    feedback_timestamp TIMESTAMP WITH TIME ZONE,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_ai_conf_org_finding ON ai_finding_confidence_analyses(organization_id, finding_id);
+CREATE INDEX idx_ai_conf_org_class ON ai_finding_confidence_analyses(organization_id, classification);
+CREATE INDEX idx_ai_conf_org_created ON ai_finding_confidence_analyses(organization_id, created_at);
+
+-- AI Finding Similarity Matches Detail Table (Phase 5.5)
+CREATE TABLE ai_finding_similarity_matches (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    confidence_analysis_id UUID REFERENCES ai_finding_confidence_analyses(id) ON DELETE CASCADE,
+    source_finding_id UUID NOT NULL REFERENCES security_findings(id) ON DELETE CASCADE,
+    matched_finding_id UUID NOT NULL REFERENCES security_findings(id) ON DELETE CASCADE,
+    similarity_score DOUBLE PRECISION NOT NULL,
+    similarity_reason TEXT NOT NULL,
+    matched_signals JSONB, -- ['CVE', 'CWE', 'ENDPOINT', 'ASSET_NODE', 'PLUGIN_ID', 'VULNERABILITY_TITLE', 'AFFECTED_COMPONENT', 'ATTACK_TECHNIQUE']
+    status VARCHAR(20) NOT NULL DEFAULT 'GENERATED',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_ai_sim_org_source ON ai_finding_similarity_matches(organization_id, source_finding_id);
+CREATE INDEX idx_ai_sim_score ON ai_finding_similarity_matches(similarity_score);
+
 -- Vector Embeddings for Knowledge Base & RAG
 CREATE TABLE security_embeddings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
