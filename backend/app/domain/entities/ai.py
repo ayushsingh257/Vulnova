@@ -1,4 +1,4 @@
-"""Pure Domain Entities & Enums for Multi-Provider LLM Gateway & Prompt Orchestrator."""
+"""Pure Domain Entities & Enums for Multi-Provider LLM Gateway, Prompt Orchestrator & AI Analysis Engine."""
 
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -31,6 +31,7 @@ class PromptCategory(str, Enum):
     """Categories of versioned security prompt templates."""
 
     FINDING_EXPLAINER = "FINDING_EXPLAINER"
+    IMPACT_ANALYSIS = "IMPACT_ANALYSIS"
     ATTACK_PATH_SYNTHESIS = "ATTACK_PATH_SYNTHESIS"
     REMEDIATION_PATCH = "REMEDIATION_PATCH"
     SYSTEM_PROMPT = "SYSTEM_PROMPT"
@@ -141,4 +142,58 @@ class PromptTemplate:
     user_prompt_template: str
     id: UUID = field(default_factory=uuid4)
     is_active: bool = True
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+class AIAnalysisStatus(str, Enum):
+    """Lifecycle status of an AI-generated analysis record."""
+
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    STALE = "STALE"
+
+
+@dataclass
+class AIFindingExplanation:
+    """Domain entity representing an AI-generated finding explanation with persistent identity."""
+
+    organization_id: UUID
+    finding_id: UUID
+    vulnerability_summary: str
+    technical_root_cause: str
+    affected_asset_context: str
+    exploitability_analysis: str
+    business_impact: str
+    attack_prerequisites: str
+    severity_reasoning: str
+    remediation_priority: str
+    model_used: str
+    provider_used: str
+    prompt_version: int = 1
+    id: UUID = field(default_factory=uuid4)
+    status: AIAnalysisStatus = AIAnalysisStatus.COMPLETED
+    error_message: Optional[str] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class AIImpactAnalysis:
+    """Domain entity representing an AI-generated impact analysis report with persistent identity."""
+
+    organization_id: UUID
+    finding_id: UUID
+    technical_impact_summary: str
+    executive_impact_summary: str
+    risk_justification: str
+    affected_business_components: str
+    cvss_interpretation: str
+    epss_context: str
+    exposure_assessment: str
+    evidence_correlation: str
+    model_used: str
+    provider_used: str
+    prompt_version: int = 1
+    id: UUID = field(default_factory=uuid4)
+    status: AIAnalysisStatus = AIAnalysisStatus.COMPLETED
+    error_message: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.utcnow)

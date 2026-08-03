@@ -1,3 +1,6 @@
+from app.infrastructure.database.repositories.ai_analysis_repository import (
+    AIAnalysisRepository,
+)
 from app.infrastructure.database.repositories.api_key_repository import (
     APIKeyRepository,
 )
@@ -14,4 +17,5 @@ __all__ = [
     "UserRepository",
     "RefreshTokenRepository",
     "APIKeyRepository",
+    "AIAnalysisRepository",
 ]

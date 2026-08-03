@@ -1,8 +1,8 @@
-"""FastAPI Router for Multi-Provider LLM Gateway & Prompt Orchestrator (/api/v1/ai/*)."""
+"""FastAPI Router for Multi-Provider LLM Gateway, Prompt Orchestrator & AI Analysis Engine (/api/v1/ai/*)."""
 
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Path, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies.api_key import get_current_user_or_api_key
@@ -10,14 +10,20 @@ from app.api.v1.dependencies.rbac import require_permission
 from app.application.ai.dto import (
     AIChatCompletionRequest,
     AIChatCompletionResponse,
+    AIFindingExplanationDTO,
+    AIImpactAnalysisDTO,
     AIUsageSummaryDTO,
     CreatePromptTemplateRequest,
     CreateProviderRequest,
+    GenerateExplanationRequest,
+    GenerateImpactAnalysisRequest,
     LLMModelDTO,
     LLMProviderConfigDTO,
     PromptTemplateDTO,
     RegisterModelRequest,
 )
+from app.application.ai.explainer_service import AIFindingExplainerService
+from app.application.ai.impact_analysis_service import ImpactAnalysisService
 from app.application.ai.llm_gateway_service import LLMGatewayService
 from app.application.ai.prompt_orchestrator_service import PromptOrchestratorService
 from app.infrastructure.database.models.user import UserModel
@@ -174,3 +180,158 @@ async def get_token_usage_summary(
     """
     service = LLMGatewayService(session)
     return await service.get_token_usage_summary(current_user)
+
+
+# ── Phase 5.2: AI Finding Explainer & Impact Analysis Endpoints ──
+
+
+@router.post(
+    "/findings/{finding_id}/explain",
+    response_model=AIFindingExplanationDTO,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("findings:ai_explain"))],
+)
+async def generate_finding_explanation(
+    finding_id: str = Path(..., description="UUID of the security finding to explain"),
+    req: Optional[GenerateExplanationRequest] = None,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AIFindingExplanationDTO:
+    """Generate an AI-powered explanation for a security finding.
+
+    Requires authentication and 'findings:ai_explain' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIFindingExplainerService(session)
+    return await service.generate_explanation(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+        actor_user_id=current_user.id,
+        model_alias=req.model_alias if req else None,
+        temperature=req.temperature if req else 0.2,
+    )
+
+
+@router.get(
+    "/findings/{finding_id}/explanation",
+    response_model=Optional[AIFindingExplanationDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def get_finding_explanation(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> Optional[AIFindingExplanationDTO]:
+    """Retrieve the most recent AI explanation for a finding.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIFindingExplainerService(session)
+    return await service.get_explanation(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+    )
+
+
+@router.post(
+    "/findings/{finding_id}/impact",
+    response_model=AIImpactAnalysisDTO,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("findings:ai_explain"))],
+)
+async def generate_impact_analysis(
+    finding_id: str = Path(..., description="UUID of the security finding to analyze"),
+    req: Optional[GenerateImpactAnalysisRequest] = None,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AIImpactAnalysisDTO:
+    """Generate an AI-powered impact analysis for a security finding.
+
+    Requires authentication and 'findings:ai_explain' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    service = ImpactAnalysisService(session)
+    return await service.generate_impact_analysis(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+        actor_user_id=current_user.id,
+        model_alias=req.model_alias if req else None,
+        temperature=req.temperature if req else 0.2,
+    )
+
+
+@router.get(
+    "/findings/{finding_id}/impact",
+    response_model=Optional[AIImpactAnalysisDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def get_impact_analysis(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> Optional[AIImpactAnalysisDTO]:
+    """Retrieve the most recent AI impact analysis for a finding.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    service = ImpactAnalysisService(session)
+    return await service.get_impact_analysis(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+    )
+
+
+@router.get(
+    "/explanations",
+    response_model=List[AIFindingExplanationDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def list_explanations(
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> List[AIFindingExplanationDTO]:
+    """List AI explanation history for organization.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    service = AIFindingExplainerService(session)
+    return await service.list_explanations(
+        organization_id=current_user.organization_id,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.get(
+    "/impact-analyses",
+    response_model=List[AIImpactAnalysisDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def list_impact_analyses(
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> List[AIImpactAnalysisDTO]:
+    """List AI impact analysis history for organization.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    service = ImpactAnalysisService(session)
+    return await service.list_impact_analyses(
+        organization_id=current_user.organization_id,
+        limit=limit,
+        offset=offset,
+    )

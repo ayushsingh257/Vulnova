@@ -1,4 +1,4 @@
-"""Pydantic v2 DTO Schemas for Multi-Provider LLM Gateway & Prompt Orchestrator."""
+"""Pydantic v2 DTO Schemas for Multi-Provider LLM Gateway, Prompt Orchestrator & AI Analysis Engine."""
 
 from typing import List, Optional
 
@@ -137,4 +137,63 @@ class LLMRequestLogDTO(BaseModel):
     cost_usd: float
     status: str
     error_message: Optional[str] = None
+    created_at: str
+
+
+# ── Phase 5.2: AI Finding Explainer & Impact Analysis DTOs ──
+
+
+class GenerateExplanationRequest(BaseModel):
+    """Request model for generating an AI finding explanation."""
+
+    finding_id: str
+    model_alias: Optional[str] = None
+    temperature: float = 0.2
+
+
+class AIFindingExplanationDTO(BaseModel):
+    """DTO representing a generated AI finding explanation."""
+
+    id: str
+    finding_id: str
+    vulnerability_summary: str
+    technical_root_cause: str
+    affected_asset_context: str
+    exploitability_analysis: str
+    business_impact: str
+    attack_prerequisites: str
+    severity_reasoning: str
+    remediation_priority: str
+    model_used: str
+    provider_used: str
+    prompt_version: int
+    status: str
+    created_at: str
+
+
+class GenerateImpactAnalysisRequest(BaseModel):
+    """Request model for generating an AI impact analysis."""
+
+    finding_id: str
+    model_alias: Optional[str] = None
+    temperature: float = 0.2
+
+
+class AIImpactAnalysisDTO(BaseModel):
+    """DTO representing a generated AI impact analysis report."""
+
+    id: str
+    finding_id: str
+    technical_impact_summary: str
+    executive_impact_summary: str
+    risk_justification: str
+    affected_business_components: str
+    cvss_interpretation: str
+    epss_context: str
+    exposure_assessment: str
+    evidence_correlation: str
+    model_used: str
+    provider_used: str
+    prompt_version: int
+    status: str
     created_at: str
