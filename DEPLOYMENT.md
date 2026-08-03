@@ -103,3 +103,11 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 - Horizontal Pod Autoscaler (HPA) for Celery assessment workers based on queue length.
 - Dedicated StatefulSets for PostgreSQL & Redis with persistent volume claims (PVC).
 - PersistentVolumeClaim (PVC) for multi-modal evidence store (`evidence_data` mount or S3/MinIO cloud object storage).
+
+---
+
+## ⚡ 4. Distributed Worker Sandbox Policy Compatibility (Era 6 Future Readiness)
+
+- **Stateless Execution Policy Reuse**: The `ScanPolicyEngine` (`app/application/assessment/policy_engine.py`) introduced in Phase 4.7 operates statelessly without dependencies on web framework routers or database connections.
+- **Worker Sandbox Integration**: In future Era 6 distributed worker deployments, Celery worker nodes running in unprivileged sandbox pods will directly consume `ScanPolicyEngine` to enforce URL scope matching, concurrency throttling, header/cookie injection, and emergency `stop_on_critical` scan termination.
+- **Zero Deployment Infrastructure Overhead**: No additional deployment topology changes or new services are required currently.

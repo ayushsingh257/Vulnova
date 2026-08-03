@@ -70,30 +70,74 @@ All API errors return a standardized JSON error format:
 
 ---
 
-### C. Scan Execution & Target Authorization (`/scans`)
+### C. Assessment Execution & Profile Management (`/assessments`)
 
-#### `POST /scans`
-- **Summary**: Dispatch new security scan job with mandatory legal target authorization confirmation.
+#### `GET /api/v1/assessments/profiles`
+- **Summary**: List all available enterprise scan profiles and default execution policies.
+- **RBAC Guard**: Requires authentication (`get_current_user_or_api_key`) and `scans:read` permission.
+- **Response (200 OK)**:
+  ```json
+  [
+    {
+      "id": "web_scan",
+      "name": "Web Vulnerability Scan",
+      "description": "Web application assessment (SQLi, XSS, Headers, Auth Cookies).",
+      "plugin_ids": ["sql_injection_plugin", "xss_plugin", "security_headers_plugin", "auth_security_plugin"],
+      "default_policy": {
+        "concurrency_limit": 5,
+        "rate_limit_rps": 10,
+        "respect_robots_txt": true,
+        "scope_include_patterns": [],
+        "scope_exclude_patterns": [],
+        "max_crawl_depth": 3,
+        "max_requests": 500,
+        "timeout_seconds": 30.0,
+        "stop_on_critical": false
+      }
+    }
+  ]
+  ```
+
+#### `POST /api/v1/assessments`
+- **Summary**: Dispatch dynamic vulnerability assessment scan with scan profile selection and execution policy overrides.
+- **RBAC Guard**: Requires authentication (`get_current_user_or_api_key`) and `scans:trigger` permission.
 - **Request Body**:
   ```json
   {
-    "target_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "profile_id": "8f12a34b-9876-4321-a1b2-c3d4e5f67890",
-    "enable_ai_analysis": true,
-    "authorization_declaration": {
-      "confirmed_ownership_or_permission": true,
-      "declaration_text": "I confirm that I own this asset or have explicit permission to perform security testing.",
-      "accepted_scope_boundary": "https://api.shop.enterprise.com/*"
+    "target_url": "https://api.shop.enterprise.com",
+    "profile_id": "web_scan",
+    "plugins": ["sql_injection_plugin", "xss_plugin"],
+    "policy_override": {
+      "concurrency_limit": 10,
+      "rate_limit_rps": 20,
+      "stop_on_critical": true
     }
   }
   ```
-- **Response (202 Accepted)**:
+- **Response (201 Created)**:
   ```json
   {
-    "scan_job_id": "c73bcd8f-0e42-4f32-8419-756c66d214a1",
-    "status": "QUEUED",
-    "authorization_declaration_hash": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
-    "estimated_duration_seconds": 300
+    "id": "c73bcd8f-0e42-4f32-8419-756c66d214a1",
+    "target_url": "https://api.shop.enterprise.com",
+    "status": "COMPLETED",
+    "profile_id": "web_scan",
+    "enabled_plugins": ["sql_injection_plugin", "xss_plugin"],
+    "policy": {
+      "concurrency_limit": 10,
+      "rate_limit_rps": 20,
+      "respect_robots_txt": true,
+      "scope_include_patterns": [],
+      "scope_exclude_patterns": [],
+      "max_crawl_depth": 3,
+      "max_requests": 500,
+      "timeout_seconds": 30.0,
+      "stop_on_critical": true
+    },
+    "total_findings": 2,
+    "findings": [],
+    "duration_seconds": 4.12,
+    "error_message": null,
+    "created_at": "2026-08-03T00:00:00Z"
   }
   ```
 

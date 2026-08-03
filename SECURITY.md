@@ -35,11 +35,15 @@ Every target setup and scan creation request requires an explicit user confirmat
 
 ### B. Verification & Scope Enforcement
 1. **Domain Ownership Verification**: Targets can require DNS TXT record or file upload verification prior to launching `FULL_SECURITY_ASSESSMENT` scans.
-2. **Scope Boundaries**: Out-of-scope subdomains, paths, and URLs are strictly filtered out by the orchestrator prior to passing targets to scanner workers.
-3. **Immutable Audit Logging**: Every scan authorization confirmation records:
+2. **Scope Boundary Restrictions**: Out-of-scope subdomains, paths, and URLs are strictly filtered by `ScanPolicyEngine.is_url_in_scope()` using fnmatch wildcard include/exclude pattern matching before executing active probes.
+3. **Execution Rate & Concurrency Throttling**: `ScanPolicyEngine` validates and clamps request concurrency (max 20 workers) and rate limits (max 50 requests/sec) to prevent Denial of Service (DoS) against target infrastructure.
+4. **Credential Injection Protection**: Auth headers (`Authorization: Bearer <token>`) and session cookies are injected safely via `enrich_request_headers` and `enrich_request_cookies`, ensuring secrets are masked before logging or evidence storage.
+5. **Emergency Stop Controls**: Scans configured with `stop_on_critical: true` automatically terminate plugin execution immediately upon discovering a `CRITICAL` severity finding to prevent cascading impact.
+6. **Immutable Audit Logging**: Every scan execution logs structured audit events capturing:
    - `user_id` & `organization_id`
+   - Target URL, `profile_id`, and `enabled_plugins` list
    - Target URL & confirmed scope rules
-   - User IP address, timestamp (UTC ISO 8601), and authorization declaration text hash.
+   - User IP address, timestamp (UTC ISO 8601), and error logs.
 
 ---
 

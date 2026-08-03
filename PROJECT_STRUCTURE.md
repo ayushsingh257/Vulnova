@@ -55,11 +55,13 @@ Vulnova/
 │   │   │   ├── dependencies/        # FastAPI Auth & RBAC dependency injectors
 │   │   │   └── schemas/             # Pydantic v2 request/response models
 │   │   ├── application/             # Use Cases & Application Service Coordinators
-│   │   │   ├── assessment/          # AssessmentService, RiskIntelligenceEngine, FindingDeduplicator, DTOs
+│   │   │   ├── assessment/          # AssessmentService, ScanProfileRegistry, ScanPolicyEngine, RiskIntelligenceEngine, FindingDeduplicator, DTOs
+│   │   │   │   ├── scan_profiles.py # Enterprise Scan Profile Registry (10 predefined profiles)
+│   │   │   │   └── policy_engine.py # Stateless Execution Policy Engine (rate limiting, concurrency, scope, auth, stop-on-critical)
 │   │   │   ├── use_cases/           # Scan launch, finding triage, report generation workflows
 │   │   │   └── services/            # Domain service orchestrators
 │   │   ├── domain/                  # Pure Business Logic (No external framework dependencies)
-│   │   │   ├── entities/            # User, Organization, Target, Finding, CVSS, EPSS, Evidence entities
+│   │   │   ├── entities/            # User, Organization, Target, Finding, CVSS, EPSS, Evidence, ScanProfile, ScanPolicy entities
 │   │   │   ├── value_objects/       # CVSSScore, TargetURL, SeverityLabel value objects
 │   │   │   └── ports/               # Abstract Interfaces (ScannerPort, AIProviderPort, EventBusPort)
 │   │   ├── infrastructure/          # Adapters & External System Implementations
@@ -74,7 +76,7 @@ Vulnova/
 │   │   └── workers/                 # Celery background worker task entrypoints
 │   ├── migrations/                  # Alembic database migration scripts
 │   ├── scripts/                     # Local seed scripts & DB maintenance utilities
-│   └── tests/                       # Pytest unit, integration, and security test suite (148 passed)
+│   └── tests/                       # Pytest unit, integration, and security test suite (155 passed)
 │
 ├── plugins/                         # Modular Security Assessment Plugins
 │   ├── sqli_assessment/             # SQL Injection Plugin (plugin.yaml, plugin.py, payloads.json)

@@ -455,15 +455,26 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Findings contain rich visual screenshots, raw HTTP request/response payloads, and DOM snapshots; evidence artifacts persisted securely; pytest (148 passed), Ruff, Black, Mypy (strict) pass cleanly; GitHub Actions ci.yml and security.yml green (`bc8ddea8`, `6dcf652b`).
 - **Testing Requirements**: Screenshot capture unit tests, HTTP Exchange dump tests, evidence storage security verification.
 
-### Phase 4.7: Enterprise Scan Profile & Execution Policy Engine
+### ✅ Phase 4.7: Enterprise Scan Profile & Execution Policy Engine
 - **Objective**: Create pre-configured enterprise scan profiles (Quick Scan, Web Scan, API Scan, Infrastructure Scan, OWASP Top 10, OWASP API Top 10, Full Assessment, Authenticated Scan, Passive Scan, Custom Scan) and a centralized execution policy engine enforcing rate limits, concurrency caps, scope boundaries, authentication injection, and safety controls.
 - **Deliverables**:
-  - `ScanProfileRegistry` (`app/application/assessment/scan_profiles.py`) mapping enterprise profiles to required plugin subsets and discovery depth.
-  - `ScanPolicyEngine` (`app/infrastructure/assessment/policy_engine.py`) enforcing rate limits, `robots.txt` compliance, max requests, include/exclude path rules, and emergency stop on critical findings.
-  - DTOs and API endpoints for profile selection and custom policy configuration.
+  - Enterprise Scan Profile Registry (`app/application/assessment/scan_profiles.py`) managing 10 predefined enterprise scan profiles.
+  - `PluginRegistry` integration as single source of truth for plugin availability and capability verification.
+  - Stateless `ScanPolicyEngine` (`app/application/assessment/policy_engine.py`) enforcing rate limiting (RPS), concurrency controls, `robots.txt` compliance, include/exclude scope rules, auth header/cookie injection, and `stop_on_critical` emergency scan termination.
+  - `AssessmentJob` profile persistence (`profile_id`) and policy JSON persistence (`policy_json`) in database layer (`app/infrastructure/database/models/assessment.py` & `repositories/assessment_repository.py`).
+  - DTO extensions (`ScanPolicyDTO`, `ScanProfileDTO`, `profile_id`, `policy_override`) and `GET /api/v1/assessments/profiles` REST API endpoint.
+  - Unit & Integration test suite (`tests/test_scan_profiles_policy.py`) — 7 tests covering profile resolution, policy validation, scope pattern matching, auth enrichment, stop-on-critical triggers, endpoint listing, and service integration.
+- **Implementation Details**:
+  - **Feature Commit**: `ba93cf3d`
+  - **Documentation Commit**: `9167387d`
+  - **Quality Verification**:
+    - **Black**: Passed
+    - **Ruff**: 0 errors
+    - **Mypy**: 115 source files passed (strict mode)
+    - **Pytest**: 155/155 passed
 - **Dependencies**: Phase 4.5 & Phase 4.6.
-- **Completion Criteria**: Users can select pre-built enterprise scan profiles or configure custom execution policies; rate limits and scope boundaries strictly enforced.
-- **Testing Requirements**: Scan profile plugin resolution tests, policy rate limiting unit tests, scope exclusion enforcement tests.
+- **Completion Criteria**: Pre-built enterprise scan profiles and custom execution policies operational; rate limits, concurrency, and scope boundaries strictly enforced; pytest (155 passed), Ruff, Black, Mypy (strict) pass cleanly (`ba93cf3d`, `9167387d`).
+- **Testing Requirements**: Scan profile plugin resolution tests, policy rate limiting unit tests, scope exclusion enforcement tests, auth enrichment tests, stop-on-critical emergency termination tests.
 
 ### Phase 4.8: Multi-Source Finding Correlation & Asset Inventory Engine
 - **Objective**: Correlate crawler endpoints, SPA rendered DOM nodes, DNS intelligence, technology stack fingerprints, Asset Graph topology, and 10 production security assessment plugins into a unified, normalized enterprise asset and vulnerability intelligence model.

@@ -69,12 +69,16 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
 - **Client Context Extraction**: Captures `client_ip` (supporting `X-Forwarded-For` proxy headers) and `user_agent` strings.
 - **Fail-Safe Audit Logging**: Async audit recording designed to log high-priority warnings without disrupting primary business transactions.
 
-### 🔍 Security Assessment & Evidence Intelligence Engine
-- **10 Production Assessment Plugins**: High-concurrency security plugins covering Web (SQLi, XSS, Security Headers, Cookie Auth Security), API (Exposed Docs, JWT Signatures & Claims, CORS Policies), and Infrastructure/Cloud (Open Administrative Ports, TLS/SSL Certs & Protocols, S3/Azure/GCP & IMDS Exposure).
-- **Risk Intelligence Engine**: CVSS v3.1/v4 vector parsing, EPSS (Exploit Prediction Scoring System) probability mapping, asset criticality multipliers (1.5x, 1.2x, 1.0x, 0.8x), normalized 0.0–100.0 risk scoring, and SLA assignment (24h Critical, 72h High, 14d Medium, 30d Low).
-- **Finding Deduplication**: SHA-256 signature hashing (`organization_id`, `plugin_id`, `cwe_id`, `target_endpoint`, `parameter_name`) merging duplicate finding instances into primary canonical findings.
+### 🔍 Enterprise Assessment Intelligence & Policy Engine
+- **10 Production Security Assessment Plugins**: High-concurrency security plugins covering Web (SQLi, XSS, Security Headers, Cookie Auth Security), API (Exposed Docs, JWT Signatures & Claims, CORS Policies), and Infrastructure/Cloud (Open Administrative Ports, TLS/SSL Certs & Protocols, S3/Azure/GCP & IMDS Exposure).
+- **CVSS v3.1/v4 Risk Intelligence Engine**: CVSS vector parsing, EPSS (Exploit Prediction Scoring System) probability mapping, asset criticality multipliers (1.5x, 1.2x, 1.0x, 0.8x), normalized 0.0–100.0 risk scoring, and SLA assignment (24h Critical, 72h High, 14d Medium, 30d Low).
+- **Finding Deduplication Engine**: SHA-256 signature hashing (`organization_id`, `plugin_id`, `cwe_id`, `target_endpoint`, `parameter_name`) merging duplicate finding instances into primary canonical findings.
 - **Multi-Modal Evidence Collection Engine**: Captures reproducible proof including masked HTTP request/response dumps, header/cookie profiles, Playwright HTML DOM snapshots, and visual PNG screenshots.
 - **Provider-Independent Evidence Storage**: Async `EvidenceArtifactStorage` with SHA-256 content checksum verification and tenant-isolated storage paths.
+- **Enterprise Scan Profile Engine**: 10 pre-configured profiles (`Quick Scan`, `Web Scan`, `API Scan`, `Infrastructure Scan`, `OWASP Top 10`, `OWASP API Top 10`, `Full Assessment`, `Authenticated Scan`, `Passive Scan`, `Custom Scan`) resolving plugin execution subsets via `PluginRegistry`.
+- **Policy-Controlled Assessment Execution**: Centralized `ScanPolicyEngine` enforcing concurrency limits, RPS rate limits, `robots.txt` compliance, wildcard scope include/exclude rules, custom auth header/cookie injection, and emergency `stop_on_critical` termination triggers.
+- **Authenticated Scan Support & Custom Scan Policies**: Per-scan overrides for authentication headers, session cookies, rate limits, and custom scope boundaries.
+- **Scope-Controlled Security Assessments**: Wildcard fnmatch target path matching ensuring scans strictly adhere to legal boundaries without unintended egress.
 
 ---
 

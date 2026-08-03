@@ -102,3 +102,13 @@ All logs are emitted using `structlog` as formatted JSON:
 1. **Storage Provider Independence**: Evidence files (HTTP text dumps, HTML DOM snapshots, PNG screenshots) must be stored via `EvidenceArtifactStorage` interface abstraction supporting local storage (`uploads/evidence/<org_id>/<finding_id>/`) and future S3/MinIO cloud providers.
 2. **Sensitive Data Sanitization**: Prior to persisting HTTP exchanges, headers, or cookies, all sensitive credentials (`Authorization` headers, `Cookie`/`Set-Cookie` directives, session IDs, JWT tokens, API keys) MUST be sanitized via `mask_sensitive_headers` and `mask_sensitive_cookies`.
 3. **Integrity Verification**: Every evidence artifact MUST generate a SHA-256 checksum calculated over byte content upon save.
+
+---
+
+## 🎯 6. Scan Profile & Execution Policy Architecture
+
+1. **ScanProfileRegistry Responsibilities**: `ScanProfileRegistry` (`app/application/assessment/scan_profiles.py`) manages 10 pre-configured enterprise scan profiles (`quick_scan`, `web_scan`, `api_scan`, `infrastructure_scan`, `owasp_top_10`, `owasp_api_top_10`, `full_assessment`, `authenticated_scan`, `passive_scan`, `custom_scan`) mapping profiles to required plugin ID subsets.
+2. **PluginRegistry as Source of Truth**: `ScanProfileRegistry` MUST NOT duplicate plugin metadata, descriptions, or implementation logic. Plugin availability and capabilities are strictly validated against `PluginRegistry.list_plugins()`.
+3. **ScanPolicyEngine Separation**: Execution policy enforcement is encapsulated in a dedicated `ScanPolicyEngine` (`app/application/assessment/policy_engine.py`) rather than tightly coupled inside `AssessmentService`.
+4. **Stateless Policy Evaluation**: Policy methods (`validate_policy`, `is_url_in_scope`, `enrich_request_headers`, `enrich_request_cookies`, `should_stop_on_critical`) operate statelessly on `ScanPolicy` objects without side effects.
+5. **Future Distributed Worker Compatibility**: `ScanPolicyEngine` has zero dependencies on web framework routers or database sessions, ensuring full compatibility for reuse inside Era 6 distributed Celery worker sandboxes.

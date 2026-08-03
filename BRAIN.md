@@ -254,3 +254,10 @@ The following discovery engine architecture decisions were finalized during Phas
 12. **Cloud Bucket & IMDS Exposure Auditing**: `CloudSecurityPlugin` detects public cloud storage bucket listing permissions (AWS S3, Azure Blob, GCP) and flags references to Cloud Metadata Service (169.254.169.254).
 13. **Enterprise Platform Architectural Shift**: Vulnova has transitioned from a vulnerability plugin execution framework into an Enterprise Application Security Intelligence Platform. Future development prioritizes normalization, correlation, evidence, continuous monitoring, and AI-driven analysis over isolated vulnerability checks.
 14. **Multi-Modal Evidence Capture & Proof Pipeline**: `EvidenceCollectionEngine` captures reproducible proof (masked HTTP request/response text dumps, header/cookie profiles, Playwright DOM snapshots, visual PNG screenshots) after finding normalization. Evidence artifacts are integrity-verified via SHA-256 checksums and saved to tenant-isolated storage paths (`EvidenceArtifactStorage`).
+15. **Enterprise Scan Profile & Execution Policy Architecture**: Vulnova assessments are no longer directly plugin-triggered. The pipeline operates via profile resolution and policy validation:
+    ```
+    User Request ──► Scan Profile Resolution ──► Policy Validation ──► Plugin Execution ──► Risk Intelligence ──► Finding Deduplication ──► Evidence Collection ──► Assessment Storage
+    ```
+    - `ScanProfileRegistry` references `PluginRegistry` IDs only and does not duplicate plugin metadata or implementation logic.
+    - `PluginRegistry` remains the single source of truth for plugin availability and capability verification.
+    - `ScanPolicyEngine` is a stateless helper class independent of FastAPI/HTTP layers, ensuring full compatibility for reuse inside future Era 6 distributed Celery worker sandboxes.

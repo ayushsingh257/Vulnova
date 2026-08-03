@@ -95,20 +95,22 @@ CREATE TABLE scan_targets (
 );
 CREATE INDEX idx_scan_targets_org ON scan_targets(organization_id);
 
--- Scan Jobs
-CREATE TABLE scan_jobs (
+-- Assessment Jobs (Phase 4.1 & Phase 4.7 Enterprise Policy Engine)
+CREATE TABLE assessment_jobs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    target_id UUID NOT NULL REFERENCES scan_targets(id) ON DELETE CASCADE,
-    profile_id UUID REFERENCES scan_profiles(id),
-    status VARCHAR(50) NOT NULL DEFAULT 'QUEUED',
-    authorization_declaration_hash VARCHAR(255) NOT NULL,
-    progress_percentage INT DEFAULT 0,
-    started_at TIMESTAMP WITH TIME ZONE,
-    completed_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    target_url TEXT NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING', -- 'PENDING', 'RUNNING', 'COMPLETED', 'FAILED'
+    profile_id VARCHAR(100) DEFAULT 'full_assessment', -- Stores selected enterprise scan profile (e.g. 'web_scan', 'api_scan')
+    policy_json JSONB, -- Stores execution policy configuration (concurrency, RPS rate limit, scope globs, auth, stop_on_critical)
+    enabled_plugins_json JSONB,
+    duration_seconds NUMERIC(10, 2),
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX idx_scan_jobs_org_status ON scan_jobs(organization_id, status);
+CREATE INDEX idx_assessment_jobs_org_status ON assessment_jobs(organization_id, status);
+CREATE INDEX idx_assessment_jobs_org_profile ON assessment_jobs(organization_id, profile_id);
 
 -- Security Findings (Normalized & Evidence Enriched - Phase 4.5 & 4.6)
 CREATE TABLE security_findings (
