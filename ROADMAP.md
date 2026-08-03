@@ -595,14 +595,27 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: AI finding explainer, impact analysis engine, structured output JSON repair recovery, and RBAC authorization operational; pytest (192 passed), Ruff, Black, Mypy (strict) pass cleanly (`9fce9b2d`).
 - **Testing Requirements**: Explanation generation unit tests, impact analysis prompt validation tests, retry-once JSON repair recovery tests, tenant boundary isolation tests.
 
-### Phase 5.3: Automated Attack Path & Kill Chain Visualization Engine
-- **Objective**: Synthesize discovered vulnerabilities, technology stack fingerprints, and Asset Graph relationship edges to construct multi-step attack scenarios, MITRE ATT&CK kill chain progressions, privilege escalation paths, and lateral movement vectors.
+### ✅ Phase 5.3: AI Attack Path Synthesis Engine
+- **Objective**: Synthesize discovered vulnerabilities, evidence artifacts, asset topology graph edges, and triage state to construct multi-step evidence-grounded attack scenarios, MITRE ATT&CK technique progressions, privilege escalation paths, and lateral movement vectors with path-level confidence scoring and analyst review feedback loops.
 - **Deliverables**:
-  - `AttackPathSynthesizer` (`app/application/ai/attack_path_service.py`) evaluating graph edges and findings to build structured attack trees.
-  - Attack path DTOs and Mermaid/JSON visualization renderers.
-- **Dependencies**: Phase 5.2, Phase 3.5.
-- **Completion Criteria**: Generates structured, multi-step attack chains and kill chain visual representations from asset graph topology.
-- **Testing Requirements**: Attack tree synthesis unit tests, kill chain mapping verification.
+  - Domain entities (`app/domain/entities/ai.py`): `AttackPath`, `AttackPathStep`, `AttackPathStatus` (`GENERATED`, `REVIEWED`, `ACCEPTED`, `REJECTED`, `STALE`, `FAILED`), `AttackStepType` (`INITIAL_ACCESS`, `EXECUTION`, `PRIVILEGE_ESCALATION`, `CREDENTIAL_ACCESS`, `LATERAL_MOVEMENT`, `IMPACT`), and `KNOWN_MITRE_TECHNIQUES` validation registry.
+  - Database ORM models (`app/infrastructure/database/models/ai_attack_path.py`): `AIAttackPathModel` (`ai_attack_paths` table) and `AIAttackPathStepModel` (`ai_attack_path_steps` table) implementing Option A normalized relational design with path-level `confidence_score` and SOC analyst review metadata (`review_notes`, `reviewed_by`, `reviewed_at`).
+  - `AIAttackPathRepository` (`app/infrastructure/database/repositories/ai_attack_path_repository.py`): Multi-tenant isolated queries for attack path persistence, child step eager loading, and analyst review status tracking.
+  - `AIAttackPathService` (`app/application/ai/attack_path_service.py`): Evidence-grounded attack path synthesizer enforcing MITRE ATT&CK technique validation against registry, computing overall path confidence scores, masking sensitive secrets via `mask_sensitive_prompt_context`, and executing retry-once JSON repair recovery.
+  - Pydantic v2 DTO schemas (`app/application/ai/dto.py`): `GenerateAttackPathRequest`, `ReviewAttackPathRequest`, `AttackPathStepDTO`, `AIAttackPathDTO`.
+  - REST API router endpoints (`app/api/v1/routers/ai.py`): `POST /api/v1/ai/findings/{id}/attack-paths`, `GET /api/v1/ai/findings/{id}/attack-paths`, `GET /api/v1/ai/attack-paths/{id}`, `GET /api/v1/ai/attack-paths`, `PATCH /api/v1/ai/attack-paths/{id}/review`.
+  - Configured `"findings:ai_attack_path": Role.SECURITY_ANALYST` in `PERMISSION_MAP` (`app/domain/entities/role.py`) to guard synthesis and review endpoints.
+  - Unit & Integration test suite (`tests/test_attack_path_synthesis.py`) — 8 test functions (16 test cases across pytest-anyio runners) covering attack path generation, step mapping, MITRE ATT&CK technique validation, graph topology context, sensitive data masking, tenant boundary isolation, retry-once JSON repair recovery, and analyst review status tracking.
+- **Implementation Details**:
+  - **Feature Commit**: `7289be1e`
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 149 source files passed (strict mode)
+    - **Pytest**: **208/208 passed**
+- **Dependencies**: Phase 5.2, Phase 3.5, Phase 4.5.
+- **Completion Criteria**: AI attack path engine, MITRE ATT&CK validation, path confidence scoring, analyst feedback review, and RBAC authorization operational; pytest (208 passed), Ruff, Black, Mypy (strict) pass cleanly (`7289be1e`).
+- **Testing Requirements**: Attack path synthesis unit tests, MITRE technique validation tests, path confidence tests, tenant boundary isolation tests.
 
 ### Phase 5.4: Contextual AI Remediation & Fix Generator Engine
 - **Objective**: Generate precise, production-ready code patches, framework configuration fixes (Nginx, Apache, FastAPI, Express, Django), and Infrastructure-as-Code (Terraform, Docker) snippets addressing the root causes of findings.

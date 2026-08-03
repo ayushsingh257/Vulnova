@@ -109,6 +109,12 @@ Every target setup and scan creation request requires an explicit user confirmat
 - **Sensitive Data Masking**: All evidence dumps and finding descriptions pass through `mask_sensitive_prompt_context` before being rendered into prompt payloads.
 - **Tenant Isolation & Audit Trail**: Explanations (`ai_finding_explanations`) and impact reports (`ai_impact_analyses`) enforce mandatory `organization_id` foreign keys and query filters, with generation events recorded via `AuditLogService.record_event` (`finding.ai_explained`, `finding.impact_analyzed`).
 
+### AI Attack Path Synthesis Security Controls (Phase 5.3)
+- **Granular RBAC Authorization**: Generating AI attack paths or recording analyst review feedback requires `findings:ai_attack_path` permission (`SECURITY_ANALYST` role level 20+), while reading attack paths requires `findings:read` (`VIEWER` role level 10+).
+- **Evidence Grounding Safeguard**: Attack context built by `AIAttackPathService` strictly restricts LLM output to verified asset nodes, graph relationships, and evidence artifacts. LLM system prompts strictly forbid hallucinating non-existent assets or vulnerabilities.
+- **MITRE ATT&CK Registry Validation**: Every step technique ID is validated against `KNOWN_MITRE_TECHNIQUES`. Unverified or non-standard technique IDs are flagged as `Unverified` to prevent malicious or hallucinated framework data.
+- **Analyst Review Feedback Non-Repudiation**: Analyst status reviews (`ACCEPTED`, `REJECTED`, `REVIEWED`) record reviewer identity (`reviewed_by`), notes (`review_notes`), and timestamps (`reviewed_at`) in `ai_attack_paths` and log audit events (`ai_attack_path.reviewed`).
+
 ---
 
 ## 🌐 7. Secure HTTP Headers & Browser Protections

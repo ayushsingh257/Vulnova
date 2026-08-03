@@ -438,6 +438,54 @@ All API errors return a standardized JSON error format:
 #### `GET /ai/findings/{finding_id}/impact`
 - **Summary**: Retrieve latest AI impact analysis report (`findings:read` permission required).
 
+#### `POST /ai/findings/{finding_id}/attack-paths`
+- **Summary**: Synthesize AI attack path graph (`findings:ai_attack_path` permission required).
+- **Response (201 Created)**:
+  ```json
+  {
+    "id": "path_uuid",
+    "root_finding_id": "finding_uuid",
+    "source_asset_id": "asset_uuid",
+    "target_asset_id": "asset_uuid",
+    "title": "SQL Injection to Database Takeover",
+    "attack_summary": "Attacker leverages unescaped SQL parameter to extract admin hashes and escalate privileges.",
+    "composite_risk_score": 88.5,
+    "confidence_score": 0.92,
+    "model_used": "gpt-4o",
+    "provider_used": "OPENAI",
+    "prompt_version": 1,
+    "status": "GENERATED",
+    "steps": [
+      {
+        "id": "step_uuid",
+        "sequence_number": 1,
+        "step_type": "INITIAL_ACCESS",
+        "title": "Exploit SQL Injection",
+        "description": "Send crafted SQL payload to admin search form.",
+        "mitre_tactic": "Initial Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit Public-Facing Application",
+        "attacker_action": "POST /search with payload",
+        "required_privilege": "Unauthenticated",
+        "confidence_score": 0.95
+      }
+    ],
+    "created_at": "2026-08-03T12:00:00Z"
+  }
+  ```
+
+#### `GET /ai/findings/{finding_id}/attack-paths`
+- **Summary**: Retrieve all synthesized attack paths for a specific finding (`findings:read` permission required).
+
+#### `GET /ai/attack-paths/{id}`
+- **Summary**: Retrieve single attack path by ID with all steps (`findings:read` permission required).
+
+#### `GET /ai/attack-paths`
+- **Summary**: List organizational attack path history (`findings:read` permission required).
+
+#### `PATCH /ai/attack-paths/{id}/review`
+- **Summary**: Record SOC analyst review status (`ACCEPTED`, `REJECTED`, `REVIEWED`) and notes (`findings:ai_attack_path` permission required).
+
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol

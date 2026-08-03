@@ -255,6 +255,12 @@ The Phase 5.2 AI analysis subsystem operates as an autonomous AI Security Analys
 - **ImpactAnalysisService**: Enriches vulnerability data with CVSS vectors, EPSS probabilities, asset graph topology (`AssetNode`), composite risk scores (reads existing `risk_score` without recalculation), and evidence artifacts to produce executive and technical impact analysis reports.
 - **Persistence & Auditability**: Stores immutable append-only records in `ai_finding_explanations` and `ai_impact_analyses` tables while reusing Phase 5.1's `LLMGatewayService` for token budget tracking and request audit logging.
 
+### E. AI Attack Path Synthesis Engine Subsystem (Phase 5.3)
+The Phase 5.3 attack path synthesis subsystem provides graph-aware attack chain reasoning:
+- **AIAttackPathService**: Synthesizes evidence-grounded attack paths from findings, evidence artifacts, and Asset Graph topology. Validates MITRE ATT&CK technique IDs (`T1190`, `T1059`, `T1068`, `T1021`, etc.) against `KNOWN_MITRE_TECHNIQUES` registry, calculates overall path confidence scores, and masks sensitive secrets.
+- **Option A Relational Storage**: Persists normalized master/detail tables (`ai_attack_paths` and `ai_attack_path_steps`) for sub-millisecond relational queries by MITRE technique or finding ID.
+- **SOC Analyst Feedback Loop**: Supports review state transitions (`GENERATED`, `REVIEWED`, `ACCEPTED`, `REJECTED`, `STALE`) and records reviewer notes and timestamps (`review_notes`, `reviewed_by`, `reviewed_at`).
+
 ### Event Bus Migration Path:
 The application uses an abstract `EventBusPort`. While initial phases utilize Celery + Redis Pub/Sub, the interface supports seamless drop-in adapters for **RabbitMQ (AMQP)**, **Apache Kafka**, or **NATS JetStream** without modifying domain logic.
 

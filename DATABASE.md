@@ -332,6 +332,52 @@ CREATE TABLE ai_impact_analyses (
 CREATE INDEX idx_ai_impact_org_finding ON ai_impact_analyses(organization_id, finding_id);
 CREATE INDEX idx_ai_impact_org_created ON ai_impact_analyses(organization_id, created_at);
 
+-- AI Attack Paths Master Table (Option A - Phase 5.3)
+CREATE TABLE ai_attack_paths (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    root_finding_id UUID NOT NULL REFERENCES security_findings(id) ON DELETE CASCADE,
+    source_asset_id UUID REFERENCES asset_nodes(id) ON DELETE SET NULL,
+    target_asset_id UUID REFERENCES asset_nodes(id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    attack_summary TEXT NOT NULL,
+    composite_risk_score DOUBLE PRECISION NOT NULL,
+    confidence_score DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+    model_used VARCHAR(100) NOT NULL,
+    provider_used VARCHAR(50) NOT NULL,
+    prompt_version INT NOT NULL DEFAULT 1,
+    status VARCHAR(20) NOT NULL DEFAULT 'GENERATED', -- 'GENERATED', 'REVIEWED', 'ACCEPTED', 'REJECTED', 'STALE', 'FAILED'
+    review_notes TEXT,
+    reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_ai_paths_org_finding ON ai_attack_paths(organization_id, root_finding_id);
+CREATE INDEX idx_ai_paths_org_status ON ai_attack_paths(organization_id, status);
+CREATE INDEX idx_ai_paths_org_created ON ai_attack_paths(organization_id, created_at);
+
+-- AI Attack Path Steps Detail Table (Option A - Phase 5.3)
+CREATE TABLE ai_attack_path_steps (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    attack_path_id UUID NOT NULL REFERENCES ai_attack_paths(id) ON DELETE CASCADE,
+    sequence_number INT NOT NULL,
+    step_type VARCHAR(50) NOT NULL, -- 'INITIAL_ACCESS', 'EXECUTION', 'PRIVILEGE_ESCALATION', 'CREDENTIAL_ACCESS', 'LATERAL_MOVEMENT', 'IMPACT'
+    asset_node_id UUID REFERENCES asset_nodes(id) ON DELETE SET NULL,
+    finding_id UUID REFERENCES security_findings(id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    mitre_tactic VARCHAR(100) NOT NULL,
+    mitre_technique_id VARCHAR(50) NOT NULL,
+    mitre_technique_name VARCHAR(255) NOT NULL,
+    attacker_action TEXT NOT NULL,
+    required_privilege VARCHAR(100) NOT NULL,
+    evidence_reference TEXT,
+    confidence_score DOUBLE PRECISION NOT NULL DEFAULT 1.0
+);
+CREATE INDEX idx_ai_steps_path_seq ON ai_attack_path_steps(attack_path_id, sequence_number);
+CREATE INDEX idx_ai_steps_mitre ON ai_attack_path_steps(mitre_technique_id);
+
 -- Vector Embeddings for Knowledge Base & RAG
 CREATE TABLE security_embeddings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

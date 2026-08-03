@@ -162,5 +162,16 @@ All logs are emitted using `structlog` as formatted JSON:
 4. **Context Sanitization & Prompt Injection Resistance**: All evidence dumps and finding descriptions MUST be passed through `mask_sensitive_prompt_context` prior to prompt rendering. System prompts MUST instruct the LLM to ignore embedded instructions in finding text.
 5. **No Duplicate Request Logging**: AI analysis records store generated domain explanations and impact reports in `ai_finding_explanations` and `ai_impact_analyses` tables. Token consumption, latency, and USD costs are managed by `LLMGatewayService.generate_completion` and logged to `llm_request_logs`.
 
+---
+
+## 🤖 12. AI Attack Path Synthesis Engine Architecture
+
+1. **Option A Relational Persistence**: Attack paths MUST be stored using Option A normalized relational tables (`ai_attack_paths` + `ai_attack_path_steps`) rather than monolithic JSON blobs. This enables relational indexing on `mitre_technique_id`, step sequence filtering, and step-level correlation queries across organization findings.
+2. **MITRE ATT&CK Registry Validation**: `AIAttackPathService` MUST validate LLM-generated `mitre_technique_id` strings against `KNOWN_MITRE_TECHNIQUES` registry. Invalid or unverified technique IDs MUST be flagged as `Unverified` rather than persisted as official framework techniques.
+3. **Path & Step Level Confidence Scoring**: Every attack path MUST calculate and store an overall path `confidence_score` (Float 0.0–1.0) alongside step-level confidence ratings to communicate reliability to SOC analysts.
+4. **Analyst Review Feedback Loop**: Attack path records MUST support analyst review state transitions (`GENERATED`, `REVIEWED`, `ACCEPTED`, `REJECTED`, `STALE`) and capture reviewer metadata (`review_notes`, `reviewed_by`, `reviewed_at`) via `PATCH /api/v1/ai/attack-paths/{id}/review`.
+5. **Evidence Grounding**: Attack path context MUST be constructed from verified asset graph nodes (`AssetNode`), edge relationships (`AssetRelationshipModel`), and evidence artifacts. LLM prompts MUST explicitly prohibit hallucinating non-existent target assets or vulnerabilities.
+
+
 
 

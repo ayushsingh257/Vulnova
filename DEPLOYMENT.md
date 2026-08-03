@@ -151,5 +151,14 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 - **Structured Output JSON Recovery Overhead**: In the event of malformed LLM JSON output, the single repair retry adds a minor latency overhead (~200–500ms) but guarantees structured data integrity and prevents corrupt records from entering database tables.
 - **Resource Footprint**: Explanation and impact records average ~1–2 KB per analysis version, permitting years of AI analysis history per tenant organization without database degradation.
 
+---
+
+## 🤖 10. AI Attack Path Synthesis Performance & Storage Blueprint (Phase 5.3)
+
+- **Option A Relational Query Indexing**: `ai_attack_paths` and `ai_attack_path_steps` tables feature composite PostgreSQL indexes `(organization_id, root_finding_id)`, `(organization_id, status)`, `(attack_path_id, sequence_number)`, and `(mitre_technique_id)`. This enables sub-millisecond querying of attack paths by MITRE technique or finding ID.
+- **Eager Loading Optimization**: `AIAttackPathRepository` utilizes SQLAlchemy `selectinload(AIAttackPathModel.steps)` to retrieve full attack paths and their ordered steps in a single optimized DB round-trip.
+- **Analyst Review Metadata Indexing**: `ai_attack_paths.status` index supports fast filtering of paths requiring SOC analyst validation (`GENERATED` vs `REVIEWED` / `ACCEPTED`).
+
+
 
 
