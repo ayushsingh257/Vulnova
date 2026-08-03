@@ -19,6 +19,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 4 Phase 4.7 (Enterprise Scan Profile & Execution Policy Engine)** (`ba93cf3d`):
+  - Created `ScanProfileRegistry` (`app/application/assessment/scan_profiles.py`) mapping 10 pre-configured enterprise scan profiles (`Quick Scan`, `Web Scan`, `API Scan`, `Infrastructure Scan`, `OWASP Top 10`, `OWASP API Top 10`, `Full Assessment`, `Authenticated Scan`, `Passive Scan`, `Custom Scan`) to registered plugin IDs without duplicating plugin metadata.
+  - Implemented standalone, execution-layer independent `ScanPolicyEngine` (`app/application/assessment/policy_engine.py`) enforcing concurrency caps, rate limits (requests/sec), `robots.txt` compliance, scope include/exclude wildcard patterns, custom auth header/cookie injection, and emergency `stop_on_critical` triggers. Designed for future Era 6 distributed worker reuse.
+  - Extended domain entities (`app/domain/entities/assessment.py`) with `ScanProfileType`, `ScanPolicy`, `ScanProfile`, and attached `policy: ScanPolicy` to `AssessmentContext`.
+  - Extended database ORM (`app/infrastructure/database/models/assessment.py`) and repository (`app/infrastructure/database/repositories/assessment_repository.py`) with `profile_id` and `policy_json` columns.
+  - Extended DTOs (`app/application/assessment/dto.py`) with `ScanPolicyDTO`, `ScanProfileDTO`, `profile_id`, and `policy_override` in `CreateAssessmentRequest`.
+  - Added REST endpoint `GET /api/v1/assessments/profiles` (`app/api/v1/routers/assessment.py`) listing available enterprise scan profiles and default policies.
+  - Integrated profile resolution and policy enforcement into `AssessmentService.create_and_run_assessment` (`app/application/assessment/services.py`).
+  - Added unit & integration test suite (`tests/test_scan_profiles_policy.py`) — 7 tests covering profile resolution, policy parameter validation, scope filtering, auth enrichment, stop-on-critical triggers, profile endpoint listing, and service integration. Total backend test suite now stands at **155 passing tests**.
 - **Era 4 Phase 4.6 (Multi-Modal Evidence Collection & Capture Engine)** (`bc8ddea8`):
   - Created `EvidenceCollectionEngine` (`app/infrastructure/assessment/evidence_engine.py`) capturing HTTP request/response dumps, header dumps, cookie profiles, Playwright DOM snapshots, and visual PNG screenshots.
   - Implemented sensitive data masking for Authorization headers (Bearer/Basic), session cookies, API keys, and JWT tokens before storage.
