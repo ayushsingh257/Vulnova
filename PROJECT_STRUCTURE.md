@@ -109,6 +109,7 @@ Vulnova/
 │   └── regression_suite/            # Security regression verification test scripts
 │
 ├── docs/                            # Internal Developer & Architecture Documentation
+│   ├── audits/                      # Era Completion Audit Reports (ERA_1 through ERA_4)
 │   ├── architecture/                # Extended C4 diagrams and sequence flows
 │   ├── security/                    # Security threat matrices and ASVS compliance checklists
 │   └── api/                         # Exported OpenAPI specs and Postman collections
