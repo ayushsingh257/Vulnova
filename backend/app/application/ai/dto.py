@@ -257,3 +257,85 @@ class AIAttackPathDTO(BaseModel):
     reviewed_at: Optional[str] = None
     error_message: Optional[str] = None
     created_at: str
+
+
+# ── Phase 5.4: AI Remediation Engine DTOs ──
+
+
+class GenerateRemediationRequest(BaseModel):
+    """Request payload for triggering AI remediation plan generation."""
+
+    finding_id: str
+    model_alias: Optional[str] = None
+    temperature: float = 0.2
+
+
+class ReviewRemediationPlanRequest(BaseModel):
+    """Request payload for analyst review of a remediation plan."""
+
+    status: str
+    review_notes: Optional[str] = None
+
+
+class AIPatchSuggestionDTO(BaseModel):
+    """DTO representing a non-executable code or config patch suggestion."""
+
+    id: str
+    language: str
+    file_type: str
+    target_file_path: Optional[str] = None
+    original_code_snippet: str
+    proposed_patch_diff: str
+    explanation: str
+    security_impact_notes: str
+    confidence_score: float = 1.0
+
+
+class RemediationStepDTO(BaseModel):
+    """DTO representing an individual step in a remediation plan."""
+
+    id: str
+    sequence_number: int
+    step_type: str
+    title: str
+    description: str
+    affected_component: str
+    recommended_action: str
+    validation_command: Optional[str] = None
+    rollback_strategy: Optional[str] = None
+    confidence_score: float = 1.0
+
+
+class AIRemediationPlanDTO(BaseModel):
+    """DTO representing a full AI-synthesized remediation plan."""
+
+    id: str
+    root_finding_id: str
+    attack_path_id: Optional[str] = None
+    cve_id: Optional[str] = None
+    cwe_id: Optional[str] = None
+    affected_version: Optional[str] = None
+    fixed_version: Optional[str] = None
+    title: str
+    summary: str
+    technical_solution: str
+    business_solution: str
+    risk_reduction_explanation: str
+    validation_strategy: str
+    composite_risk_score: float
+    ai_confidence_score: float
+    effectiveness_confidence_score: float
+    requires_backup: bool
+    requires_downtime: bool
+    rollback_available: bool
+    model_used: str
+    provider_used: str
+    prompt_version: int
+    status: str
+    steps: List[RemediationStepDTO]
+    patch_suggestions: List[AIPatchSuggestionDTO]
+    review_notes: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    error_message: Optional[str] = None
+    created_at: str

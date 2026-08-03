@@ -4,6 +4,9 @@ from app.infrastructure.database.repositories.ai_analysis_repository import (
 from app.infrastructure.database.repositories.ai_attack_path_repository import (
     AIAttackPathRepository,
 )
+from app.infrastructure.database.repositories.ai_remediation_repository import (
+    AIRemediationRepository,
+)
 from app.infrastructure.database.repositories.api_key_repository import (
     APIKeyRepository,
 )
@@ -22,4 +25,5 @@ __all__ = [
     "APIKeyRepository",
     "AIAnalysisRepository",
     "AIAttackPathRepository",
+    "AIRemediationRepository",
 ]

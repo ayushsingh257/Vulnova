@@ -286,3 +286,100 @@ class AttackPath:
     reviewed_at: Optional[datetime] = None
     error_message: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+# ── Phase 5.4: AI Remediation Engine Domain Entities ──
+
+
+class RemediationStatus(str, Enum):
+    """Lifecycle status of an AI-synthesized remediation plan."""
+
+    GENERATED = "GENERATED"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    IMPLEMENTED = "IMPLEMENTED"
+    VERIFIED = "VERIFIED"
+    VALIDATION_FAILED = "VALIDATION_FAILED"
+    FAILED = "FAILED"
+
+
+class RemediationType(str, Enum):
+    """Classification of remediation action types."""
+
+    CODE_PATCH = "CODE_PATCH"
+    CONFIGURATION_CHANGE = "CONFIGURATION_CHANGE"
+    DEPENDENCY_UPDATE = "DEPENDENCY_UPDATE"
+    ARCHITECTURE_CHANGE = "ARCHITECTURE_CHANGE"
+    SECURITY_CONTROL = "SECURITY_CONTROL"
+    MANUAL_PROCESS = "MANUAL_PROCESS"
+
+
+@dataclass
+class AIPatchSuggestion:
+    """Domain entity representing a suggested code or configuration patch diff."""
+
+    language: str
+    file_type: str
+    original_code_snippet: str
+    proposed_patch_diff: str
+    explanation: str
+    security_impact_notes: str
+    id: UUID = field(default_factory=uuid4)
+    remediation_plan_id: Optional[UUID] = None
+    target_file_path: Optional[str] = None
+    confidence_score: float = 1.0
+
+
+@dataclass
+class AIRemediationStep:
+    """Domain entity representing an individual step within a remediation plan."""
+
+    sequence_number: int
+    step_type: RemediationType
+    title: str
+    description: str
+    affected_component: str
+    recommended_action: str
+    id: UUID = field(default_factory=uuid4)
+    remediation_plan_id: Optional[UUID] = None
+    validation_command: Optional[str] = None
+    rollback_strategy: Optional[str] = None
+    confidence_score: float = 1.0
+
+
+@dataclass
+class AIRemediationPlan:
+    """Domain entity representing a full AI-synthesized remediation plan with persistent identity."""
+
+    organization_id: UUID
+    root_finding_id: UUID
+    title: str
+    summary: str
+    technical_solution: str
+    business_solution: str
+    risk_reduction_explanation: str
+    validation_strategy: str
+    composite_risk_score: float
+    model_used: str
+    provider_used: str
+    ai_confidence_score: float = 1.0
+    effectiveness_confidence_score: float = 1.0
+    requires_backup: bool = False
+    requires_downtime: bool = False
+    rollback_available: bool = True
+    prompt_version: int = 1
+    id: UUID = field(default_factory=uuid4)
+    attack_path_id: Optional[UUID] = None
+    cve_id: Optional[str] = None
+    cwe_id: Optional[str] = None
+    affected_version: Optional[str] = None
+    fixed_version: Optional[str] = None
+    status: RemediationStatus = RemediationStatus.GENERATED
+    steps: List[AIRemediationStep] = field(default_factory=list)
+    patch_suggestions: List[AIPatchSuggestion] = field(default_factory=list)
+    review_notes: Optional[str] = None
+    reviewed_by: Optional[UUID] = None
+    reviewed_at: Optional[datetime] = None
+    error_message: Optional[str] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)

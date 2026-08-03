@@ -93,6 +93,7 @@ PERMISSION_MAP: Dict[str, Role] = {
     "findings:ai_analyze": Role.SECURITY_ANALYST,
     "findings:ai_explain": Role.SECURITY_ANALYST,
     "findings:ai_attack_path": Role.SECURITY_ANALYST,
+    "findings:ai_remediate": Role.SECURITY_ANALYST,
     "findings:export": Role.SECURITY_ANALYST,
     # ── Reports ──
     "reports:read": Role.VIEWER,

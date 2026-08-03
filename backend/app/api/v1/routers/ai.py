@@ -14,22 +14,26 @@ from app.application.ai.dto import (
     AIChatCompletionResponse,
     AIFindingExplanationDTO,
     AIImpactAnalysisDTO,
+    AIRemediationPlanDTO,
     AIUsageSummaryDTO,
     CreatePromptTemplateRequest,
     CreateProviderRequest,
     GenerateAttackPathRequest,
     GenerateExplanationRequest,
     GenerateImpactAnalysisRequest,
+    GenerateRemediationRequest,
     LLMModelDTO,
     LLMProviderConfigDTO,
     PromptTemplateDTO,
     RegisterModelRequest,
     ReviewAttackPathRequest,
+    ReviewRemediationPlanRequest,
 )
 from app.application.ai.explainer_service import AIFindingExplainerService
 from app.application.ai.impact_analysis_service import ImpactAnalysisService
 from app.application.ai.llm_gateway_service import LLMGatewayService
 from app.application.ai.prompt_orchestrator_service import PromptOrchestratorService
+from app.application.ai.remediation_service import AIRemediationService
 from app.infrastructure.database.models.user import UserModel
 from app.infrastructure.database.session import get_async_session
 
@@ -466,6 +470,136 @@ async def review_attack_path(
     return await service.review_attack_path(
         organization_id=current_user.organization_id,
         path_id=_UUID(path_id),
+        reviewer_id=current_user.id,
+        req=req,
+    )
+
+
+# ── Phase 5.4: AI Remediation Engine Endpoints ──
+
+
+@router.post(
+    "/findings/{finding_id}/remediation",
+    response_model=AIRemediationPlanDTO,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("findings:ai_remediate"))],
+)
+async def generate_remediation_plan(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    req: Optional[GenerateRemediationRequest] = None,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AIRemediationPlanDTO:
+    """Synthesize an evidence-grounded AI remediation plan for a security finding.
+
+    Requires authentication and 'findings:ai_remediate' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIRemediationService(session)
+    return await service.generate_remediation_plan(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+        actor_user_id=current_user.id,
+        model_alias=req.model_alias if req else None,
+        temperature=req.temperature if req else 0.2,
+    )
+
+
+@router.get(
+    "/findings/{finding_id}/remediation",
+    response_model=List[AIRemediationPlanDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def list_remediation_plans_for_finding(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> List[AIRemediationPlanDTO]:
+    """Retrieve all synthesized remediation plans for a specific finding.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIRemediationService(session)
+    return await service.list_remediation_plans_for_finding(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+    )
+
+
+@router.get(
+    "/remediation/{plan_id}",
+    response_model=Optional[AIRemediationPlanDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def get_remediation_plan_by_id(
+    plan_id: str = Path(..., description="UUID of the remediation plan"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> Optional[AIRemediationPlanDTO]:
+    """Retrieve single remediation plan by ID with all steps and patch suggestions.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIRemediationService(session)
+    return await service.get_remediation_plan(
+        organization_id=current_user.organization_id,
+        plan_id=_UUID(plan_id),
+    )
+
+
+@router.get(
+    "/remediation",
+    response_model=List[AIRemediationPlanDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def list_remediation_plans(
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> List[AIRemediationPlanDTO]:
+    """List organizational remediation history.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    service = AIRemediationService(session)
+    return await service.list_remediation_plans(
+        organization_id=current_user.organization_id,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.patch(
+    "/remediation/{plan_id}/review",
+    response_model=AIRemediationPlanDTO,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:ai_remediate"))],
+)
+async def review_remediation_plan(
+    req: ReviewRemediationPlanRequest,
+    plan_id: str = Path(..., description="UUID of the remediation plan to review"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AIRemediationPlanDTO:
+    """Record SOC analyst review status and feedback notes on a remediation plan.
+
+    Requires authentication and 'findings:ai_remediate' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIRemediationService(session)
+    return await service.review_remediation_plan(
+        organization_id=current_user.organization_id,
+        plan_id=_UUID(plan_id),
         reviewer_id=current_user.id,
         req=req,
     )
