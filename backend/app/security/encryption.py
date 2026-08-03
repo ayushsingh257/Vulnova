@@ -23,7 +23,17 @@ class SecretEncryptionService:
     """Reusable service for encrypting and decrypting sensitive secrets (API keys, SIEM tokens, Cloud credentials) at rest."""
 
     def __init__(self, key_seed: Optional[str] = None) -> None:
-        seed_val = str(key_seed) if key_seed else str(getattr(settings, "SECRET_KEY", "vulnova-default-secret-key-change-in-production"))
+        seed_val = (
+            str(key_seed)
+            if key_seed
+            else str(
+                getattr(
+                    settings,
+                    "SECRET_KEY",
+                    "vulnova-default-secret-key-change-in-production",
+                )
+            )
+        )
         fernet_key = _derive_fernet_key(seed_val)
         self.fernet = Fernet(fernet_key)
 
