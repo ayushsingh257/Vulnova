@@ -203,6 +203,17 @@ All logs are emitted using `structlog` as formatted JSON:
 5. **Governance Approval Workflow**: Internal security policy uploads start in `UNDER_REVIEW` and require explicit analyst approval (`PATCH /api/v1/ai/knowledge/documents/{id}/review`) before becoming active `INDEXED` AI knowledge.
 6. **Hybrid Tenant Isolation Boundary**: Queries MUST enforce `organization_id IS NULL OR organization_id = tenant_id` to allow shared access to global public standards while isolating private tenant policies.
 
+---
+
+## 🤖 16. Enterprise AI Security Copilot Architecture
+
+1. **Multi-Agent Intent Classification Router**: Analyst queries are classified by `AgentOrchestrator` into specialized sub-agent personas (`SECURITY_ANALYST`, `EXPLAINER`, `ATTACK_PATH`, `REMEDIATION`, `FALSE_POSITIVE`, `KNOWLEDGE_RAG`) to construct tailored system prompts.
+2. **Safe Read-Only Tool Calling Registry**: Tool execution (`CopilotToolRegistry`) is strictly restricted to read-only security data retrieval (`get_finding_details`, `get_asset_topology`, `get_risk_summary`, `search_rag_knowledge`, `get_remediation_plan`, `get_confidence_analysis`, `get_attack_path`) with audit log persistence (`ai_copilot_tool_executions`). Zero auto-remediation or system command execution capability exists.
+3. **Response Grounding & Explainability Metadata**: Every Copilot assistant message MUST track and record explainability metadata columns (`response_confidence_score`, `sources_used`, `knowledge_chunks_used`, `tools_called`, `reasoning_summary`, `model_used`, `prompt_version`, `response_evaluation_metadata`).
+4. **5-Table Normalized Schema**: Copilot data MUST be stored across 5 normalized relational tables (`ai_copilot_sessions`, `ai_copilot_messages`, `ai_copilot_context_memories`, `ai_copilot_tool_executions`, `ai_copilot_feedback`) with composite indexes on `(organization_id, user_id)` and `(session_id, role)`.
+5. **Strict Multi-Tenant & Prompt Security Boundary**: Session, message history, key-value memory, and tool execution queries MUST validate `organization_id = tenant_id`. User inputs and security findings pass through `mask_sensitive_prompt_context`.
+
+
 
 
 

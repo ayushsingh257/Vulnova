@@ -687,6 +687,101 @@ All API errors return a standardized JSON error format:
 #### `POST /ai/findings/{finding_id}/rag-context`
 - **Summary**: Generate tailored RAG knowledge context block for a security finding (`findings:read` permission required).
 
+#### `POST /ai/copilot/sessions`
+- **Summary**: Initialize a new multi-turn AI Security Copilot investigation session (`copilot:manage` permission required).
+- **Response (201 Created)**:
+  ```json
+  {
+    "id": "session_uuid",
+    "organization_id": "org_uuid",
+    "user_id": "user_uuid",
+    "title": "Investigating Critical SQLi",
+    "status": "ACTIVE",
+    "focused_finding_id": "finding_uuid",
+    "model_alias": "default",
+    "temperature": 0.2,
+    "total_tokens": 0,
+    "message_count": 0,
+    "created_at": "2026-08-03T18:00:00Z",
+    "updated_at": "2026-08-03T18:00:00Z"
+  }
+  ```
+
+#### `GET /ai/copilot/sessions`
+- **Summary**: List Copilot investigation sessions for organization with pagination (`copilot:read` permission required).
+
+#### `GET /ai/copilot/sessions/{session_id}`
+- **Summary**: Retrieve single Copilot investigation session details by ID (`copilot:read` permission required).
+
+#### `PATCH /ai/copilot/sessions/{session_id}`
+- **Summary**: Update session title, status, or focused finding ID (`copilot:manage` permission required).
+
+#### `DELETE /ai/copilot/sessions/{session_id}`
+- **Summary**: Delete Copilot investigation session and message history (`copilot:manage` permission required).
+
+#### `POST /ai/copilot/sessions/{session_id}/messages`
+- **Summary**: Send analyst query to Copilot assistant and receive grounded AI response with explainability metadata (`copilot:chat` permission required).
+- **Response (200 OK)**:
+  ```json
+  {
+    "session_id": "session_uuid",
+    "user_message": {
+      "id": "user_msg_uuid",
+      "session_id": "session_uuid",
+      "organization_id": "org_uuid",
+      "role": "USER",
+      "content": "How do I fix this SQL injection?",
+      "agent_type": "SECURITY_ANALYST",
+      "token_count": 8,
+      "created_at": "2026-08-03T18:01:00Z"
+    },
+    "assistant_message": {
+      "id": "assistant_msg_uuid",
+      "session_id": "session_uuid",
+      "organization_id": "org_uuid",
+      "role": "ASSISTANT",
+      "content": "### AI Security Copilot Analysis (REMEDIATION)\nUse parameterized queries.",
+      "agent_type": "REMEDIATION",
+      "token_count": 45,
+      "response_confidence_score": 0.92,
+      "sources_used": [{"title": "OWASP SQLi Prevention", "source_url": "https://owasp.org"}],
+      "knowledge_chunks_used": [{"chunk_id": "chunk_uuid", "similarity_score": 0.88}],
+      "tools_called": [{"tool_name": "get_remediation_plan", "execution_status": "SUCCESS"}],
+      "reasoning_summary": "Synthesized using OWASP standards and remediation tool output.",
+      "model_used": "default",
+      "prompt_version": "1.0",
+      "response_evaluation_metadata": {"agent_type": "REMEDIATION"},
+      "created_at": "2026-08-03T18:01:02Z"
+    },
+    "agent_type": "REMEDIATION",
+    "sources_used": [
+      {
+        "source_type": "OWASP",
+        "title": "OWASP SQLi Prevention",
+        "external_ref_id": "OWASP-A03:2021",
+        "source_url": "https://owasp.org",
+        "similarity_score": 0.88
+      }
+    ],
+    "tools_executed": [
+      {
+        "tool_name": "get_remediation_plan",
+        "input_params": {"finding_id": "finding_uuid"},
+        "execution_status": "SUCCESS",
+        "summary": "Executed get_remediation_plan in 12ms"
+      }
+    ],
+    "response_confidence_score": 0.92,
+    "total_session_tokens": 53
+  }
+  ```
+
+#### `GET /ai/copilot/sessions/{session_id}/messages`
+- **Summary**: Retrieve full message history for a Copilot investigation session (`copilot:read` permission required).
+
+#### `POST /ai/copilot/feedback`
+- **Summary**: Record SOC analyst rating (1-5 stars) and evaluation feedback (`copilot:feedback` permission required).
+
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol

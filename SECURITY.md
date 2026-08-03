@@ -133,6 +133,12 @@ Every target setup and scan creation request requires an explicit user confirmat
 - **Document Governance Approval Workflow**: Internal security policies uploaded to tenant knowledge bases start in `UNDER_REVIEW` and require explicit analyst approval (`PATCH /api/v1/ai/knowledge/documents/{id}/review`) before vector indexing into search stores.
 - **Secret Prompt Masking & Prompt Injection Defense**: Ingested document content and RAG query strings pass through `mask_sensitive_prompt_context`. Retreived RAG context blocks are wrapped in `<rag_knowledge_context>` tags to isolate reference text from LLM system prompts.
 
+### Enterprise AI Security Copilot Security Controls (Phase 5.7)
+- **Granular RBAC Authorization**: Creating or updating sessions requires `copilot:manage` permission (`SECURITY_ANALYST` role level 20+), chatting requires `copilot:chat` (`SECURITY_ANALYST`), submitting feedback requires `copilot:feedback` (`SECURITY_ANALYST`), and viewing session history requires `copilot:read` (`VIEWER` role level 10+).
+- **Strict Human-in-the-Loop Read-Only Safety Policy**: Copilot tool execution (`CopilotToolRegistry`) is strictly restricted to read-only security data retrieval. Zero auto-patching, system command execution, or finding suppression capability exists in the copilot service or tool registry.
+- **Strict Multi-Tenant Isolation**: Copilot sessions, message history, context memory, and tool execution queries strictly enforce `organization_id = tenant_id`.
+- **Response Grounding Explainability Auditability**: Every assistant response tracks and records explainability metadata columns (`response_confidence_score`, `sources_used`, `knowledge_chunks_used`, `tools_called`, `reasoning_summary`, `model_used`, `prompt_version`, `response_evaluation_metadata`) and emits structured audit logs (`copilot_message.sent`, `copilot_feedback.submitted`).
+
 ---
 
 ## 🌐 7. Secure HTTP Headers & Browser Protections

@@ -135,11 +135,17 @@ Asset Inventory Intelligence & AI Security Copilot
 - **Zero Graph Explosion**: Security findings remain in `security_findings` rather than duplicated as individual graph nodes, maintaining clean and fast graph topology traversal.
 - **Risk Score Aggregation**: Asset composite risk scores reuse existing Phase 4.5 `RiskIntelligenceEngine` metrics (`composite_risk_score`) to aggregate maximum severity and risk ratings per asset node.
 
-### E. Attack Surface Trend & Continuous Monitoring Subsystem
-- **ContinuousMonitoringService**: Computes point-in-time posture snapshots (`AssetSnapshotModel`) linked to `organization_id` and `assessment_job_id`, timestamped for immutable security audit history.
-- **ChangeDetectionEngine**: Compares current assessment state against historical baseline snapshots to detect vulnerability finding lifecycle transitions (`FINDING_NEW`, `FINDING_RESOLVED`, `FINDING_REOPENED`) and records discrete audit events in `AssetChangeEventModel`.
-- **Historical Risk Trajectory**: Exposes organizational risk score trajectories (`GET /api/v1/assets/trends`) and posture event timelines (`GET /api/v1/security/posture/timeline`) reusing Phase 4.5 `RiskIntelligenceEngine` composite scores directly.
-- **Tenant Boundary Security**: All inventory lookup APIs (`GET /api/v1/assets/inventory`, `GET /api/v1/assets/{asset_id}`) strictly enforce tenant boundary isolation (`organization_id`).
+### H. Security Knowledge Base & RAG Vector Engine Subsystem (Phase 5.6)
+- **AIRAGKnowledgeService**: Implements Retrieval-Augmented Generation (RAG) vector engine backed by PostgreSQL `pgvector` (`vector(1536)`).
+- **Source-Type Chunking & Embedding Metadata**: Configurable text chunking (`OWASP`/`CWE`: 512, `CVE_NVD`: 256, `INTERNAL_POLICY`: 768) with `embedding_model` and `embedding_dimension` tracking.
+- **Governance Approval Workflow**: Human review lifecycle (`UNDER_REVIEW` -> `APPROVED` -> `INDEXED`) for uploaded security policies.
+
+### I. Enterprise AI Security Copilot Subsystem (Phase 5.7)
+- **SecurityCopilotService**: Conversational SOC analyst assistant synthesizing intelligence from all Era 5 engines into multi-turn investigation sessions.
+- **AgentOrchestrator**: Multi-agent intent classification router dispatching queries to specialized sub-agent personas (`SECURITY_ANALYST`, `EXPLAINER`, `ATTACK_PATH`, `REMEDIATION`, `FALSE_POSITIVE`, `KNOWLEDGE_RAG`).
+- **CopilotToolRegistry**: Safe read-only internal tool calling registry executing 7 security tools (`get_finding_details`, `get_asset_topology`, `get_risk_summary`, `search_rag_knowledge`, `get_remediation_plan`, `get_confidence_analysis`, `get_attack_path`) with audit logging.
+- **Grounding & Explainability Tracking**: Assistant responses record explainability metadata (`response_confidence_score`, `sources_used`, `knowledge_chunks_used`, `tools_called`, `reasoning_summary`, `model_used`, `prompt_version`, `response_evaluation_metadata`).
+- **Strict Non-Autonomous Read-Only Policy**: Operating strictly under human-in-the-loop controls with zero automated infrastructure mutation or finding suppression capability.
 
 ---
 

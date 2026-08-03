@@ -564,6 +564,88 @@ CREATE TABLE rag_search_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_rag_log_org ON rag_search_logs(organization_id, created_at);
+
+-- AI Copilot Sessions Master Table (Phase 5.7)
+CREATE TABLE ai_copilot_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL DEFAULT 'New Security Investigation',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- 'ACTIVE', 'ARCHIVED', 'CLOSED'
+    focused_finding_id UUID REFERENCES security_findings(id) ON DELETE SET NULL,
+    model_alias VARCHAR(100) NOT NULL DEFAULT 'default',
+    temperature DOUBLE PRECISION NOT NULL DEFAULT 0.2,
+    total_tokens INT NOT NULL DEFAULT 0,
+    message_count INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_copilot_sess_org_user ON ai_copilot_sessions(organization_id, user_id);
+CREATE INDEX idx_copilot_sess_status ON ai_copilot_sessions(organization_id, status);
+
+-- AI Copilot Messages Detail Table with Explainability Metadata (Phase 5.7)
+CREATE TABLE ai_copilot_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id UUID NOT NULL REFERENCES ai_copilot_sessions(id) ON DELETE CASCADE,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL, -- 'USER', 'ASSISTANT', 'SYSTEM', 'TOOL'
+    content TEXT NOT NULL,
+    agent_type VARCHAR(50) NOT NULL DEFAULT 'SECURITY_ANALYST',
+    token_count INT NOT NULL DEFAULT 0,
+    response_confidence_score DOUBLE PRECISION,
+    sources_used JSONB NOT NULL DEFAULT '[]'::jsonb,
+    knowledge_chunks_used JSONB NOT NULL DEFAULT '[]'::jsonb,
+    tools_called JSONB NOT NULL DEFAULT '[]'::jsonb,
+    reasoning_summary TEXT,
+    model_used VARCHAR(100),
+    prompt_version VARCHAR(50) NOT NULL DEFAULT '1.0',
+    response_evaluation_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_copilot_msg_session ON ai_copilot_messages(session_id, role);
+
+-- AI Copilot Context Memory Table (Phase 5.7)
+CREATE TABLE ai_copilot_context_memories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id UUID NOT NULL REFERENCES ai_copilot_sessions(id) ON DELETE CASCADE,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    memory_key VARCHAR(100) NOT NULL,
+    memory_value_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+    memory_type VARCHAR(50) NOT NULL DEFAULT 'INVESTIGATION_STATE',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_copilot_mem_session_key ON ai_copilot_context_memories(session_id, memory_key);
+
+-- AI Copilot Tool Executions Audit Table (Phase 5.7)
+CREATE TABLE ai_copilot_tool_executions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id UUID NOT NULL REFERENCES ai_copilot_sessions(id) ON DELETE CASCADE,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    message_id UUID REFERENCES ai_copilot_messages(id) ON DELETE SET NULL,
+    tool_name VARCHAR(100) NOT NULL,
+    input_params_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+    output_summary_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+    execution_status VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
+    latency_ms INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_copilot_tool_exec_session ON ai_copilot_tool_executions(session_id, tool_name);
+
+-- AI Copilot Analyst Feedback Table (Phase 5.7)
+CREATE TABLE ai_copilot_feedback (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id UUID NOT NULL REFERENCES ai_copilot_sessions(id) ON DELETE CASCADE,
+    message_id UUID NOT NULL REFERENCES ai_copilot_messages(id) ON DELETE CASCADE,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    rating INT NOT NULL, -- 1 to 5
+    is_helpful BOOLEAN NOT NULL DEFAULT TRUE,
+    feedback_category VARCHAR(100),
+    feedback_notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_copilot_feedback_org ON ai_copilot_feedback(organization_id, rating);
 ```
 
 ---

@@ -183,6 +183,15 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 - **Source-Type Chunking Efficiency**: Source-type chunk size parameters (`OWASP`/`CWE`/`CAPEC`: 512, `CVE_NVD`: 256, `INTERNAL_POLICY`: 768) minimize chunk fragmentation and maximize semantic retrieval accuracy.
 - **Hybrid Tenant Filtering Optimization**: Single composite index `(organization_id, status)` and `(document_id, chunk_index)` allows tenant boundary filtering (`organization_id IS NULL OR organization_id = tenant_id`) with zero performance degradation.
 
+---
+
+## 🤖 14. Enterprise AI Security Copilot Performance & Storage Blueprint (Phase 5.7)
+
+- **5-Table Relational Indexing**: `ai_copilot_sessions`, `ai_copilot_messages`, `ai_copilot_context_memories`, `ai_copilot_tool_executions`, and `ai_copilot_feedback` feature composite PostgreSQL indexes `(organization_id, user_id)`, `(session_id, role)`, `(session_id, memory_key)`, and `(organization_id, rating)`. This enables sub-millisecond session history & memory query performance.
+- **Eager Loading Optimization**: `AICopilotRepository` utilizes SQLAlchemy `selectinload(CopilotSessionModel.messages)` and `selectinload(CopilotSessionModel.context_memories)` to fetch active investigation sessions, chat history, and persistent context memory in a single database round-trip.
+- **Grounding Explainability Indexing**: Grounding metadata columns (`response_confidence_score`, `sources_used`, `knowledge_chunks_used`, `tools_called`, `reasoning_summary`, `model_used`, `prompt_version`, `response_evaluation_metadata`) allow instant auditability of AI recommendations without secondary database joins.
+
+
 
 
 

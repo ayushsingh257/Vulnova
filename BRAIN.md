@@ -258,24 +258,29 @@ The following discovery engine architecture decisions were finalized during Phas
     ```
     User Request ──► Scan Profile Resolution ──► Policy Validation ──► Plugin Execution ──► Risk Intelligence ──► Finding Deduplication ──► Evidence Collection ──► Assessment Storage
     ```
-    - `ScanProfileRegistry` references `PluginRegistry` IDs only and does not duplicate plugin metadata or implementation logic.
-    - `PluginRegistry` remains the single source of truth for plugin availability and capability verification.
-    - `ScanPolicyEngine` is a stateless helper class independent of FastAPI/HTTP layers, ensuring full compatibility for reuse inside future Era 6 distributed Celery worker sandboxes.
-16. **Multi-Source Finding Correlation & Asset Inventory Architecture**: Findings are no longer isolated scanner records. `AssessmentCorrelationEngine` maps normalized findings to Asset Graph nodes (`AssetNode`) and aggregates posture metrics:
-    - `asset_node_id` remains an optional field (`Optional[UUID]`) on findings to preserve full backward compatibility with legacy scan data.
-    - Findings are NOT duplicated as graph nodes; they remain stored in `security_findings` while linked via `asset_node_id` to prevent graph node explosion.
-    - Asset posture risk scores reuse `RiskIntelligenceEngine` composite scores (`composite_risk_score`) rather than inventing secondary risk engines.
-    - Every asset inventory query enforces mandatory `organization_id` filtering for strict multi-tenant boundary security.
-17. **Attack Surface Posture Snapshotting & Continuous Monitoring Architecture**: Vulnova posture snapshots and change detection events:
-    - `AssetSnapshotModel` (`asset_snapshots` table) records point-in-time posture aggregates (`total_assets`, `total_findings`, `critical_findings`, `high_findings`, `avg_risk_score`, `max_risk_score`) per organization assessment run.
-    - Every posture snapshot is organization isolated (`organization_id`), assessment linked (`assessment_job_id`), and timestamped (`created_at`) to build immutable security audit history.
-    - Risk score trajectory metrics reuse `RiskIntelligenceEngine` composite scores (`f.risk.composite_risk_score`) directly; zero secondary risk calculators are introduced.
-    - `ChangeDetectionEngine` identifies vulnerability lifecycle state transitions (`FINDING_NEW`, `FINDING_RESOLVED`, `FINDING_REOPENED`) and records discrete audit timeline events in `AssetChangeEventModel` (`asset_change_events`).
-18. **Enterprise Finding Triage & Automated Suppression Architecture**: Vulnova vulnerability lifecycle management and automated false-positive suppression:
+- Investigate the root cause.
+- Fix the actual issue.
+- Re-run validation.
+- Push again.
+- Wait for successful CI completion.
+
+Do not bypass failures by:
+- commenting out code,
+- disabling tests,
+- removing security checks,
+- ignoring workflow failures.
+
+After CI success:
+- Update ROADMAP.md completion status with ✅.
 - Update BRAIN.md project state if required.
 - Continue to the next phase only after verification.
 
-This workflow represents Vulnova's enterprise engineering lifecycle.
+25. **Enterprise AI Security Copilot Architecture (Phase 5.7)**: AI Security Copilot architecture rules:
+    - `SecurityCopilotService` acts as the primary conversational SOC assistant, unifying intelligence from LLM Gateway, Finding Explainer/Impact Engine, Attack Path Engine, Remediation Engine, False Positive/Confidence Engine, and pgvector RAG Knowledge Base.
+    - Multi-agent intent classification (`AgentOrchestrator`) routes queries to specialized sub-agent personas (`SECURITY_ANALYST`, `EXPLAINER`, `ATTACK_PATH`, `REMEDIATION`, `FALSE_POSITIVE`, `KNOWLEDGE_RAG`).
+    - Tool execution (`CopilotToolRegistry`) is strictly restricted to read-only security tools (`get_finding_details`, `get_asset_topology`, `get_risk_summary`, `search_rag_knowledge`, `get_remediation_plan`, `get_confidence_analysis`, `get_attack_path`) under a strict **Human-in-the-Loop Only** policy with tool audit logging (`ai_copilot_tool_executions`).
+    - Grounding explainability metadata (`response_confidence_score`, `sources_used`, `knowledge_chunks_used`, `tools_called`, `reasoning_summary`, `model_used`, `prompt_version`, `response_evaluation_metadata`) MUST be tracked on every assistant message.
+    - Data is stored across a 5-table normalized schema (`ai_copilot_sessions`, `ai_copilot_messages`, `ai_copilot_context_memories`, `ai_copilot_tool_executions`, `ai_copilot_feedback`) with strict multi-tenant boundary checks (`organization_id = tenant_id`) and RBAC authorization (`copilot:read`, `copilot:chat`, `copilot:manage`, `copilot:feedback`).
 
 ### Axiom 8: Canonical Repository Blueprint Rule
 `PROJECT_STRUCTURE.md` is the canonical repository blueprint.
