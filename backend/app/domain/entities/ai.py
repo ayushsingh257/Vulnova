@@ -383,3 +383,87 @@ class AIRemediationPlan:
     reviewed_at: Optional[datetime] = None
     error_message: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+# ── Phase 5.5: AI False Positive Filter & Finding Confidence Domain Entities ──
+
+
+class FindingConfidenceClassification(str, Enum):
+    """Classification rating of vulnerability finding authenticity."""
+
+    TRUE_POSITIVE = "TRUE_POSITIVE"
+    FALSE_POSITIVE = "FALSE_POSITIVE"
+    NEEDS_REVIEW = "NEEDS_REVIEW"
+
+
+class AIConfidenceStatus(str, Enum):
+    """Lifecycle status of an AI confidence analysis or similarity match."""
+
+    GENERATED = "GENERATED"
+    REVIEWED = "REVIEWED"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+    STALE = "STALE"
+    FAILED = "FAILED"
+
+
+class SimilaritySignalType(str, Enum):
+    """Signals used for multi-vector duplicate finding similarity correlation."""
+
+    CVE = "CVE"
+    CWE = "CWE"
+    ENDPOINT = "ENDPOINT"
+    ASSET_NODE = "ASSET_NODE"
+    PLUGIN_ID = "PLUGIN_ID"
+    VULNERABILITY_TITLE = "VULNERABILITY_TITLE"
+    AFFECTED_COMPONENT = "AFFECTED_COMPONENT"
+    ATTACK_TECHNIQUE = "ATTACK_TECHNIQUE"
+
+
+@dataclass
+class AIFindingSimilarityMatch:
+    """Domain entity representing a duplicate or related finding match across multiple correlation signals."""
+
+    organization_id: UUID
+    source_finding_id: UUID
+    matched_finding_id: UUID
+    similarity_score: float
+    similarity_reason: str
+    matched_signals: List[SimilaritySignalType] = field(default_factory=list)
+    id: UUID = field(default_factory=uuid4)
+    status: AIConfidenceStatus = AIConfidenceStatus.GENERATED
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class AIFindingConfidenceAnalysis:
+    """Domain entity representing an AI confidence assessment with calibration metadata and persistent identity."""
+
+    organization_id: UUID
+    finding_id: UUID
+    classification: FindingConfidenceClassification
+    confidence_score: float
+    evidence_quality_score: float
+    reasoning: str
+    supporting_evidence: str
+    contradicting_evidence: str
+    missing_information: str
+    validation_requirements: str
+    recommendation: str
+    composite_risk_score: float
+    model_used: str
+    provider_used: str
+    prompt_version: int = 1
+    id: UUID = field(default_factory=uuid4)
+    status: AIConfidenceStatus = AIConfidenceStatus.GENERATED
+    similarity_matches: List[AIFindingSimilarityMatch] = field(default_factory=list)
+    review_notes: Optional[str] = None
+    reviewed_by: Optional[UUID] = None
+    reviewed_at: Optional[datetime] = None
+    # ── AI Confidence Score Calibration Metadata ──
+    predicted_confidence_score: Optional[float] = None
+    analyst_final_decision: Optional[str] = None
+    confidence_accuracy_delta: Optional[float] = None
+    feedback_timestamp: Optional[datetime] = None
+    error_message: Optional[str] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)

@@ -8,17 +8,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.dependencies.api_key import get_current_user_or_api_key
 from app.api.v1.dependencies.rbac import require_permission
 from app.application.ai.attack_path_service import AIAttackPathService
+from app.application.ai.confidence_service import AIConfidenceAnalysisService
 from app.application.ai.dto import (
     AIAttackPathDTO,
     AIChatCompletionRequest,
     AIChatCompletionResponse,
+    AIFindingConfidenceAnalysisDTO,
     AIFindingExplanationDTO,
+    AIFindingSimilarityMatchDTO,
     AIImpactAnalysisDTO,
     AIRemediationPlanDTO,
     AIUsageSummaryDTO,
     CreatePromptTemplateRequest,
     CreateProviderRequest,
     GenerateAttackPathRequest,
+    GenerateConfidenceAnalysisRequest,
     GenerateExplanationRequest,
     GenerateImpactAnalysisRequest,
     GenerateRemediationRequest,
@@ -27,6 +31,7 @@ from app.application.ai.dto import (
     PromptTemplateDTO,
     RegisterModelRequest,
     ReviewAttackPathRequest,
+    ReviewConfidenceAnalysisRequest,
     ReviewRemediationPlanRequest,
 )
 from app.application.ai.explainer_service import AIFindingExplainerService
@@ -600,6 +605,162 @@ async def review_remediation_plan(
     return await service.review_remediation_plan(
         organization_id=current_user.organization_id,
         plan_id=_UUID(plan_id),
+        reviewer_id=current_user.id,
+        req=req,
+    )
+
+
+# ── Phase 5.5: AI False Positive Filter & Finding Confidence Endpoints ──
+
+
+@router.post(
+    "/findings/{finding_id}/confidence-analysis",
+    response_model=AIFindingConfidenceAnalysisDTO,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("findings:ai_confidence"))],
+)
+async def generate_confidence_analysis(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    req: Optional[GenerateConfidenceAnalysisRequest] = None,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AIFindingConfidenceAnalysisDTO:
+    """Synthesize an evidence-grounded AI confidence assessment for a finding without auto-suppression.
+
+    Requires authentication and 'findings:ai_confidence' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIConfidenceAnalysisService(session)
+    return await service.generate_confidence_analysis(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+        actor_user_id=current_user.id,
+        model_alias=req.model_alias if req else None,
+        temperature=req.temperature if req else 0.2,
+    )
+
+
+@router.get(
+    "/findings/{finding_id}/confidence-analysis",
+    response_model=Optional[AIFindingConfidenceAnalysisDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def get_latest_confidence_analysis(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> Optional[AIFindingConfidenceAnalysisDTO]:
+    """Retrieve the latest confidence analysis assessment for a finding.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIConfidenceAnalysisService(session)
+    return await service.get_latest_confidence_analysis(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+    )
+
+
+@router.get(
+    "/confidence-analysis",
+    response_model=List[AIFindingConfidenceAnalysisDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def list_confidence_analyses(
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> List[AIFindingConfidenceAnalysisDTO]:
+    """List organizational confidence analysis history.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    service = AIConfidenceAnalysisService(session)
+    return await service.list_confidence_analyses(
+        organization_id=current_user.organization_id,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.post(
+    "/findings/{finding_id}/similarity-check",
+    response_model=List[AIFindingSimilarityMatchDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:ai_confidence"))],
+)
+async def run_similarity_check(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> List[AIFindingSimilarityMatchDTO]:
+    """Correlate finding against organizational history across 8 matching signals.
+
+    Requires authentication and 'findings:ai_confidence' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIConfidenceAnalysisService(session)
+    return await service.run_similarity_check(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+    )
+
+
+@router.get(
+    "/finding-similarity/{finding_id}",
+    response_model=List[AIFindingSimilarityMatchDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def get_similarity_matches_for_finding(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> List[AIFindingSimilarityMatchDTO]:
+    """Retrieve existing similarity matches for a finding.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIConfidenceAnalysisService(session)
+    return await service.list_similarity_matches(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+    )
+
+
+@router.patch(
+    "/confidence-analysis/{analysis_id}/review",
+    response_model=AIFindingConfidenceAnalysisDTO,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:ai_confidence"))],
+)
+async def review_confidence_analysis(
+    req: ReviewConfidenceAnalysisRequest,
+    analysis_id: str = Path(
+        ..., description="UUID of the confidence analysis to review"
+    ),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AIFindingConfidenceAnalysisDTO:
+    """Record SOC analyst review feedback and track AI confidence calibration accuracy metadata.
+
+    Requires authentication and 'findings:ai_confidence' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIConfidenceAnalysisService(session)
+    return await service.review_confidence_analysis(
+        organization_id=current_user.organization_id,
+        analysis_id=_UUID(analysis_id),
         reviewer_id=current_user.id,
         req=req,
     )

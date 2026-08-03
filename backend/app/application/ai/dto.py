@@ -339,3 +339,66 @@ class AIRemediationPlanDTO(BaseModel):
     reviewed_at: Optional[str] = None
     error_message: Optional[str] = None
     created_at: str
+
+
+# ── Phase 5.5: AI False Positive Filter & Confidence DTOs ──
+
+
+class GenerateConfidenceAnalysisRequest(BaseModel):
+    """Request payload for triggering AI confidence analysis."""
+
+    finding_id: str
+    model_alias: Optional[str] = None
+    temperature: float = 0.2
+
+
+class ReviewConfidenceAnalysisRequest(BaseModel):
+    """Request payload for analyst review of confidence analysis."""
+
+    status: str
+    review_notes: Optional[str] = None
+
+
+class AIFindingSimilarityMatchDTO(BaseModel):
+    """DTO representing a duplicate or related finding similarity match."""
+
+    id: str
+    source_finding_id: str
+    matched_finding_id: str
+    similarity_score: float
+    similarity_reason: str
+    matched_signals: List[str]
+    status: str
+    created_at: str
+
+
+class AIFindingConfidenceAnalysisDTO(BaseModel):
+    """DTO representing a full AI confidence analysis assessment."""
+
+    id: str
+    finding_id: str
+    classification: str
+    confidence_score: float
+    evidence_quality_score: float
+    reasoning: str
+    supporting_evidence: str
+    contradicting_evidence: str
+    missing_information: str
+    validation_requirements: str
+    recommendation: str
+    composite_risk_score: float
+    model_used: str
+    provider_used: str
+    prompt_version: int
+    status: str
+    similarity_matches: List[AIFindingSimilarityMatchDTO]
+    review_notes: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    # Calibration feedback tracking metadata
+    predicted_confidence_score: Optional[float] = None
+    analyst_final_decision: Optional[str] = None
+    confidence_accuracy_delta: Optional[float] = None
+    feedback_timestamp: Optional[str] = None
+    error_message: Optional[str] = None
+    created_at: str

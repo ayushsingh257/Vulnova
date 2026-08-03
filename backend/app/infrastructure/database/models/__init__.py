@@ -14,6 +14,10 @@ from app.infrastructure.database.models.ai_attack_path import (
     AIAttackPathModel,
     AIAttackPathStepModel,
 )
+from app.infrastructure.database.models.ai_confidence import (
+    AIFindingConfidenceAnalysisModel,
+    AIFindingSimilarityMatchModel,
+)
 from app.infrastructure.database.models.ai_remediation import (
     AIPatchSuggestionModel,
     AIRemediationPlanModel,
@@ -66,4 +70,6 @@ __all__ = [
     "AIRemediationPlanModel",
     "AIRemediationStepModel",
     "AIPatchSuggestionModel",
+    "AIFindingConfidenceAnalysisModel",
+    "AIFindingSimilarityMatchModel",
 ]
