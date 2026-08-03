@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies.api_key import get_current_user_or_api_key
 from app.api.v1.dependencies.rbac import require_permission
+from app.application.ai.attack_path_service import AIAttackPathService
 from app.application.ai.dto import (
+    AIAttackPathDTO,
     AIChatCompletionRequest,
     AIChatCompletionResponse,
     AIFindingExplanationDTO,
@@ -15,12 +17,14 @@ from app.application.ai.dto import (
     AIUsageSummaryDTO,
     CreatePromptTemplateRequest,
     CreateProviderRequest,
+    GenerateAttackPathRequest,
     GenerateExplanationRequest,
     GenerateImpactAnalysisRequest,
     LLMModelDTO,
     LLMProviderConfigDTO,
     PromptTemplateDTO,
     RegisterModelRequest,
+    ReviewAttackPathRequest,
 )
 from app.application.ai.explainer_service import AIFindingExplainerService
 from app.application.ai.impact_analysis_service import ImpactAnalysisService
@@ -334,4 +338,134 @@ async def list_impact_analyses(
         organization_id=current_user.organization_id,
         limit=limit,
         offset=offset,
+    )
+
+
+# ── Phase 5.3: AI Attack Path Synthesis Endpoints ──
+
+
+@router.post(
+    "/findings/{finding_id}/attack-paths",
+    response_model=AIAttackPathDTO,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("findings:ai_attack_path"))],
+)
+async def generate_attack_path(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    req: Optional[GenerateAttackPathRequest] = None,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AIAttackPathDTO:
+    """Synthesize an evidence-grounded AI attack path for a security finding.
+
+    Requires authentication and 'findings:ai_attack_path' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIAttackPathService(session)
+    return await service.generate_attack_path(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+        actor_user_id=current_user.id,
+        model_alias=req.model_alias if req else None,
+        temperature=req.temperature if req else 0.2,
+    )
+
+
+@router.get(
+    "/findings/{finding_id}/attack-paths",
+    response_model=List[AIAttackPathDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def list_attack_paths_for_finding(
+    finding_id: str = Path(..., description="UUID of the security finding"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> List[AIAttackPathDTO]:
+    """Retrieve all synthesized attack paths for a specific finding.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIAttackPathService(session)
+    return await service.list_attack_paths_for_finding(
+        organization_id=current_user.organization_id,
+        finding_id=_UUID(finding_id),
+    )
+
+
+@router.get(
+    "/attack-paths/{path_id}",
+    response_model=Optional[AIAttackPathDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def get_attack_path_by_id(
+    path_id: str = Path(..., description="UUID of the attack path"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> Optional[AIAttackPathDTO]:
+    """Retrieve single attack path by ID with all steps.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIAttackPathService(session)
+    return await service.get_attack_path(
+        organization_id=current_user.organization_id,
+        path_id=_UUID(path_id),
+    )
+
+
+@router.get(
+    "/attack-paths",
+    response_model=List[AIAttackPathDTO],
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:read"))],
+)
+async def list_attack_paths(
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> List[AIAttackPathDTO]:
+    """List organizational attack path history.
+
+    Requires authentication and 'findings:read' RBAC permission (VIEWER+).
+    """
+    service = AIAttackPathService(session)
+    return await service.list_attack_paths(
+        organization_id=current_user.organization_id,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.patch(
+    "/attack-paths/{path_id}/review",
+    response_model=AIAttackPathDTO,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("findings:ai_attack_path"))],
+)
+async def review_attack_path(
+    req: ReviewAttackPathRequest,
+    path_id: str = Path(..., description="UUID of the attack path to review"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AIAttackPathDTO:
+    """Record SOC analyst review status and feedback notes on an attack path.
+
+    Requires authentication and 'findings:ai_attack_path' RBAC permission (SECURITY_ANALYST+).
+    """
+    from uuid import UUID as _UUID
+
+    service = AIAttackPathService(session)
+    return await service.review_attack_path(
+        organization_id=current_user.organization_id,
+        path_id=_UUID(path_id),
+        reviewer_id=current_user.id,
+        req=req,
     )

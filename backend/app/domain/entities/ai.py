@@ -197,3 +197,92 @@ class AIImpactAnalysis:
     status: AIAnalysisStatus = AIAnalysisStatus.COMPLETED
     error_message: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+# ── Phase 5.3: AI Attack Path Synthesis Domain Entities ──
+
+
+class AttackPathStatus(str, Enum):
+    """Lifecycle status of an AI-synthesized attack path."""
+
+    GENERATED = "GENERATED"
+    REVIEWED = "REVIEWED"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+    STALE = "STALE"
+    FAILED = "FAILED"
+
+
+class AttackStepType(str, Enum):
+    """Classification of individual steps in an attack chain aligned with MITRE ATT&CK tactics."""
+
+    INITIAL_ACCESS = "INITIAL_ACCESS"
+    EXECUTION = "EXECUTION"
+    PRIVILEGE_ESCALATION = "PRIVILEGE_ESCALATION"
+    CREDENTIAL_ACCESS = "CREDENTIAL_ACCESS"
+    LATERAL_MOVEMENT = "LATERAL_MOVEMENT"
+    IMPACT = "IMPACT"
+
+
+KNOWN_MITRE_TECHNIQUES = {
+    "T1190": "Exploit Public-Facing Application",
+    "T1059": "Command and Scripting Interpreter",
+    "T1068": "Exploitation for Privilege Escalation",
+    "T1078": "Valid Accounts",
+    "T1021": "Remote Services",
+    "T1555": "Credentials from Password Stores",
+    "T1003": "OS Credential Dumping",
+    "T1210": "Exploitation of Remote Services",
+    "T1083": "File and Directory Discovery",
+    "T1499": "Endpoint Denial of Service",
+    "T1110": "Brute Force",
+    "T1566": "Phishing",
+    "T1134": "Access Token Manipulation",
+    "T1046": "Network Service Discovery",
+}
+
+
+@dataclass
+class AttackPathStep:
+    """Domain entity representing a single evidence-grounded step in an attack chain."""
+
+    sequence_number: int
+    step_type: AttackStepType
+    title: str
+    description: str
+    mitre_tactic: str
+    mitre_technique_id: str
+    mitre_technique_name: str
+    attacker_action: str
+    required_privilege: str
+    id: UUID = field(default_factory=uuid4)
+    attack_path_id: Optional[UUID] = None
+    asset_node_id: Optional[UUID] = None
+    finding_id: Optional[UUID] = None
+    evidence_reference: Optional[str] = None
+    confidence_score: float = 1.0
+
+
+@dataclass
+class AttackPath:
+    """Domain entity representing a full AI-synthesized attack path with persistent identity."""
+
+    organization_id: UUID
+    root_finding_id: UUID
+    title: str
+    attack_summary: str
+    composite_risk_score: float
+    model_used: str
+    provider_used: str
+    confidence_score: float = 1.0
+    prompt_version: int = 1
+    id: UUID = field(default_factory=uuid4)
+    source_asset_id: Optional[UUID] = None
+    target_asset_id: Optional[UUID] = None
+    status: AttackPathStatus = AttackPathStatus.GENERATED
+    steps: List[AttackPathStep] = field(default_factory=list)
+    review_notes: Optional[str] = None
+    reviewed_by: Optional[UUID] = None
+    reviewed_at: Optional[datetime] = None
+    error_message: Optional[str] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)

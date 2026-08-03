@@ -197,3 +197,63 @@ class AIImpactAnalysisDTO(BaseModel):
     prompt_version: int
     status: str
     created_at: str
+
+
+# ── Phase 5.3: AI Attack Path Synthesis DTOs ──
+
+
+class GenerateAttackPathRequest(BaseModel):
+    """Request payload for triggering AI attack path synthesis."""
+
+    finding_id: str
+    model_alias: Optional[str] = None
+    temperature: float = 0.2
+
+
+class ReviewAttackPathRequest(BaseModel):
+    """Request payload for analyst review of a synthesized attack path."""
+
+    status: str
+    review_notes: Optional[str] = None
+
+
+class AttackPathStepDTO(BaseModel):
+    """DTO representing an individual step in an attack path chain."""
+
+    id: str
+    sequence_number: int
+    step_type: str
+    asset_node_id: Optional[str] = None
+    finding_id: Optional[str] = None
+    title: str
+    description: str
+    mitre_tactic: str
+    mitre_technique_id: str
+    mitre_technique_name: str
+    attacker_action: str
+    required_privilege: str
+    evidence_reference: Optional[str] = None
+    confidence_score: float = 1.0
+
+
+class AIAttackPathDTO(BaseModel):
+    """DTO representing a full AI-synthesized attack path with steps and review metadata."""
+
+    id: str
+    root_finding_id: str
+    source_asset_id: Optional[str] = None
+    target_asset_id: Optional[str] = None
+    title: str
+    attack_summary: str
+    composite_risk_score: float
+    confidence_score: float
+    model_used: str
+    provider_used: str
+    prompt_version: int
+    status: str
+    steps: List[AttackPathStepDTO]
+    review_notes: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    error_message: Optional[str] = None
+    created_at: str

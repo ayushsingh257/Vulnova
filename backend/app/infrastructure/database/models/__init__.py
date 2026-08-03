@@ -10,6 +10,10 @@ from app.infrastructure.database.models.ai_analysis import (
     AIFindingExplanationModel,
     AIImpactAnalysisModel,
 )
+from app.infrastructure.database.models.ai_attack_path import (
+    AIAttackPathModel,
+    AIAttackPathStepModel,
+)
 from app.infrastructure.database.models.api_key import APIKeyModel
 from app.infrastructure.database.models.assessment import (
     AssessmentJobModel,
@@ -52,4 +56,6 @@ __all__ = [
     "LLMRequestLogModel",
     "AIFindingExplanationModel",
     "AIImpactAnalysisModel",
+    "AIAttackPathModel",
+    "AIAttackPathStepModel",
 ]
