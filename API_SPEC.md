@@ -386,23 +386,57 @@ All API errors return a standardized JSON error format:
 #### `GET /findings/{finding_id}/evidence`
 - **Summary**: Retrieve detailed evidence records (screenshots, HTTP request/response dumps, proof hashes) associated with finding.
 
-#### `POST /findings/{finding_id}/ai-analyze`
-- **Summary**: Trigger autonomous AI Security Analyst re-evaluation.
-- **Response (200 OK)**:
+#### `POST /ai/findings/{finding_id}/explain`
+- **Summary**: Generate AI finding explanation (`findings:ai_explain` permission required).
+- **Response (201 Created)**:
   ```json
   {
-    "finding_id": "uuid...",
-    "ai_analysis": {
-      "cvss_score": 8.6,
-      "cvss_vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N",
-      "technical_impact": "Reflected Cross-Site Scripting allows arbitrary code execution in victim browser context.",
-      "business_impact": "Potential session hijacking of administrative users leading to unauthorized account takeover.",
-      "attack_scenario": "Attacker crafts malicious URL containing payload...",
-      "remediation_patch": "```python\n# Sanitized input using HTML escape\nimport html\nsanitized_input = html.escape(user_input)\n```",
-      "false_positive_probability": 0.05
-    }
+    "id": "explanation_uuid",
+    "finding_id": "finding_uuid",
+    "vulnerability_summary": "SQL Injection allowing database extraction.",
+    "technical_root_cause": "Direct string concatenation in SQL query builder.",
+    "affected_asset_context": "Login authentication API endpoint.",
+    "exploitability_analysis": "High exploitability; public tool availability.",
+    "business_impact": "Potential data breach and unauthorized database access.",
+    "attack_prerequisites": "Network access to login form.",
+    "severity_reasoning": "High CVSS base score of 8.5.",
+    "remediation_priority": "P1 - Fix immediately within 72 hours.",
+    "model_used": "gpt-4o",
+    "provider_used": "OPENAI",
+    "prompt_version": 1,
+    "status": "COMPLETED",
+    "created_at": "2026-08-03T12:00:00Z"
   }
   ```
+
+#### `GET /ai/findings/{finding_id}/explanation`
+- **Summary**: Retrieve latest AI explanation for a finding (`findings:read` permission required).
+
+#### `POST /ai/findings/{finding_id}/impact`
+- **Summary**: Generate AI impact analysis report (`findings:ai_explain` permission required).
+- **Response (201 Created)**:
+  ```json
+  {
+    "id": "impact_uuid",
+    "finding_id": "finding_uuid",
+    "technical_impact_summary": "Full compromise of web application server host.",
+    "executive_impact_summary": "Critical threat to customer data confidentiality.",
+    "risk_justification": "Maximum risk rating driven by high EPSS exploit probability (92%).",
+    "affected_business_components": "Core Payment Processing Service.",
+    "cvss_interpretation": "CVSS 9.8 Critical rating.",
+    "epss_context": "92nd percentile exploit probability.",
+    "exposure_assessment": "Publicly exposed Internet facing API endpoint.",
+    "evidence_correlation": "Proof-of-exploit HTTP request dump confirms remote shell execution.",
+    "model_used": "claude-3-5-sonnet",
+    "provider_used": "ANTHROPIC",
+    "prompt_version": 1,
+    "status": "COMPLETED",
+    "created_at": "2026-08-03T12:00:00Z"
+  }
+  ```
+
+#### `GET /ai/findings/{finding_id}/impact`
+- **Summary**: Retrieve latest AI impact analysis report (`findings:read` permission required).
 
 ---
 

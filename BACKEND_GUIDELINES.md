@@ -152,4 +152,15 @@ All logs are emitted using `structlog` as formatted JSON:
 5. **Sensitive Prompt Context Sanitization**: `PromptOrchestratorService` MUST invoke `mask_sensitive_prompt_context` to strip/mask Authorization headers, Bearer tokens, cookies, API keys, and passwords before formatting prompt payloads.
 6. **Internal Gateway Foundation for AI Agents**: `/ai/chat/completions` and `LLMGatewayService` serve as internal infrastructure. Future Era 5 AI agents (`AIFindingExplainerService`, `AttackPathSynthesizer`, `AIRemediationEngine`) MUST consume `LLMGatewayService` internally.
 
+---
+
+## 🤖 11. AI Finding Explainer & Impact Analysis Engine Architecture
+
+1. **Domain Entity Classification**: `AIFindingExplanation` and `AIImpactAnalysis` are classified as **Domain Entities** (not Value Objects) because they possess persistent identity (`UUID`), lifecycle status (`COMPLETED`, `FAILED`, `STALE`), creation timestamps, and immutable audit history.
+2. **Structured Output JSON Repair Recovery**: If initial LLM output fails JSON parsing, `AIFindingExplainerService` and `ImpactAnalysisService` MUST execute a retry-once recovery attempt using a strict JSON repair prompt before persisting a `FAILED` status record. Failed generation attempts MUST be recorded rather than silently discarded.
+3. **Reuse Existing Risk Scores**: AI analysis services MUST read `risk_score` (the composite risk score from `RiskIntelligenceEngine`) directly from `SecurityFindingModel.risk_score`. Services MUST NOT recalculate or override composite risk scores.
+4. **Context Sanitization & Prompt Injection Resistance**: All evidence dumps and finding descriptions MUST be passed through `mask_sensitive_prompt_context` prior to prompt rendering. System prompts MUST instruct the LLM to ignore embedded instructions in finding text.
+5. **No Duplicate Request Logging**: AI analysis records store generated domain explanations and impact reports in `ai_finding_explanations` and `ai_impact_analyses` tables. Token consumption, latency, and USD costs are managed by `LLMGatewayService.generate_completion` and logged to `llm_request_logs`.
+
+
 

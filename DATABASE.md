@@ -286,6 +286,52 @@ CREATE TABLE llm_request_logs (
 );
 CREATE INDEX idx_llm_logs_org_created ON llm_request_logs(organization_id, created_at);
 
+-- AI Finding Explanations Table (Phase 5.2)
+CREATE TABLE ai_finding_explanations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    finding_id UUID NOT NULL REFERENCES security_findings(id) ON DELETE CASCADE,
+    vulnerability_summary TEXT NOT NULL,
+    technical_root_cause TEXT NOT NULL,
+    affected_asset_context TEXT NOT NULL,
+    exploitability_analysis TEXT NOT NULL,
+    business_impact TEXT NOT NULL,
+    attack_prerequisites TEXT NOT NULL,
+    severity_reasoning TEXT NOT NULL,
+    remediation_priority TEXT NOT NULL,
+    model_used VARCHAR(100) NOT NULL,
+    provider_used VARCHAR(50) NOT NULL,
+    prompt_version INT NOT NULL DEFAULT 1,
+    status VARCHAR(20) NOT NULL DEFAULT 'COMPLETED', -- 'COMPLETED', 'FAILED', 'STALE'
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_ai_explanations_org_finding ON ai_finding_explanations(organization_id, finding_id);
+CREATE INDEX idx_ai_explanations_org_created ON ai_finding_explanations(organization_id, created_at);
+
+-- AI Impact Analyses Table (Phase 5.2)
+CREATE TABLE ai_impact_analyses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    finding_id UUID NOT NULL REFERENCES security_findings(id) ON DELETE CASCADE,
+    technical_impact_summary TEXT NOT NULL,
+    executive_impact_summary TEXT NOT NULL,
+    risk_justification TEXT NOT NULL,
+    affected_business_components TEXT NOT NULL,
+    cvss_interpretation TEXT NOT NULL,
+    epss_context TEXT NOT NULL,
+    exposure_assessment TEXT NOT NULL,
+    evidence_correlation TEXT NOT NULL,
+    model_used VARCHAR(100) NOT NULL,
+    provider_used VARCHAR(50) NOT NULL,
+    prompt_version INT NOT NULL DEFAULT 1,
+    status VARCHAR(20) NOT NULL DEFAULT 'COMPLETED', -- 'COMPLETED', 'FAILED', 'STALE'
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_ai_impact_org_finding ON ai_impact_analyses(organization_id, finding_id);
+CREATE INDEX idx_ai_impact_org_created ON ai_impact_analyses(organization_id, created_at);
+
 -- Vector Embeddings for Knowledge Base & RAG
 CREATE TABLE security_embeddings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

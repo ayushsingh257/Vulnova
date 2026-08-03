@@ -19,6 +19,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 5 Phase 5.2 (AI Finding Explainer & Impact Analysis Engine)** (`9fce9b2d`):
+  - Created domain entities (`app/domain/entities/ai.py`): `AIFindingExplanation`, `AIImpactAnalysis`, and `AIAnalysisStatus` (`COMPLETED`, `FAILED`, `STALE`).
+  - Created database ORM models (`app/infrastructure/database/models/ai_analysis.py`): `AIFindingExplanationModel` (`ai_finding_explanations` table) and `AIImpactAnalysisModel` (`ai_impact_analyses` table) capturing immutable append-only history with multi-tenant isolation.
+  - Implemented `AIAnalysisRepository` (`app/infrastructure/database/repositories/ai_analysis_repository.py`): Multi-tenant isolated queries for storing and retrieving explanations and impact analyses.
+  - Built `AIFindingExplainerService` (`app/application/ai/explainer_service.py`): Consumes Era 4 findings, evidence artifacts, and triage state to generate 8-field structured vulnerability explanations via LLM gateway, featuring a retry-once JSON repair recovery strategy.
+  - Built `ImpactAnalysisService` (`app/application/ai/impact_analysis_service.py`): Consumes CVSS vectors, EPSS probabilities, composite risk scores (reads existing `risk_score` without recalculation), asset topology context, and evidence to generate structured impact analysis reports.
+  - Added Pydantic v2 DTO schemas (`app/application/ai/dto.py`): `GenerateExplanationRequest`, `AIFindingExplanationDTO`, `GenerateImpactAnalysisRequest`, and `AIImpactAnalysisDTO`.
+  - Implemented REST API router endpoints (`app/api/v1/routers/ai.py`): `POST /api/v1/ai/findings/{id}/explain`, `GET /api/v1/ai/findings/{id}/explanation`, `POST /api/v1/ai/findings/{id}/impact`, `GET /api/v1/ai/findings/{id}/impact`, `GET /api/v1/ai/explanations`, and `GET /api/v1/ai/impact-analyses`.
+  - Configured `"findings:ai_explain": Role.SECURITY_ANALYST` in `PERMISSION_MAP` (`app/domain/entities/role.py`) to guard generation endpoints.
+  - Added unit & integration test suite (`tests/test_ai_explainer.py`) — 7 new unit and integration tests covering explanation generation, impact analysis generation, retry-once JSON repair recovery, failure status persistence, repository CRUD, latest retrieval, and tenant boundary isolation. Total backend test suite now stands at **192 passing tests**.
 - **Era 5 Phase 5.1 (Multi-Provider LLM Gateway & Prompt Orchestrator)** (`48751b8a`):
   - Created pure domain entities (`app/domain/entities/ai.py`): `LLMProviderType`, `AIModelCapability`, `PromptCategory`, `AIRequestState`, `LLMProvider`, `LLMModel`, `PromptTemplate`, `LLMMessage`, `LLMRequest`, `LLMResponse`, `ProviderHealthState`.
   - Built provider-agnostic LLM adapter framework (`app/infrastructure/ai/providers/`): `BaseLLMAdapter`, `OpenAIAdapter`, `AnthropicAdapter`, `GoogleAdapter`, and `LocalOllamaAdapter`. Uses `httpx.AsyncClient` REST API calls with zero mandatory third-party LLM SDK dependencies to ensure unhindered application startup in local/air-gapped environments.

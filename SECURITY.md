@@ -103,6 +103,12 @@ Every target setup and scan creation request requires an explicit user confirmat
 - **Prompt Injection Defense Preparation**: System prompts enforce strict boundary demarcations (`<security_finding_data>`, `<evidence_dumps>`) instructing LLM providers to treat untrusted target input purely as data.
 - **AI Audit Trail Non-Repudiation**: Every AI request records token consumption (input/output), latency (ms), provider used, model alias, cost estimate ($), and status in `llm_request_logs` with mandatory tenant isolation (`organization_id`).
 
+### AI Finding Explainer & Impact Analysis Security Controls (Phase 5.2)
+- **Granular RBAC Authorization**: Generating AI explanations or impact reports requires `findings:ai_explain` permission (`SECURITY_ANALYST` role level 20+), while reading previously generated analysis requires `findings:read` (`VIEWER` role level 10+).
+- **Structured Output Recovery Defense**: Invalid or malformed LLM responses trigger a single repair attempt with strict JSON repair system prompts before recording a `FAILED` status, preventing malformed data injection into analysis tables.
+- **Sensitive Data Masking**: All evidence dumps and finding descriptions pass through `mask_sensitive_prompt_context` before being rendered into prompt payloads.
+- **Tenant Isolation & Audit Trail**: Explanations (`ai_finding_explanations`) and impact reports (`ai_impact_analyses`) enforce mandatory `organization_id` foreign keys and query filters, with generation events recorded via `AuditLogService.record_event` (`finding.ai_explained`, `finding.impact_analyzed`).
+
 ---
 
 ## 🌐 7. Secure HTTP Headers & Browser Protections

@@ -572,14 +572,28 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Multi-provider gateway routing, automatic fallback, health cooldown tracking, secret encryption, immutable prompt versioning, secret masking, and RBAC operational; pytest (178 passed), Ruff, Black, Mypy (strict) pass cleanly (`48751b8a`, `a9eab953`).
 - **Testing Requirements**: Secret encryption unit tests, provider REST adapter mock tests, prompt context secret masking tests, gateway fallback & health cooldown unit tests.
 
-### Phase 5.2: AI Finding Explainer & Impact Analysis Engine
-- **Objective**: Build an AI analysis engine that consumes normalized findings, evidence dumps, and asset graph context to generate clear business impact explanations, technical risk descriptions, attack prerequisites, and confidence reasoning.
+### ✅ Phase 5.2: AI Finding Explainer & Impact Analysis Engine
+- **Objective**: Build an AI analysis engine that consumes normalized findings, evidence dumps, and asset graph context to generate clear business impact explanations, technical risk descriptions, attack prerequisites, and confidence reasoning with structured output JSON repair recovery strategies.
 - **Deliverables**:
-  - `AIFindingExplainerService` (`app/application/ai/explainer_service.py`) generating human-readable technical and executive impact analyses.
-  - AI Analysis DTOs (`AIFindingExplanation`, `BusinessImpactSummary`, `AttackPrerequisites`).
+  - Domain entities (`app/domain/entities/ai.py`): `AIFindingExplanation`, `AIImpactAnalysis`, and `AIAnalysisStatus` (`COMPLETED`, `FAILED`, `STALE`).
+  - Database ORM models (`app/infrastructure/database/models/ai_analysis.py`): `AIFindingExplanationModel` (`ai_finding_explanations` table) and `AIImpactAnalysisModel` (`ai_impact_analyses` table) capturing immutable append-only history with multi-tenant isolation.
+  - `AIAnalysisRepository` (`app/infrastructure/database/repositories/ai_analysis_repository.py`): Multi-tenant isolated queries for storing and retrieving explanations and impact analyses.
+  - `AIFindingExplainerService` (`app/application/ai/explainer_service.py`): Consumes Era 4 findings, evidence artifacts, and triage state to generate 8-field structured vulnerability explanations via LLM gateway, featuring retry-once JSON repair recovery strategy.
+  - `ImpactAnalysisService` (`app/application/ai/impact_analysis_service.py`): Consumes CVSS vectors, EPSS probabilities, composite risk scores (reads existing `risk_score` without recalculation), asset topology context, and evidence to generate structured impact analysis reports.
+  - Pydantic v2 DTO schemas (`app/application/ai/dto.py`): `GenerateExplanationRequest`, `AIFindingExplanationDTO`, `GenerateImpactAnalysisRequest`, `AIImpactAnalysisDTO`.
+  - REST API router endpoints (`app/api/v1/routers/ai.py`): `POST /api/v1/ai/findings/{id}/explain`, `GET /api/v1/ai/findings/{id}/explanation`, `POST /api/v1/ai/findings/{id}/impact`, `GET /api/v1/ai/findings/{id}/impact`, `GET /api/v1/ai/explanations`, `GET /api/v1/ai/impact-analyses`.
+  - Configured `"findings:ai_explain": Role.SECURITY_ANALYST` in `PERMISSION_MAP` (`app/domain/entities/role.py`) to guard generation endpoints.
+  - Unit & Integration test suite (`tests/test_ai_explainer.py`) — 7 tests covering explanation generation, impact analysis generation, retry-once JSON repair recovery, failure status persistence, repository CRUD, latest retrieval, and tenant boundary isolation.
+- **Implementation Details**:
+  - **Feature Commit**: `9fce9b2d`
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 146 source files passed (strict mode)
+    - **Pytest**: **192/192 passed**
 - **Dependencies**: Phase 5.1, Phase 4.5, Phase 4.6.
-- **Completion Criteria**: Synthesizes clear business impact, technical risk, and CVSS 4.0 vectors tailored to target application domain.
-- **Testing Requirements**: Impact analysis prompt validation tests, explanation schema compliance tests.
+- **Completion Criteria**: AI finding explainer, impact analysis engine, structured output JSON repair recovery, and RBAC authorization operational; pytest (192 passed), Ruff, Black, Mypy (strict) pass cleanly (`9fce9b2d`).
+- **Testing Requirements**: Explanation generation unit tests, impact analysis prompt validation tests, retry-once JSON repair recovery tests, tenant boundary isolation tests.
 
 ### Phase 5.3: Automated Attack Path & Kill Chain Visualization Engine
 - **Objective**: Synthesize discovered vulnerabilities, technology stack fingerprints, and Asset Graph relationship edges to construct multi-step attack scenarios, MITRE ATT&CK kill chain progressions, privilege escalation paths, and lateral movement vectors.

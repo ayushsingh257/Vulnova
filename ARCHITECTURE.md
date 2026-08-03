@@ -249,6 +249,12 @@ Vulnova initiates task distribution via Celery and Redis. As platform scale dema
 4. `FindingCreatedEvent`: Emitted whenever a DAST plugin confirms a raw vulnerability.
 5. `AIAnalysisCompletedEvent`: Emitted when the AI Analyst finishes CVSS scoring, attack path synthesis, and remediation code patch generation.
 
+### D. AI Finding Explainer & Impact Analysis Engine Subsystem (Phase 5.2)
+The Phase 5.2 AI analysis subsystem operates as an autonomous AI Security Analyst layer:
+- **AIFindingExplainerService**: Consumes Era 4 normalized findings, evidence dumps, and triage state to generate 8-field structured vulnerability explanations via LLM gateway with a retry-once JSON repair recovery strategy.
+- **ImpactAnalysisService**: Enriches vulnerability data with CVSS vectors, EPSS probabilities, asset graph topology (`AssetNode`), composite risk scores (reads existing `risk_score` without recalculation), and evidence artifacts to produce executive and technical impact analysis reports.
+- **Persistence & Auditability**: Stores immutable append-only records in `ai_finding_explanations` and `ai_impact_analyses` tables while reusing Phase 5.1's `LLMGatewayService` for token budget tracking and request audit logging.
+
 ### Event Bus Migration Path:
 The application uses an abstract `EventBusPort`. While initial phases utilize Celery + Redis Pub/Sub, the interface supports seamless drop-in adapters for **RabbitMQ (AMQP)**, **Apache Kafka**, or **NATS JetStream** without modifying domain logic.
 
