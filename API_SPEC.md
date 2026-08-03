@@ -208,6 +208,33 @@ All API errors return a standardized JSON error format:
 - **Summary**: List technologies running on a specific asset.
 - **RBAC Guard**: Requires authentication and `assets:read` permission.
 
+#### `GET /api/v1/assets/trends`
+- **Summary**: Query organizational risk score trajectory and historical posture snapshots over time.
+- **RBAC Guard**: Requires authentication and `assets:read` permission.
+- **Response (200 OK)**:
+  ```json
+  {
+    "current_avg_risk_score": 45.2,
+    "previous_avg_risk_score": 52.0,
+    "net_risk_delta": -6.8,
+    "risk_trend_direction": "DECREASING",
+    "total_snapshots": 5,
+    "snapshots": []
+  }
+  ```
+
+#### `GET /api/v1/assets/{asset_id}/history`
+- **Summary**: Query historical posture timeline and change events for a specific asset node.
+- **RBAC Guard**: Requires authentication and `assets:read` permission.
+
+#### `GET /api/v1/findings/history`
+- **Summary**: Query vulnerability finding lifecycle status transitions (`NEW`, `RESOLVED`, `REOPENED`).
+- **RBAC Guard**: Requires authentication and `findings:read` permission.
+
+#### `GET /api/v1/security/posture/timeline`
+- **Summary**: Query aggregated security posture delta change events (`ASSET_ADDED`, `ASSET_REMOVED`, `TECH_UPDATED`, `FINDING_NEW`, `FINDING_RESOLVED`, `FINDING_REOPENED`).
+- **RBAC Guard**: Requires authentication and `assets:read` permission.
+
 ---
 
 ### D. Security Plugin Management (`/plugins`)

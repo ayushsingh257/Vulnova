@@ -499,15 +499,26 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Discovered assets and security findings correlated without duplication; unified asset inventory queryable via API; pytest (158 passed), Ruff, Black, Mypy (strict) pass cleanly (`17d8fb06`, `f319b2af`).
 - **Testing Requirements**: Multi-source correlation integration tests, asset graph finding linkage verification, tenant boundary isolation tests.
 
-### Phase 4.9: Attack Surface Trend & Continuous Monitoring Engine
-- **Objective**: Implement continuous attack surface tracking, historical technology change detection, new subdomain/open-port monitoring, asset health timelines, and historical risk trend analytics.
+### ✅ Phase 4.9: Attack Surface Trend & Continuous Monitoring Engine
+- **Objective**: Implement continuous attack surface posture snapshotting, vulnerability lifecycle tracking (`NEW`, `ACTIVE`, `RESOLVED`, `REOPENED`), delta change detection, historical risk trend trajectory analytics, and security posture event timelines.
 - **Deliverables**:
-  - `ContinuousMonitoringEngine` (`app/application/assessment/continuous_monitoring.py`) tracking delta changes between scan runs (new subdomains, open port shifts, tech stack changes).
-  - `AssetTrendRepository` (`app/infrastructure/database/repositories/asset_trend_repository.py`) storing historical posture snapshots and risk metrics over time.
-  - API endpoints `/api/v1/assets/trends` returning historical risk trajectory and change logs.
+  - `AssetSnapshotModel` (`asset_snapshots` table) and `AssetChangeEventModel` (`asset_change_events` table) ORM models (`app/infrastructure/database/models/trend.py`).
+  - `AssetTrendRepository` (`app/infrastructure/database/repositories/asset_trend_repository.py`) managing tenant-isolated posture snapshots and historical change timeline events.
+  - `ContinuousMonitoringService` & `ChangeDetectionEngine` (`app/application/assessment/continuous_monitoring.py`) computing posture snapshots and tracking vulnerability finding lifecycle shifts. Reuses `RiskIntelligenceEngine` composite scores (`composite_risk_score`) for trends.
+  - Extended DTO schemas (`app/application/assessment/dto.py`): `AssetSnapshotDTO`, `AssetChangeEventDTO`, `RiskTrajectoryResponse`, `PostureTimelineResponse`.
+  - REST API router endpoints (`app/api/v1/routers/trends.py`): `GET /api/v1/assets/trends`, `GET /api/v1/assets/{asset_id}/history`, `GET /api/v1/findings/history`, `GET /api/v1/security/posture/timeline`.
+  - Unit & Integration test suite (`tests/test_continuous_monitoring.py`) — 3 tests covering posture snapshot creation, finding lifecycle state transitions, and trend repository tenant isolation.
+- **Implementation Details**:
+  - **Feature Commit**: `88ebc528`
+  - **Documentation Commit**: `de524626`
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 123 source files passed (strict mode)
+    - **Pytest**: 161/161 passed
 - **Dependencies**: Phase 4.8.
-- **Completion Criteria**: Asset history, technology changes, and risk trend metrics tracked over time; delta change detection active.
-- **Testing Requirements**: Trend snapshot calculation tests, delta change detection unit tests, historical data retention tests.
+- **Completion Criteria**: Point-in-time posture snapshots, finding lifecycle transitions (`NEW`, `RESOLVED`, `REOPENED`), and historical risk trajectory analytics operational; pytest (161 passed), Ruff, Black, Mypy (strict) pass cleanly (`88ebc528`, `de524626`).
+- **Testing Requirements**: Posture snapshot aggregation unit tests, change detection engine delta tests, trend repository multi-tenant boundary isolation tests.
 
 ---
 

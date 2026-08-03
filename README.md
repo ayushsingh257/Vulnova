@@ -80,6 +80,7 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
 - **Authenticated Scan Support & Custom Scan Policies**: Per-scan overrides for authentication headers, session cookies, rate limits, and custom scope boundaries.
 - **Multi-Source Finding Correlation Engine**: `AssessmentCorrelationEngine` links security findings to Asset Graph nodes (`AssetNode`) and aggregates composite risk scores without duplicating findings as graph nodes or causing node graph explosion.
 - **Unified Asset Inventory & Posture Model**: Tenant-isolated asset inventory (`GET /api/v1/assets/inventory`, `GET /api/v1/assets/{asset_id}`) combining discovery targets, technology stack fingerprints (`RUNS_TECH`), security findings, and evidence artifacts into consolidated posture views.
+- **Attack Surface Trend & Continuous Monitoring Engine**: `ContinuousMonitoringService` & `ChangeDetectionEngine` capture point-in-time posture snapshots (`AssetSnapshotModel`), track vulnerability finding lifecycle transitions (`NEW`, `ACTIVE`, `RESOLVED`, `REOPENED`), calculate historical risk score trajectory analytics (`GET /api/v1/assets/trends`), and record security posture event timelines (`GET /api/v1/security/posture/timeline`).
 
 ---
 

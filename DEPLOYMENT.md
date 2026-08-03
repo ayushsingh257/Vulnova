@@ -118,3 +118,10 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 
 - **Tenant-Isolated Asset Query Indexing**: `asset_nodes` and `security_findings` tables utilize composite PostgreSQL indexes on `(organization_id, node_type)` and `(organization_id, asset_node_id)` to ensure sub-millisecond query execution times for asset inventory dashboards (`GET /api/v1/assets/inventory`).
 - **Zero Graph Node Explosion**: Finding data remains in `security_findings`, preventing table size inflation in `asset_nodes` and `asset_relationships`.
+
+---
+
+## 📈 6. Continuous Monitoring Snapshot Retention & Query Performance (Phase 4.9)
+
+- **Composite Posture Indexing**: `asset_snapshots` and `asset_change_events` tables utilize composite PostgreSQL indexes on `(organization_id, created_at)` and `(organization_id, change_type)` to optimize historical risk trajectory (`GET /api/v1/assets/trends`) and posture timeline queries.
+- **Snapshot Retention Strategy**: Posture snapshots are lightweight metric aggregates (~200 bytes per record) linked to `assessment_job_id` and timestamped, allowing multi-year security posture audit histories without storage bottlenecks.

@@ -266,3 +266,8 @@ The following discovery engine architecture decisions were finalized during Phas
     - Findings are NOT duplicated as graph nodes; they remain stored in `security_findings` while linked via `asset_node_id` to prevent graph node explosion.
     - Asset posture risk scores reuse `RiskIntelligenceEngine` composite scores (`composite_risk_score`) rather than inventing secondary risk engines.
     - Every asset inventory query enforces mandatory `organization_id` filtering for strict multi-tenant boundary security.
+17. **Attack Surface Posture Snapshotting & Continuous Monitoring Architecture**: Vulnova posture snapshots and change detection events:
+    - `AssetSnapshotModel` (`asset_snapshots` table) records point-in-time posture aggregates (`total_assets`, `total_findings`, `critical_findings`, `high_findings`, `avg_risk_score`, `max_risk_score`) per organization assessment run.
+    - Every posture snapshot is organization isolated (`organization_id`), assessment linked (`assessment_job_id`), and timestamped (`created_at`) to build immutable security audit history.
+    - Risk score trajectory metrics reuse `RiskIntelligenceEngine` composite scores (`f.risk.composite_risk_score`) directly; zero secondary risk calculators are introduced.
+    - `ChangeDetectionEngine` identifies vulnerability lifecycle state transitions (`FINDING_NEW`, `FINDING_RESOLVED`, `FINDING_REOPENED`) and records discrete audit timeline events in `AssetChangeEventModel` (`asset_change_events`).

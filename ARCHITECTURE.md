@@ -102,6 +102,9 @@ Evidence Collection Engine ─► (Mask Headers/Cookies + HTTP Dumps + DOM Snaps
 Multi-Source Correlation Engine ─► (Link Finding to AssetNode + Aggregate Composite Risk Posture)
         │
         ▼
+Posture Snapshot & Change Engine ─► (Compute Posture Snapshot + Track Finding Lifecycle State + Record Change Events)
+        │
+        ▼
 Normalized Database & Storage ──► (Storage Provider Bytes + DB Findings & Inventory Metadata)
         │
         ▼
@@ -128,6 +131,11 @@ Asset Inventory Intelligence & AI Security Copilot
 - **Backward Compatibility & Optional Linkage**: `asset_node_id` remains an optional field (`Optional[UUID]`) on `SecurityFindingModel` to ensure legacy findings remain valid without breaking existing database schemas.
 - **Zero Graph Explosion**: Security findings remain in `security_findings` rather than duplicated as individual graph nodes, maintaining clean and fast graph topology traversal.
 - **Risk Score Aggregation**: Asset composite risk scores reuse existing Phase 4.5 `RiskIntelligenceEngine` metrics (`composite_risk_score`) to aggregate maximum severity and risk ratings per asset node.
+
+### E. Attack Surface Trend & Continuous Monitoring Subsystem
+- **ContinuousMonitoringService**: Computes point-in-time posture snapshots (`AssetSnapshotModel`) linked to `organization_id` and `assessment_job_id`, timestamped for immutable security audit history.
+- **ChangeDetectionEngine**: Compares current assessment state against historical baseline snapshots to detect vulnerability finding lifecycle transitions (`FINDING_NEW`, `FINDING_RESOLVED`, `FINDING_REOPENED`) and records discrete audit events in `AssetChangeEventModel`.
+- **Historical Risk Trajectory**: Exposes organizational risk score trajectories (`GET /api/v1/assets/trends`) and posture event timelines (`GET /api/v1/security/posture/timeline`) reusing Phase 4.5 `RiskIntelligenceEngine` composite scores directly.
 - **Tenant Boundary Security**: All inventory lookup APIs (`GET /api/v1/assets/inventory`, `GET /api/v1/assets/{asset_id}`) strictly enforce tenant boundary isolation (`organization_id`).
 
 ---

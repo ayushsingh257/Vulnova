@@ -86,6 +86,11 @@ Every target setup and scan creation request requires an explicit user confirmat
 - **Integrity Checksums**: Every captured evidence artifact calculates a SHA-256 hash over raw byte content to guarantee proof integrity and non-repudiation.
 - **Tenant Isolation**: Evidence storage paths are strictly isolated per tenant (`uploads/evidence/<organization_id>/<finding_id>/`).
 
+### Posture Snapshotting & Audit History Protection (Phase 4.9)
+- **Tenant Boundary Isolation**: All posture snapshots (`asset_snapshots`) and change events (`asset_change_events`) enforce mandatory `organization_id` foreign keys and query filters.
+- **Audit Trail Non-Repudiation**: Every posture snapshot is tied to `assessment_job_id` and timestamped (`created_at` TIMESTAMPTZ) to create an immutable compliance history.
+- **RBAC Endpoint Protection**: Trend APIs (`GET /api/v1/assets/trends`, `GET /api/v1/security/posture/timeline`) enforce strict RBAC permissions (`assets:read`, `findings:read`).
+
 ---
 
 ## 🌐 7. Secure HTTP Headers & Browser Protections

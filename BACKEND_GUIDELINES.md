@@ -121,3 +121,12 @@ All logs are emitted using `structlog` as formatted JSON:
 2. **Zero Graph Node Explosion**: Findings MUST NOT be duplicated as graph nodes in `asset_nodes`. Security findings remain stored in `security_findings` table, linked via `asset_node_id` and target URL.
 3. **Risk Intelligence Reuse**: Asset risk score calculation reuses composite risk scores (`composite_risk_score`) produced by `RiskIntelligenceEngine` (Phase 4.5) rather than computing secondary risk scores.
 4. **Mandatory Tenant Boundary Isolation**: Every repository method in `AssetInventoryRepository` and `AssetGraphRepository` MUST include explicit `organization_id` filters to guarantee zero cross-tenant asset data leakage.
+
+---
+
+## 📈 8. Continuous Monitoring & Posture Snapshotting Architecture
+
+1. **Organization-Isolated, Job-Linked Snapshots**: Posture snapshots (`AssetSnapshotModel`) MUST be linked to `organization_id` and `assessment_job_id`, timestamped for immutable security audit trail history.
+2. **Risk Engine Reuse**: Posture metrics (`avg_risk_score`, `max_risk_score`) MUST reuse Phase 4.5 `RiskIntelligenceEngine` composite scores (`f.risk.composite_risk_score`) directly without secondary calculators.
+3. **Finding Lifecycle State Tracking**: `ChangeDetectionEngine` MUST evaluate vulnerability lifecycle shifts (`FINDING_NEW`, `FINDING_RESOLVED`, `FINDING_REOPENED`) across consecutive assessment runs.
+4. **Tenant-Isolated Trend Analytics**: Every method in `AssetTrendRepository` MUST include mandatory `organization_id` filtering.

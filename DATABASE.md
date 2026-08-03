@@ -154,6 +154,40 @@ CREATE TABLE evidence_artifacts (
 );
 CREATE INDEX idx_evidence_artifacts_org_finding ON evidence_artifacts(organization_id, finding_id);
 
+-- Posture Snapshots (Phase 4.9)
+CREATE TABLE asset_snapshots (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    assessment_job_id UUID REFERENCES assessment_jobs(id) ON DELETE SET NULL,
+    total_assets INT NOT NULL DEFAULT 0,
+    total_findings INT NOT NULL DEFAULT 0,
+    critical_findings INT NOT NULL DEFAULT 0,
+    high_findings INT NOT NULL DEFAULT 0,
+    medium_findings INT NOT NULL DEFAULT 0,
+    low_findings INT NOT NULL DEFAULT 0,
+    info_findings INT NOT NULL DEFAULT 0,
+    avg_risk_score NUMERIC(5, 2) NOT NULL DEFAULT 0.0,
+    max_risk_score NUMERIC(5, 2) NOT NULL DEFAULT 0.0,
+    metadata_json JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_asset_snapshots_org_created ON asset_snapshots(organization_id, created_at);
+
+-- Security Change Events (Phase 4.9)
+CREATE TABLE asset_change_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    asset_node_id UUID REFERENCES asset_nodes(id) ON DELETE SET NULL,
+    assessment_job_id UUID REFERENCES assessment_jobs(id) ON DELETE SET NULL,
+    change_type VARCHAR(50) NOT NULL, -- 'ASSET_ADDED', 'ASSET_REMOVED', 'TECH_UPDATED', 'FINDING_NEW', 'FINDING_RESOLVED', 'FINDING_REOPENED'
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    details_json JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_change_events_org_created ON asset_change_events(organization_id, created_at);
+CREATE INDEX idx_change_events_org_type ON asset_change_events(organization_id, change_type);
+
 -- Vector Embeddings for Knowledge Base & RAG
 CREATE TABLE security_embeddings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
