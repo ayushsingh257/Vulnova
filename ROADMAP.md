@@ -547,14 +547,30 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 
 ## 🤖 Era 5: Enterprise AI Security Analyst & Copilot Engine
 
-### Phase 5.1: Multi-Provider LLM Gateway & Prompt Orchestrator
-- **Objective**: Build a resilient multi-provider LLM gateway supporting OpenAI, Anthropic, and local Ollama models with prompt engineering orchestration, automatic fallback, retry logic, cost tracking, and dynamic model routing.
+### ✅ Phase 5.1: Multi-Provider LLM Gateway & Prompt Orchestrator
+- **Objective**: Build a secure, provider-agnostic AI infrastructure abstraction layer supporting OpenAI, Anthropic, Google Gemini, and local Ollama models with prompt engineering orchestration, automatic priority-based fallback routing, health cooldown tracking, token budget cost estimation, and immutable prompt versioning.
 - **Deliverables**:
-  - `LLMGateway` (`app/infrastructure/ai/llm_gateway.py`) implementing provider adapters (OpenAI, Anthropic, Ollama).
-  - `PromptOrchestrator` (`app/infrastructure/ai/prompt_orchestrator.py`) managing template rendering, context truncation, token cost calculation, and failover routing.
+  - Pure domain entities (`app/domain/entities/ai.py`): `LLMProviderType`, `AIModelCapability`, `PromptCategory`, `AIRequestState`, `LLMProvider`, `LLMModel`, `PromptTemplate`, `LLMMessage`, `LLMRequest`, `LLMResponse`, `ProviderHealthState`.
+  - Provider-independent LLM adapter framework (`app/infrastructure/ai/providers/`): `BaseLLMAdapter`, `OpenAIAdapter`, `AnthropicAdapter`, `GoogleAdapter`, `LocalOllamaAdapter`. Uses `httpx.AsyncClient` REST API calls with zero mandatory third-party LLM SDK dependencies to ensure unhindered application startup in local/air-gapped environments.
+  - `SecretEncryptionService` (`app/security/encryption.py`): Reusable AES-256-GCM secret encryption and decryption abstraction for API keys, cloud keys, and SIEM credentials.
+  - Database ORM models (`app/infrastructure/database/models/ai.py`): `LLMProviderModel` (`llm_providers` table), `LLMModelRegistryModel` (`llm_models` table), `PromptTemplateModel` (`prompt_templates` table), `LLMRequestLogModel` (`llm_request_logs` table). Exported in `models/__init__.py`.
+  - `LLMGatewayRepository` (`app/infrastructure/database/repositories/llm_gateway_repository.py`): Multi-tenant isolated queries for provider configs, model registry, immutable prompt versioning (`version = max_version + 1`), provider health state tracking, and AI request audit logs.
+  - `PromptOrchestratorService` (`app/application/ai/prompt_orchestrator_service.py`): Versioned prompt template resolution, variable interpolation, immutable version assignment, and `build_security_finding_context` featuring automatic masking of Bearer tokens, cookies, API keys, and passwords.
+  - `LLMGatewayService` (`app/application/ai/llm_gateway_service.py`): Multi-provider request execution, automatic priority-based fallback routing, health cooldown tracking, token budget cost estimation, and `AuditLogService` integration (`llm_provider.configured`, `prompt_template.created`). Serves as an internal gateway foundation for downstream Era 5 AI agents.
+  - Pydantic v2 DTO schemas (`app/application/ai/dto.py`): `CreateProviderRequest`, `LLMProviderConfigDTO`, `RegisterModelRequest`, `LLMModelDTO`, `CreatePromptTemplateRequest`, `PromptTemplateDTO`, `AIChatCompletionRequest`, `AIChatCompletionResponse`, `AIUsageSummaryDTO`, `LLMRequestLogDTO`.
+  - REST API router endpoints (`app/api/v1/routers/ai.py`): `POST /api/v1/ai/chat/completions`, `POST /api/v1/ai/providers`, `GET /api/v1/ai/providers`, `POST /api/v1/ai/models`, `GET /api/v1/ai/models`, `POST /api/v1/ai/prompts`, `GET /api/v1/ai/prompts`, `GET /api/v1/ai/usage`. Registered router in `app/api/v1/api.py`.
+  - Unit & Integration test suite (`tests/test_llm_gateway.py`) — 14 tests covering AES-256-GCM encryption, provider REST adapters, prompt variable rendering, context secret masking, fallback routing, and health cooldown tracking.
+- **Implementation Details**:
+  - **Feature Commit**: `48751b8a`
+  - **Changelog Commit**: `a9eab953`
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: 142 source files passed (strict mode)
+    - **Pytest**: **178/178 passed**
 - **Dependencies**: Era 4.
-- **Completion Criteria**: Gateway routes prompts seamlessly across providers with automatic retry, cost tracking, and fallback on rate limits/failures.
-- **Testing Requirements**: LLM provider adapter mock tests, failover routing unit tests, cost calculation tests.
+- **Completion Criteria**: Multi-provider gateway routing, automatic fallback, health cooldown tracking, secret encryption, immutable prompt versioning, secret masking, and RBAC operational; pytest (178 passed), Ruff, Black, Mypy (strict) pass cleanly (`48751b8a`, `a9eab953`).
+- **Testing Requirements**: Secret encryption unit tests, provider REST adapter mock tests, prompt context secret masking tests, gateway fallback & health cooldown unit tests.
 
 ### Phase 5.2: AI Finding Explainer & Impact Analysis Engine
 - **Objective**: Build an AI analysis engine that consumes normalized findings, evidence dumps, and asset graph context to generate clear business impact explanations, technical risk descriptions, attack prerequisites, and confidence reasoning.

@@ -134,3 +134,13 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 - **Suppression Rule Evaluation**: `finding_suppression_rules` table utilizes composite index `(organization_id, is_active)` to ensure fast in-memory matching of active false-positive rules during post-assessment pipeline execution.
 - **Data Retention Strategy**: Triage audit history records are immutable and lightweight (~150 bytes per record), providing non-repudiable audit trails for SOC 2 Type II and ISO 27001 compliance.
 
+---
+
+## 🤖 8. LLM Gateway Configuration & Ollama Local AI Deployment Options (Phase 5.1)
+
+- **Zero Mandatory SDK Dependency Footprint**: Provider adapters (`OpenAIAdapter`, `AnthropicAdapter`, `GoogleAdapter`, `LocalOllamaAdapter`) execute raw REST calls via `httpx.AsyncClient`. No heavy Python LLM SDK packages are required in production container builds (`Dockerfile.backend`).
+- **Local / Air-Gapped AI Deployment**: For enterprise deployments requiring 100% air-gapped data privacy, Vulnova connects directly to local Ollama REST instances (`http://localhost:11434/api/chat` or `http://ollama-service:11434`). If external cloud providers fail or are unconfigured, `LLMGatewayService` automatically falls back to local Ollama execution with zero USD API cost.
+- **Encrpyted Secret Storage**: API keys configured via `POST /api/v1/ai/providers` are encrypted at rest using AES-256-GCM via `SecretEncryptionService` and `SECRET_KEY` derivation seed.
+- **AI Request Log Retention**: `llm_request_logs` records input/output token counts, latency (ms), and cost estimates ($) indexed by `(organization_id, created_at)` for cost tracking and CISO governance.
+
+

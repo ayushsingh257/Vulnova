@@ -97,6 +97,12 @@ Every target setup and scan creation request requires an explicit user confirmat
 - **Audit Trail Traceability**: Reuses `AuditLogService.record_event` (`finding.triaged`, `suppression_rule.created`, `suppression_rule.deleted`) to provide complete audit trail traceability for regulatory compliance.
 - **Multi-Tenant Boundary Security**: All `FindingTriageRepository` queries enforce strict `organization_id` filters to prevent cross-organization triage or suppression rule access.
 
+### Multi-Provider LLM Gateway Security & Secret Encryption Controls (Phase 5.1)
+- **AES-256-GCM Secret Encryption**: External LLM provider API keys and integration credentials are encrypted at rest using AES-256-GCM (`SecretEncryptionService` in `app/security/encryption.py`).
+- **Prompt Context Secret Sanitization**: `PromptOrchestratorService` automatically strips/masks Authorization Bearer tokens, cookies, API keys, and passwords from security finding and evidence dumps before formatting prompt payloads (`mask_sensitive_prompt_context`).
+- **Prompt Injection Defense Preparation**: System prompts enforce strict boundary demarcations (`<security_finding_data>`, `<evidence_dumps>`) instructing LLM providers to treat untrusted target input purely as data.
+- **AI Audit Trail Non-Repudiation**: Every AI request records token consumption (input/output), latency (ms), provider used, model alias, cost estimate ($), and status in `llm_request_logs` with mandatory tenant isolation (`organization_id`).
+
 ---
 
 ## 🌐 7. Secure HTTP Headers & Browser Protections

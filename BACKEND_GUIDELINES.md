@@ -141,3 +141,15 @@ All logs are emitted using `structlog` as formatted JSON:
 4. **Audit Logging Integration**: Triage operations MUST reuse existing `AuditLogService.record_event` patterns (`finding.triaged`, `suppression_rule.created`, `suppression_rule.deleted`).
 5. **RBAC Guarding & Tenant Isolation**: Triage operations require `findings:triage` (`SECURITY_ANALYST`+), while suppression rule creation/deletion requires `findings:suppress` (`ADMIN`+). All repository queries MUST enforce mandatory `organization_id` tenant boundary isolation.
 
+---
+
+## 🤖 10. Multi-Provider LLM Gateway & Prompt Orchestrator Architecture
+
+1. **Zero Mandatory Third-Party SDK Dependencies**: Provider adapters (`OpenAIAdapter`, `AnthropicAdapter`, `GoogleAdapter`, `LocalOllamaAdapter`) MUST execute REST requests using core `httpx.AsyncClient` without requiring third-party LLM SDK packages. Application startup MUST NOT fail if third-party LLM packages are uninstalled.
+2. **Reusable Secret Encryption Service**: All external API keys and credentials MUST be encrypted at rest using AES-256-GCM (`SecretEncryptionService` in `app/security/encryption.py`), providing a reusable abstraction across Vulnova for cloud credentials and SIEM keys.
+3. **Provider Health & Cooldown Tracking**: `LLMGatewayService` MUST track provider failures (`consecutive_failures`) and trigger a cooldown period (e.g. 5 minutes) when threshold is reached, automatically routing traffic to healthy secondary providers or local Ollama fallback.
+4. **Immutable Security Prompt Versioning**: Prompt templates (`PromptTemplateModel`) are strictly immutable after creation. Modifying a prompt for an organization category and name MUST assign `version = max_version + 1` rather than overwriting existing records.
+5. **Sensitive Prompt Context Sanitization**: `PromptOrchestratorService` MUST invoke `mask_sensitive_prompt_context` to strip/mask Authorization headers, Bearer tokens, cookies, API keys, and passwords before formatting prompt payloads.
+6. **Internal Gateway Foundation for AI Agents**: `/ai/chat/completions` and `LLMGatewayService` serve as internal infrastructure. Future Era 5 AI agents (`AIFindingExplainerService`, `AttackPathSynthesizer`, `AIRemediationEngine`) MUST consume `LLMGatewayService` internally.
+
+

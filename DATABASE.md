@@ -220,6 +220,72 @@ CREATE TABLE finding_suppression_rules (
 );
 CREATE INDEX idx_suppression_rules_org_active ON finding_suppression_rules(organization_id, is_active);
 
+-- LLM Providers Table (Phase 5.1)
+CREATE TABLE llm_providers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    provider_type VARCHAR(50) NOT NULL, -- 'OPENAI', 'ANTHROPIC', 'GOOGLE', 'OLLAMA', 'CUSTOM'
+    name VARCHAR(255) NOT NULL,
+    api_endpoint TEXT,
+    encrypted_api_key TEXT, -- Encrypted via AES-256-GCM
+    priority INT NOT NULL DEFAULT 10,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    is_healthy BOOLEAN NOT NULL DEFAULT TRUE,
+    consecutive_failures INT NOT NULL DEFAULT 0,
+    last_failure_at TIMESTAMP WITH TIME ZONE,
+    cooldown_until TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_llm_providers_org_active ON llm_providers(organization_id, is_active, priority);
+
+-- LLM Model Registry Table (Phase 5.1)
+CREATE TABLE llm_models (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    provider_type VARCHAR(50) NOT NULL,
+    model_alias VARCHAR(100) NOT NULL, -- e.g. 'gpt-4o', 'claude-3-5-sonnet', 'llama3'
+    model_name VARCHAR(255) NOT NULL,
+    context_window_tokens INT NOT NULL DEFAULT 128000,
+    max_output_tokens INT NOT NULL DEFAULT 4096,
+    input_cost_per_1k_tokens NUMERIC(10, 6) NOT NULL DEFAULT 0.0,
+    output_cost_per_1k_tokens NUMERIC(10, 6) NOT NULL DEFAULT 0.0,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_llm_models_org_alias ON llm_models(organization_id, model_alias);
+
+-- Prompt Templates Table (Phase 5.1)
+CREATE TABLE prompt_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    category VARCHAR(50) NOT NULL, -- 'FINDING_EXPLAINER', 'ATTACK_PATH_SYNTHESIS', 'REMEDIATION_PATCH', 'SYSTEM_PROMPT'
+    name VARCHAR(255) NOT NULL,
+    version INT NOT NULL DEFAULT 1,
+    system_prompt TEXT NOT NULL,
+    user_prompt_template TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_prompt_templates_org_cat ON prompt_templates(organization_id, category, is_active);
+
+-- LLM Request Logs Table (Phase 5.1)
+CREATE TABLE llm_request_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    provider_type VARCHAR(50) NOT NULL,
+    model_used VARCHAR(100) NOT NULL,
+    prompt_category VARCHAR(50),
+    prompt_tokens INT NOT NULL DEFAULT 0,
+    completion_tokens INT NOT NULL DEFAULT 0,
+    total_tokens INT NOT NULL DEFAULT 0,
+    latency_ms INT NOT NULL DEFAULT 0,
+    cost_usd NUMERIC(10, 6) NOT NULL DEFAULT 0.0,
+    status VARCHAR(50) NOT NULL, -- 'SUCCESS', 'FAILED', 'FALLBACK'
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_llm_logs_org_created ON llm_request_logs(organization_id, created_at);
+
 -- Vector Embeddings for Knowledge Base & RAG
 CREATE TABLE security_embeddings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

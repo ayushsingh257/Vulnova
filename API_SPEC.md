@@ -267,6 +267,50 @@ All API errors return a standardized JSON error format:
 - **Summary**: Deactivate or delete an automated finding suppression rule.
 - **RBAC Guard**: Requires authentication and `findings:suppress` permission (`ADMIN`+).
 
+#### `POST /api/v1/ai/chat/completions`
+- **Summary**: Execute AI chat completion request across configured gateway providers with automatic fallback & health tracking.
+- **RBAC Guard**: Requires authentication and `findings:ai_analyze` permission (`SECURITY_ANALYST`+).
+- **Request Body**:
+  ```json
+  {
+    "messages": [
+      { "role": "system", "content": "You are Vulnova, an expert AI Security Analyst." },
+      { "role": "user", "content": "Analyze the following security finding context:\n..." }
+    ],
+    "model_alias": "gpt-4o",
+    "max_tokens": 4096,
+    "temperature": 0.2
+  }
+  ```
+
+#### `POST /api/v1/ai/providers`
+- **Summary**: Configure a tenant-isolated LLM provider with encrypted API key (AES-256-GCM).
+- **RBAC Guard**: Requires authentication and `organization:update` permission (`ADMIN`+).
+
+#### `GET /api/v1/ai/providers`
+- **Summary**: List active configured LLM providers for tenant organization.
+- **RBAC Guard**: Requires authentication and `findings:ai_analyze` permission.
+
+#### `POST /api/v1/ai/models`
+- **Summary**: Register supported LLM model metadata, context token limits, and pricing.
+- **RBAC Guard**: Requires authentication and `organization:update` permission (`ADMIN`+).
+
+#### `GET /api/v1/ai/models`
+- **Summary**: List registered LLM models for organization.
+- **RBAC Guard**: Requires authentication and `findings:ai_analyze` permission.
+
+#### `POST /api/v1/ai/prompts`
+- **Summary**: Create a new immutable version of a security prompt template (`version = max_version + 1`).
+- **RBAC Guard**: Requires authentication and `organization:update` permission (`ADMIN`+).
+
+#### `GET /api/v1/ai/prompts`
+- **Summary**: List active security prompt templates for organization.
+- **RBAC Guard**: Requires authentication and `findings:ai_analyze` permission.
+
+#### `GET /api/v1/ai/usage`
+- **Summary**: Query organizational token consumption, latency, and estimated USD cost analytics.
+- **RBAC Guard**: Requires authentication and `findings:ai_analyze` permission.
+
 ---
 
 ### D. Security Plugin Management (`/plugins`)

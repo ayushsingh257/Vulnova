@@ -324,3 +324,40 @@ While Vulnova starts as a modular FastAPI monolith, every domain component is st
 2. **Assessment Engine Service**: Can scale horizontally as independent stateless scanner pods.
 3. **AI Analyst Service**: Can run on dedicated GPU instances hosting local LLM inference engines (Ollama / vLLM).
 4. **Control Plane / API Gateway**: Remains lightweight FastAPI gateway managing OAuth2, routing, and WebSocket streaming.
+
+---
+
+## 🤖 7. Multi-Provider LLM Gateway & Prompt Orchestrator Architecture (Phase 5.1)
+
+Phase 5.1 establishes Vulnova's enterprise AI infrastructure abstraction layer:
+
+```text
+Era 4 Normalized Findings & Evidence
+                 │
+                 ▼
+     [PromptOrchestratorService]
+     ├── Sensitive Secret Masking (mask_sensitive_prompt_context)
+     ├── Variable Interpolation & Security Context Format
+     └── Immutable Prompt Versioning (version = max_ver + 1)
+                 │
+                 ▼
+        [LLMGatewayService]
+        ├── Provider Health Tracking (Cooldown on 3 consecutive errors)
+        ├── Priority-Based Fallback Routing
+        └── Token Budget & Cost Estimation ($/1K tokens)
+                 │
+                 ▼
+   ┌─────────────┼─────────────┬─────────────┐
+   ▼             ▼             ▼             ▼
+[OpenAI]    [Anthropic]    [Google]      [Ollama]
+Adapter      Adapter       Adapter       Adapter
+(httpx)      (httpx)       (httpx)       (httpx)
+```
+
+### Architectural Axioms:
+1. **Zero Mandatory SDK Dependencies**: Provider adapters (`OpenAIAdapter`, `AnthropicAdapter`, `GoogleAdapter`, `LocalOllamaAdapter`) execute raw REST requests via `httpx.AsyncClient`. Zero third-party SDK packages are required, preventing startup failures in air-gapped or local Ollama deployments.
+2. **Reusable Secret Encryption**: Provider API keys are encrypted at rest using AES-256-GCM (`SecretEncryptionService`), reusable across Vulnova for cloud and SIEM integration credentials.
+3. **Health Cooldown & Automatic Fallback**: The gateway tracks provider failures and puts unhealthy providers into a cooldown state, routing requests to secondary providers or local Ollama fallback.
+4. **Immutable Security Prompt Templates**: Prompts (`PromptTemplateModel`) are versioned immutably to guarantee audit reproducibility.
+5. **Internal Gateway Foundation**: Downstream Era 5 agents (`AIFindingExplainerService`, `AttackPathSynthesizer`, `AIRemediationEngine`) consume `LLMGatewayService` internally rather than HTTP routing.
+
