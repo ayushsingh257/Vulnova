@@ -19,6 +19,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 
 ### Added
+- **Era 4 Phase 4.9 (Attack Surface Trend & Continuous Monitoring Engine)** (`88ebc528`):
+  - Created `AssetSnapshotModel` (`asset_snapshots` table) and `AssetChangeEventModel` (`asset_change_events` table) ORM models (`app/infrastructure/database/models/trend.py`). Point-in-time snapshots are organization isolated (`organization_id`), assessment linked (`assessment_job_id`), and timestamped (`created_at`).
+  - Created `AssetTrendRepository` (`app/infrastructure/database/repositories/asset_trend_repository.py`) managing tenant-isolated snapshot persistence and change event history lookups.
+  - Implemented `ContinuousMonitoringService` & `ChangeDetectionEngine` (`app/application/assessment/continuous_monitoring.py`). Reuses Phase 4.5 `RiskIntelligenceEngine` composite scores (`composite_risk_score`) to aggregate snapshot risk metrics without secondary risk engines.
+  - Implemented change detection tracking vulnerability lifecycle transitions (`FINDING_NEW`, `FINDING_RESOLVED`, `FINDING_REOPENED`) and asset surface deltas.
+  - Extended DTOs (`app/application/assessment/dto.py`) with `AssetSnapshotDTO`, `AssetChangeEventDTO`, `RiskTrajectoryResponse`, and `PostureTimelineResponse`.
+  - Added REST API router endpoints (`app/api/v1/routers/trends.py`): `GET /api/v1/assets/trends`, `GET /api/v1/assets/{asset_id}/history`, `GET /api/v1/findings/history`, and `GET /api/v1/security/posture/timeline`.
+  - Integrated `ContinuousMonitoringService` into `AssessmentService.create_and_run_assessment` pipeline (`Plugins -> Risk Engine -> Deduplication -> Evidence Engine -> Correlation Engine -> Snapshot & Change Detection -> DB Persistence`).
+  - Added unit & integration test suite (`tests/test_continuous_monitoring.py`) — 3 new tests covering snapshot creation, change detection, and trend repository tenant isolation. Total backend test suite now stands at **161 passing tests**.
 - **Era 4 Phase 4.8 (Multi-Source Finding Correlation & Asset Inventory Engine)** (`17d8fb06`):
   - Created `AssessmentCorrelationEngine` (`app/application/assessment/correlation_engine.py`) synthesizing discovery endpoints, technology stack fingerprints, and normalized security findings into a unified asset risk posture.
   - Linked findings to matching `AssetNode` entries in tenant Asset Graph (`finding.asset_node_id`), maintaining `asset_node_id` as optional for backward compatibility.
