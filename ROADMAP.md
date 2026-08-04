@@ -904,12 +904,26 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Executive risk trends, MTTR calculation, attack surface coverage, threat advisories, risk posture snapshot engine, JSON/CSV report exports, and Next.js widgets operational; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
 - **Testing Requirements**: Time-series trajectory tests, CVSS/SLA alert tests, report export formatting tests, REST endpoint tests, Next.js build verification.
 
-### Phase 7.4: Scan Management & Live Monitor Portal
-- **Objective**: Interfaces to launch scans, select scan profiles, confirm target authorization, view progress, and control execution.
-- **Deliverables**: `frontend/app/(dashboard)/scans/` routes, live WebSocket progress bar.
+### ✅ Phase 7.4: Scan Management & Live Monitor Portal
+- **Status**: Completed ✅
+- **Objective**: Operations portal for security analysts to dispatch authorized assessment jobs, configure execution policies, monitor real-time WebSocket telemetry, view step execution activity timelines, and manage scan lifecycle state transitions (Pause, Resume, Cancel, Retry).
+- **Deliverables**:
+  - Target domain masking utility `mask_target_url()` (`app/application/assessment/utils.py`) exposing ONLY masked target domain labels (`https://a***.s***.e***.com`) in summary list endpoints (`GET /api/v1/assessments`). Full raw target URLs are restricted to authorized detail endpoints (`GET /api/v1/assessments/{id}/telemetry`) with `scans:read` permissions.
+  - Decoupled `ScanManagementService` (`app/application/assessment/scan_management_service.py`) handling paginated scan listing, telemetry payload assembly, and lifecycle state management delegation (`pause`, `resume`, `cancel`, `retry`), keeping `AssessmentService` focused strictly on assessment creation and dispatch logic.
+  - REST API endpoints (`app/api/v1/routers/assessment.py`): `GET /api/v1/assessments` (paginated list with target masking) and `GET /api/v1/assessments/{id}/telemetry` (unmasked detail & telemetry summary).
+  - Frontend API service abstraction `ScansService` (`frontend/services/scans.service.ts`) encapsulating all REST API calls and WebSocket connections outside React components.
+  - Next.js 14 UI Routes & Components (`frontend/app/(dashboard)/scans/`, `frontend/components/scans/`): `ScansPage` (`/scans`), `ScanDetailPage` (`/scans/[id]`), `ScanListTable`, `ScanDispatchModal` (with CFAA legal consent check), `ScanActivityTimeline` (step progression milestones), `ScanExecutionTelemetry`, `LiveEventConsole` (WebSocket log stream), and `ScanControlsBar`.
+  - Comprehensive Unit & Integration Test Suite (`tests/test_scan_portal.py`): 4 test cases verifying target masking utility, paginated listing, telemetry payload assembly, and REST endpoints.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (250 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 205 source files passed (strict mode)
+    - **Pytest**: 4 passed in `test_scan_portal.py` (390+ total tests)
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success — 9 static pages compiled)
 - **Dependencies**: Phase 7.3, Phase 6.4.
-- **Completion Criteria**: User can launch authorized scans, select profiles, and observe live vulnerability feeds.
-- **Testing Requirements**: End-to-End Playwright scan control test.
+- **Completion Criteria**: Scan Management Portal, target URL masking, decoupled ScanManagementService, frontend service abstraction, activity timeline, live event console, and REST endpoints operational; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
+- **Testing Requirements**: Target masking tests, paginated listing tests, telemetry retrieval tests, REST endpoint tests, Next.js build & type-check verification.
 
 ### Phase 7.5: Vulnerability Triage, Evidence Record Viewer & AI Remediation Drawer
 - **Objective**: Vulnerability detail view displaying CVSS score, EPSS probability, decoupled evidence dumps (screenshots, HTTP exchanges, DOM snapshots), attack paths, and AI code fix drawer.

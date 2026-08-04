@@ -20,6 +20,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 7 Phase 7.4 (Scan Management & Live Monitor Portal)**:
+  - Created domain target masking utility `mask_target_url()` (`app/application/assessment/utils.py`) to protect sensitive infrastructure details in list views (`GET /api/v1/assessments`).
+  - Implemented decoupled `ScanManagementService` (`app/application/assessment/scan_management_service.py`) for paginated scan listing, telemetry aggregation, and lifecycle state management delegation (`pause`, `resume`, `cancel`, `retry`).
+  - Added REST API endpoints (`app/api/v1/routers/assessment.py`):
+    - `GET /api/v1/assessments`: Paginated assessment jobs with target domain masking and status filtering (`scans:read` permission).
+    - `GET /api/v1/assessments/{assessment_id}/telemetry`: Detailed telemetry summary and unmasked target URL for authorized detail view (`scans:read` permission).
+  - Created frontend API service abstraction `ScansService` (`frontend/services/scans.service.ts`) encapsulating all REST API calls and WebSocket connections outside React components.
+  - Implemented Next.js 14 Scan Management UI routes & components:
+    - `ScansPage` (`frontend/app/(dashboard)/scans/page.tsx`): Main Scan Management Portal with status filter tabs, search bar, and paginated data table.
+    - `ScanDetailPage` (`frontend/app/(dashboard)/scans/[id]/page.tsx`): Live Telemetry & Event Console route.
+    - `ScanListTable` (`frontend/components/scans/scan-list-table.tsx`): Execution registry data table.
+    - `ScanDispatchModal` (`frontend/components/scans/scan-dispatch-modal.tsx`): Scan dispatch modal with CFAA legal consent checkbox.
+    - `ScanActivityTimeline` (`frontend/components/scans/scan-activity-timeline.tsx`): Visual step execution timeline component.
+    - `ScanExecutionTelemetry` (`frontend/components/scans/scan-execution-telemetry.tsx`): Worker attribution & findings summary card.
+    - `LiveEventConsole` (`frontend/components/scans/live-event-console.tsx`): Real-time WebSocket streaming log console.
+    - `ScanControlsBar` (`frontend/components/scans/scan-controls-bar.tsx`): Action bar with Pause, Resume, Cancel, and Retry buttons.
 - **Era 7 Phase 7.3 (Enterprise Executive Analytics, Risk Snapshot Engine & Threat Advisory System)**:
   - Created ORM model `RiskPostureSnapshotModel` (`app/infrastructure/database/models/risk_snapshot.py`): `risk_posture_snapshots` table persisting daily risk posture snapshots (`composite_risk_score`, `total_open_findings`, `critical_count`, `high_count`, `mttr_hours`, `snapshot_date`) with index `idx_risk_snapshots_org_date`.
   - Created domain entities (`app/domain/entities/analytics_trend.py`): `RiskVelocity` enum (`STABLE`, `IMPROVING`, `DETERIORATING`), `TimeframePeriod` enum, `RiskTrendPoint`, `AttackSurfaceEnvironmentBreakdown`, `ExecutiveThreatAlert`.

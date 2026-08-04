@@ -746,3 +746,60 @@ class ExecutiveSummaryReportResponse(BaseModel):
     attack_surface_coverage: AttackSurfaceCoverageResponse
     vulnerability_breakdown: VulnerabilitySeverityBreakdownDTO
     threat_advisories: List[ExecutiveThreatAlertDTO] = Field(default_factory=list)
+
+
+# Phase 7.4 Scan Management & Live Monitor DTOs
+
+
+class AssessmentJobSummaryDTO(BaseModel):
+    """Scan job item DTO for paginated list response with target URL masking."""
+
+    id: str
+    target_name: str
+    environment: str = "PRODUCTION"
+    masked_target_url: str
+    profile_name: str
+    status: str
+    current_step: str
+    progress_percentage: float = 0.0
+    findings_count: int = 0
+    started_at: str
+    completed_at: Optional[str] = None
+
+
+class PaginatedAssessmentListResponse(BaseModel):
+    """Paginated scan jobs response payload."""
+
+    items: List[AssessmentJobSummaryDTO] = Field(default_factory=list)
+    total: int
+    page: int = 1
+    page_size: int = 20
+
+
+class ScanActivityTimelineItemDTO(BaseModel):
+    """Individual milestone item in scan execution activity timeline."""
+
+    timestamp: str
+    stage: str  # QUEUED, PROBING, CRAWLING, ASSESSING, VERIFYING, COMPLETED, FAILED
+    title: str
+    description: str
+    status: str = "COMPLETED"  # COMPLETED, IN_PROGRESS, FAILED, PENDING
+
+
+class AssessmentTelemetrySummaryResponse(BaseModel):
+    """Detailed scan job telemetry summary with unmasked target URL for detail view."""
+
+    id: str
+    target_name: str
+    environment: str
+    unmasked_target_url: str
+    profile_name: str
+    status: str
+    current_step: str
+    progress_percentage: float = 0.0
+    findings_count: int = 0
+    started_at: str
+    completed_at: Optional[str] = None
+    duration_seconds: int = 0
+    assigned_worker_node_id: Optional[str] = "worker-node-01"
+    timeline_items: List[ScanActivityTimelineItemDTO] = Field(default_factory=list)

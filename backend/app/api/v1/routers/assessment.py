@@ -10,11 +10,16 @@ from app.api.v1.dependencies.api_key import get_current_user_or_api_key
 from app.api.v1.dependencies.rbac import require_permission
 from app.application.assessment.dto import (
     AssessmentJobResponse,
+    AssessmentTelemetrySummaryResponse,
     CreateAssessmentRequest,
     FindingDTO,
+    PaginatedAssessmentListResponse,
     PluginMetadataDTO,
     ScanLifecycleStateDTO,
     ScanProfileDTO,
+)
+from app.application.assessment.scan_management_service import (
+    ScanManagementService,
 )
 from app.application.assessment.services import AssessmentService
 from app.infrastructure.database.models.user import UserModel
@@ -40,6 +45,35 @@ async def create_and_run_assessment(
     """
     service = AssessmentService(session)
     return await service.create_and_run_assessment(req, current_user)
+
+
+@router.get(
+    "/assessments",
+    response_model=PaginatedAssessmentListResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("scans:read"))],
+)
+async def list_assessments_paginated(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+    status_filter: Optional[str] = Query(None, description="Optional status filter"),
+    search: Optional[str] = Query(None, description="Optional target search filter"),
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> PaginatedAssessmentListResponse:
+    """List paginated assessment jobs for authenticated user's organization.
+
+    Masks target URLs to protect infrastructure details in list views.
+    Requires authentication and 'scans:read' RBAC permission.
+    """
+    service = ScanManagementService(session)
+    return await service.list_assessments_paginated(
+        current_user,
+        page=page,
+        page_size=page_size,
+        status_filter=status_filter,
+        search=search,
+    )
 
 
 @router.get(
@@ -95,6 +129,22 @@ async def get_assessment_job(
     """
     service = AssessmentService(session)
     return await service.get_assessment_job(assessment_id, current_user)
+
+
+@router.get(
+    "/assessments/{assessment_id}/telemetry",
+    response_model=AssessmentTelemetrySummaryResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("scans:read"))],
+)
+async def get_assessment_telemetry_summary(
+    assessment_id: UUID,
+    current_user: UserModel = Depends(get_current_user_or_api_key),
+    session: AsyncSession = Depends(get_async_session),
+) -> AssessmentTelemetrySummaryResponse:
+    """Retrieve detailed telemetry summary, timeline, and unmasked target URL for authorized detail view."""
+    service = ScanManagementService(session)
+    return await service.get_assessment_telemetry_summary(assessment_id, current_user)
 
 
 @router.get(

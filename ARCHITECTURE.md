@@ -534,6 +534,49 @@ Phase 6.4 introduces a high-throughput, low-latency WebSocket event streaming se
    - `CONNECTION_TIMEOUT_SECONDS = 90` (Stale connection pruning).
    - `MAX_EVENT_PAYLOAD_SIZE = 64KB` (Event payload size cap).
 
+---
+
+## 🖥️ 12. Scan Management Portal & Frontend Service Abstraction (Phase 7.4)
+
+Phase 7.4 introduces the **Scan Management Portal & Live Monitor Gateway**, establishing a clean decoupling between frontend UI components, API service abstraction, and backend scan operations:
+
+```text
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                         Security Analyst Web Portal                         │
+  │                  (/scans  &  /scans/[id] Telemetry Route)                   │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                     Frontend Scans Service Abstraction                      │
+  │                     (frontend/services/scans.service.ts)                    │
+  └───────────────────┬─────────────────────────────────────┬───────────────────┘
+                      │ REST API                            │ WebSocket Stream
+                      ▼                                     ▼
+  ┌───────────────────────────────────────┐   ┌─────────────────────────────────┐
+  │      FastAPI Assessment Router        │   │   WebSocket Scan Stream Router    │
+  │   (/api/v1/assessments, /telemetry)   │   │(/api/v1/scans/{scan_id}/stream) │
+  └─────────┬───────────────────┬─────────┘   └─────────────────┬───────────────┘
+            │                   │                               │
+            ▼                   ▼                               ▼
+┌──────────────────────┐ ┌──────────────────────┐   ┌───────────────────────────┐
+│  AssessmentService   │ │ScanManagementService │   │   Redis Pub/Sub Channel   │
+│(Creation & Dispatch) │ │(Listing, Controls)   │   │(vulnova:scan:events:{org})│
+└──────────────────────┘ └──────────┬───────────┘   └───────────────────────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │  PostgreSQL Database │
+                         │  (assessment_jobs)   │
+                         └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Target Data Exposure Protection**: Exposes ONLY domain-masked target URL identifiers (`https://a***.s***.e***.com`) in summary list endpoints (`GET /api/v1/assessments`). Full raw target URLs are restricted to authorized detail endpoints (`GET /api/v1/assessments/{id}/telemetry`) with `scans:read` permissions.
+2. **Decoupled Application Services Architecture**: `ScanManagementService` handles paginated queries (`list_assessments_paginated`), telemetry payload assembly (`get_assessment_telemetry_summary`), and lifecycle state control delegation (`pause`, `resume`, `cancel`, `retry`), keeping `AssessmentService` focused strictly on assessment creation and dispatch logic.
+3. **Frontend API Abstraction Service**: `frontend/services/scans.service.ts` encapsulates all REST API calls and WebSocket connections outside React components.
+4. **Visual Scan Activity Execution Timeline**: `ScanActivityTimeline` component renders step execution progression milestones (`QUEUED`, `PROBING`, `CRAWLING`, `ASSESSING`, `VERIFYING`, `COMPLETED`), target verification events, plugin executions, and finding discovery events.
+
 
 
 
