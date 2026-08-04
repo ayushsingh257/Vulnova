@@ -620,7 +620,47 @@ Phase 7.5 introduces a dedicated analyst vulnerability investigation workspace (
 3. **On-Demand Advisory AI Fix Generation**: `POST /api/v1/vulnerabilities/{id}/remediation-ai` invokes `AIRemediationService.generate_remediation_plan()` (Phase 5.4) under a strict non-executable human approval policy.
 4. **Tenant Isolation & RBAC Boundaries**: Every query enforces `organization_id = current_user.organization_id`. Endpoints require permissions (`findings:read`, `findings:ai_attack_path`, `findings:ai_remediate`).
 
+---
 
+## ⚙️ 14. Enterprise Administration Workspace & Control Plane Architecture (Phase 7.6)
 
+Phase 7.6 introduces the centralized administrative control plane workspace (`/settings/*`) for team member governance, RBAC role boundary visualization, machine-to-machine API key management, and security posture overview:
 
+```text
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                    Enterprise Administration Control Plane                  │
+  │    (/settings/organization, /settings/users, /settings/roles,              │
+  │     /settings/api-keys, /settings/security)                                 │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                   Frontend Admin Service Abstraction                        │
+  │                     (frontend/services/admin.service.ts)                    │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │ REST API (/api/v1/admin/*)
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                     FastAPI Administrative REST Router                      │
+  │                     (app/api/v1/routers/admin.py)                           │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                     AdminService Aggregator Service                         │
+  │                  (app/application/admin/admin_service.py)                  │
+  └──────────┬───────────────────┬───────────────────┬───────────────────┬──────┘
+             │                   │                   │                   │
+             ▼                   ▼                   ▼                   ▼
+  ┌────────────────────┐┌──────────────────┐┌──────────────────┐┌──────────────────┐
+  │OrganizationService ││   UserService    ││  APIKeyService   ││ AuditLogService  │
+  │(OrganizationModel) ││   (UserModel)    ││  (APIKeyModel)   ││ (AuditLogModel)  │
+  └────────────────────┘└──────────────────┘└──────────────────┘└──────────────────┘
+```
 
+### Key Architectural Safeguards:
+1. **100% Schema & Model Reuse**: Reuses existing `OrganizationModel`, `UserModel`, `APIKeyModel`, `AuditLogModel`, `PERMISSION_MAP`, and `Role` enum across Era 2 foundations. Zero new database tables or permission engines created.
+2. **Sole Owner & Self-Deactivation Protections**: `update_user_role` and `deactivate_user` enforce active owner count checks (`count_owners_in_org <= 1`) and self-deactivation guards (`target_user_id != current_user.id`), preventing accidental lockout of organization control.
+3. **Raw API Key Show-Once Governance**: Machine-to-machine API keys created via `POST /api/v1/admin/api-keys` return raw secret token (`vn_live_...`) ONCE in response DTO. Only `key_prefix` and SHA-256 `key_hash` are stored in database.
+4. **Detailed API Key Audit Logging**: Audit log events for `api_key.created` and `api_key.revoked` record `actor_user_id`, `organization_id`, `resource_id` (api_key_id), `timestamp`, `action`, and scope metadata.
+5. **Canonical Permission Consistency**: Endpoints enforce permissions (`organization:read`, `organization:update`, `users:read`, `users:invite`, `users:update_role`, `users:remove`, `api_keys:read`, `api_keys:create`, `api_keys:revoke`) matching `PERMISSION_MAP` across backend, `SECURITY.md`, and `API_SPEC.md`.

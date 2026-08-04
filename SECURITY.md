@@ -478,3 +478,20 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
    - `findings:ai_attack_path` required for attack path graph data (`Role.SECURITY_ANALYST` level 20+).
    - `findings:ai_remediate` required for AI remediation plan generation (`Role.SECURITY_ANALYST` level 20+).
 
+---
+
+## ⚙️ 18. Administrative RBAC Controls & API Key Governance (Phase 7.6)
+
+1. **Administrative Tenant Isolation**:
+   - All administrative endpoints (`/api/v1/admin/*`) enforce strict `organization_id = current_user.organization_id` database queries. Cross-tenant user, role, or organization access returns 403 Forbidden or 404 Not Found.
+2. **Canonical Permission Enforcement**:
+   - Organization settings require `organization:read` / `organization:update` (`Role.ADMIN` level 30+).
+   - User management requires `users:read`, `users:invite`, `users:update_role`, `users:remove` (`Role.ADMIN` level 30+ / `Role.OWNER` level 40).
+   - Integration API key governance requires `api_keys:read`, `api_keys:create`, `api_keys:revoke` (`Role.ADMIN` level 30+).
+3. **Account Safeguards & Sole Owner Demotion Protection**:
+   - `update_user_role` and `deactivate_user` check active owner counts (`count_owners_in_org <= 1`). Demoting or deactivating the sole active `OWNER` raises `400 Bad Request` validation error to prevent organization lockout.
+   - `deactivate_user` explicitly blocks self-deactivation (`target_user_id == current_user.id`) with `403 Forbidden`.
+4. **Raw API Key Show-Once Governance & Hash Storage**:
+   - Raw integration API keys (`vn_live_...`) are generated cryptographically and returned ONCE in creation response DTO. Only `key_prefix` and SHA-256 `key_hash` are persisted in database storage.
+5. **Comprehensive Administrative Audit Events**:
+   - All administrative mutations dispatches audit events (`organization.updated`, `user.invited`, `user.role_updated`, `user.deactivated`, `api_key.created`, `api_key.revoked`) recording `actor_user_id`, `organization_id`, `resource_id`, `timestamp`, and detailed metadata.

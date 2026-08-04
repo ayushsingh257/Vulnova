@@ -1199,6 +1199,55 @@ All API errors return a standardized JSON error format:
 
 ---
 
+### Section F: Enterprise Administration REST Endpoints (Phase 7.6)
+
+#### `GET /api/v1/admin/organization`
+- **Summary**: Retrieve organization administration settings, plan metadata, and active member metrics.
+- **RBAC Guard**: `organization:read` (`Role.VIEWER`+).
+
+#### `PATCH /api/v1/admin/organization`
+- **Summary**: Update organization display name or plan tier metadata with audit event recording (`organization.updated`).
+- **RBAC Guard**: `organization:update` (`Role.ADMIN`+).
+
+#### `GET /api/v1/admin/users`
+- **Summary**: List organization team members, assigned RBAC roles, and account statuses.
+- **RBAC Guard**: `users:read` (`Role.ADMIN`+).
+
+#### `POST /api/v1/admin/users/invite`
+- **Summary**: Invite a new team member with assigned RBAC role and dispatch audit event (`user.invited`).
+- **RBAC Guard**: `users:invite` (`Role.ADMIN`+).
+
+#### `PATCH /api/v1/admin/users/{user_id}/role`
+- **Summary**: Update team member RBAC role. Enforces sole owner demotion protection (`count_owners_in_org <= 1`).
+- **RBAC Guard**: `users:update_role` (`Role.OWNER` level 40).
+
+#### `DELETE /api/v1/admin/users/{user_id}`
+- **Summary**: Deactivate team member account. Enforces self-deactivation and sole owner protection.
+- **RBAC Guard**: `users:remove` (`Role.ADMIN`+).
+
+#### `GET /api/v1/admin/roles`
+- **Summary**: Retrieve RBAC role-permission boundary matrix comparing OWNER, ADMIN, SECURITY_ANALYST, and VIEWER.
+- **RBAC Guard**: `users:read` (`Role.ADMIN`+).
+
+#### `GET /api/v1/admin/api-keys`
+- **Summary**: List active integration API keys, prefixes, scopes, and last used timestamps.
+- **RBAC Guard**: `api_keys:read` (`Role.ADMIN`+).
+
+#### `POST /api/v1/admin/api-keys`
+- **Summary**: Generate machine-to-machine API key. Raw secret returned ONCE in creation response DTO. Records audit event (`api_key.created`).
+- **RBAC Guard**: `api_keys:create` (`Role.ADMIN`+).
+
+#### `DELETE /api/v1/admin/api-keys/{key_id}`
+- **Summary**: Revoke integration API key with audit event recording (`api_key.revoked`).
+- **RBAC Guard**: `api_keys:revoke` (`Role.ADMIN`+).
+
+#### `GET /api/v1/admin/security/status`
+- **Summary**: Retrieve security configuration overview and MFA enrollment tracking visibility.
+- **RBAC Guard**: `organization:read` (`Role.ADMIN`+).
+
+
+---
+
 ## ⚡ 4. WebSocket Streaming Protocol
 
 

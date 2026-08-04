@@ -3,7 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
 [![Security: OWASP ASVS](https://img.shields.io/badge/Security-OWASP_ASVS_v4.0-crimson.svg)](SECURITY.md)
 [![Architecture: Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20DDD-black.svg)](ARCHITECTURE.md)
-[![Status: Era 7 Phase 7.5 Complete](https://img.shields.io/badge/Status-Era%207%20Phase%207.5%20Complete-green.svg)](ROADMAP.md)
+[![Status: Era 7 Complete](https://img.shields.io/badge/Status-Era%207%20Complete-green.svg)](ROADMAP.md)
+
 [![Build Status](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](.github/workflows/ci.yml)
 
 **Vulnova** is a next-generation, AI-native Application Security (AppSec) platform engineered for enterprise security teams, DevSecOps practitioners, and security analysts. It unifies automated attack surface discovery, dynamic security assessments (DAST), API security inspection, and an autonomous AI Security Analyst to continuously identify, prioritize, and remediate application vulnerabilities.
@@ -92,6 +93,13 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
 - **Celery & Distributed Isolated Worker Sandbox Cluster (Phase 6.1)**: Distributed Celery worker cluster infrastructure (`celery_app.py`) managing priority task queues (`scans.high`, `scans.default`, `scans.low`, `ai.priority`), container sandbox security limits (`WorkerSandboxManager` enforcing 1 vCPU, 512MB RAM, `no_new_privs=True`, unprivileged UID/GID 10001, read-only rootfs, dropped capabilities, egress network filtering), worker orchestrator service (`WorkerOrchestratorService`), worker node/task database tracking (`worker_nodes`, `worker_task_executions`), task execution audit logging (`worker_task.dispatched`, `worker_task.cancelled`), REST API cluster monitoring and job dispatching (`POST /api/v1/workers/jobs/dispatch`, `GET /api/v1/workers/nodes`, `GET /api/v1/workers/metrics`), and RBAC authorization guards (`workers:read`, `workers:manage`, `scans:dispatch`). Worker execution flow follows `Celery Worker -> Task Queue -> Sandbox Executor -> Job Dispatch` with zero direct OS command execution.
 - **Scan Management Portal & Live Monitor Gateway (Phase 7.4)**: Operations portal (`/scans` & `/scans/[id]`), target URL masking utility (`mask_target_url()`), decoupled `ScanManagementService` (paginated jobs, telemetry aggregation, lifecycle state delegation), frontend service abstraction (`ScansService`), step execution activity timeline (`ScanActivityTimeline`), and real-time WebSocket event streaming console (`LiveEventConsole`).
 - **Vulnerability Triage, Evidence Record Viewer & AI Remediation Drawer (Phase 7.5)**: Analyst investigation workspace (`/vulnerabilities/[id]`), read-only aggregator service `FindingIntelligenceService`, multi-modal proof evidence viewer (`EvidenceViewerDrawer` with HTTP request/responses, screenshots, DOM snapshots, plugin output, SHA-256 integrity badges), vertical attack chain graph (`AttackPathGraph`), and advisory copilot panel (`AIRemediationDrawer` displaying AI explanations, step-by-step fix guides, syntax-highlighted code patches, verification checklists, and on-demand AI remediation triggers). Zero table duplication with full tenant isolation.
+- **Enterprise Administration Workspace & Control Plane (Phase 7.6)**: Administrative control plane (`/settings/*`) providing verified capabilities:
+  - **✓ Organization Settings**: Workspace profile management, slug identification, and subscription plan tracking (`settings/organization/page.tsx`).
+  - **✓ User Management**: Team member listing, status filters, user search, invitation workflows, role assignment, and account deactivation (`settings/users/page.tsx`, `UserManagementTable`, `InviteUserModal`).
+  - **✓ RBAC Visualization**: Interactive role-permission boundary matrix comparing OWNER, ADMIN, SECURITY_ANALYST, and VIEWER roles against resource permissions (`settings/roles/page.tsx`, `RolePermissionMatrix`).
+  - **✓ API Key Governance**: Machine-to-machine integration API key generation with raw secret key show-once dialog, active key scope tags, and instant revocation (`settings/api-keys/page.tsx`, `APIKeyManagementPanel`).
+  - **✓ Security Posture & MFA Overview**: Authentication security policy overview, session policy tracking, and MFA enrollment state visibility card (`settings/security/page.tsx`, `SecuritySettingsCard`).
+
 
 ---
 

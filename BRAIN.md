@@ -37,6 +37,14 @@ The following axioms govern all software design, implementation, and code review
 ### Axiom 4: Extensible Plugin Framework
 - All dynamic security checks are self-contained plugins governed by standard `plugin.yaml` manifests. New assessment checks must be addable without modifying core scanning engine code.
 
+31. **Enterprise Administration Workspace & Control Plane Architecture (Phase 7.6)**: Enterprise control plane & RBAC governance workspace:
+    - **Zero Parallel Auth / User System Safeguard**: Reuses existing `OrganizationModel`, `UserModel`, `APIKeyModel`, `AuditLogModel`, `PERMISSION_MAP`, and `Role` enum across Era 2 foundations. Zero duplicate database schemas or permission engines created.
+    - **`AdminService` Aggregator (`app/application/admin/admin_service.py`)**: Assembles organization profile metadata, team user management workflows, role-permission matrix visualization data, machine-to-machine API key governance, and security posture overview states.
+    - **Sole Owner Demotion & Self-Deactivation Protections**: `update_user_role` and `deactivate_user` enforce active owner count checks (`count_owners_in_org <= 1`) and self-deactivation guards (`target_user_id != current_user.id`), preventing accidental lockout of organization control.
+    - **Raw API Key Show-Once Governance**: Machine-to-machine API keys generated via `create_api_key` return raw secret token (`vn_live_...`) ONCE in creation response payload. Only `key_prefix` and SHA-256 `key_hash` are stored in database. Detailed audit events (`api_key.created`, `api_key.revoked`) capture `actor_user_id`, `organization_id`, `resource_id`, `timestamp`, and `action`.
+    - **Canonical Permission Consistency**: Endpoints enforce canonical permissions (`organization:read`, `organization:update`, `users:read`, `users:invite`, `users:update_role`, `users:remove`, `api_keys:read`, `api_keys:create`, `api_keys:revoke`) matching `PERMISSION_MAP` across backend, `SECURITY.md`, and `API_SPEC.md`.
+    - **Frontend Service & Next.js Settings Routes**: `AdminService` (`frontend/services/admin.service.ts`), 5 Next.js settings routes (`frontend/app/(dashboard)/settings/` for `organization`, `users`, `roles`, `api-keys`, `security`), and 5 reusable UI components (`UserManagementTable`, `InviteUserModal`, `RolePermissionMatrix`, `APIKeyManagementPanel` with raw secret key dialog, `SecuritySettingsCard` with MFA enrollment tracking).
+
 ### Axiom 5: Event-Driven System Evolution
 - State transitions dispatch structured domain events (`ScanCreatedEvent`, `FindingCreatedEvent`, `AIAnalysisCompletedEvent`) over abstract event bus interfaces compatible with RabbitMQ, Kafka, or NATS.
 

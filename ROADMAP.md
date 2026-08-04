@@ -946,12 +946,26 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Analysts can inspect raw HTTP dumps, screenshots, attack chain diagrams, and AI remediation patches; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
 - **Testing Requirements**: Service aggregation tests, evidence listing tests, tenant isolation tests, attack path tests, AI remediation tests, Next.js build & type-check verification.
 
-### Phase 7.6: User, Organization & Role Management UI
+### Phase 7.6: User, Organization & Role Management UI ✅
 - **Objective**: Settings interface for managing team invitations, RBAC roles, MFA, and API keys.
-- **Deliverables**: `frontend/app/(dashboard)/settings/` pages.
+- **Deliverables**:
+  - Administrative Aggregator Service `AdminService` (`app/application/admin/admin_service.py`).
+  - Administrative REST API Router (`app/api/v1/routers/admin.py`).
+  - Frontend API Service Abstraction `AdminService` (`frontend/services/admin.service.ts`).
+  - Next.js 14 Settings Page Routes: `frontend/app/(dashboard)/settings/` (`organization`, `users`, `roles`, `api-keys`, `security`).
+  - Reusable UI Components: `frontend/components/settings/` (`UserManagementTable`, `InviteUserModal`, `RolePermissionMatrix`, `APIKeyManagementPanel`, `SecuritySettingsCard`).
+  - Test Suite (`tests/test_admin_management.py`): 6 unit & integration test cases verifying org profile updates, team invitations, sole owner demotion protection, self-deactivation prevention, role permission matrix generation, API key creation/revocation audit logging, and REST API endpoints.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (256 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 213 source files passed (strict mode)
+    - **Pytest**: 6 passed in `test_admin_management.py` (395+ total tests)
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success — 14 static pages compiled including 5 settings routes)
 - **Dependencies**: Phase 7.3, Era 2.
-- **Completion Criteria**: Admins can invite users, assign permissions, and revoke access keys.
-- **Testing Requirements**: RBAC UI management tests.
+- **Completion Criteria**: Admins can invite users, assign permissions, inspect role-permission matrix, generate/revoke API keys, and view security MFA status; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
+- **Testing Requirements**: Org profile tests, user management tests, sole owner demotion tests, API key lifecycle & audit tests, Next.js build & type-check verification.
+
 
 ---
 

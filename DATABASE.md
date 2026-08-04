@@ -781,12 +781,14 @@ Paginated scan listing queries (`GET /api/v1/assessments`) utilize composite ind
 
 ---
 
-## 🔍 6. Vulnerability Investigation Workspace Table & Index Reuse (Phase 7.5)
+---
 
-Phase 7.5 requires zero new database tables or schema migrations. `FindingIntelligenceService` queries 9 existing PostgreSQL tables using composite indexes:
-- `security_findings` (`idx_security_findings_org_severity`, `idx_security_findings_org_risk`) for vulnerability metadata.
-- `evidence_artifacts` (`idx_evidence_artifacts_org_finding`) for proof artifact lookups.
-- `finding_triage_history` (`idx_triage_history_org_finding`) for audit history retrieval.
-- `ai_attack_paths` (`idx_ai_paths_org_finding`) and `ai_attack_path_steps` (`idx_ai_paths_org_finding`) for attack graph nodes.
-- `ai_remediation_plans` (`idx_ai_remed_org_finding`), `ai_remediation_steps`, `ai_patch_suggestions` for fix recommendations.
+## ⚙️ 7. Admin Control Plane Table & Repository Reuse (Phase 7.6)
+
+Phase 7.6 requires zero new database tables or schema migrations. `AdminService` (`app/application/admin/admin_service.py`) reuses 4 existing PostgreSQL tables across Era 2 models:
+- `organizations` (`idx_organizations_slug`) for organization profile and member statistics.
+- `users` (`idx_users_org_role`, `idx_users_email`) for team member listing, invitations, role updates, and deactivation.
+- `api_keys` (`idx_api_keys_org`, `idx_api_keys_hash`, `idx_api_keys_prefix`) for machine-to-machine integration API key listing, generation, and revocation.
+- `audit_logs` (`idx_audit_logs_org_action`, `idx_audit_logs_actor`) for administrative action logging (`organization.updated`, `user.invited`, `user.role_updated`, `user.deactivated`, `api_key.created`, `api_key.revoked`).
+
 

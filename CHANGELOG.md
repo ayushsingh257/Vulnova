@@ -20,7 +20,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 7 Phase 7.6 (User, Organization & Role Management UI)**:
+  - Created administrative aggregator service `AdminService` (`app/application/admin/admin_service.py`) aggregating organization profile settings, team user management workflows, role-permission matrix visualization data, machine-to-machine API key governance, and security overview metrics with 100% database table and repository reuse across Era 2 models.
+  - Built administrative REST API router (`app/api/v1/routers/admin.py`) registered under `/api/v1/admin/` with tenant isolation (`organization_id`) and permissions (`organization:read`, `organization:update`, `users:read`, `users:invite`, `users:update_role`, `users:remove`, `api_keys:read`, `api_keys:create`, `api_keys:revoke`):
+    - `GET /api/v1/admin/organization`: Retrieve organization admin details & member metrics.
+    - `PATCH /api/v1/admin/organization`: Update organization display name or plan tier.
+    - `GET /api/v1/admin/users`: List team members, assigned RBAC roles, and account statuses.
+    - `POST /api/v1/admin/users/invite`: Invite a new team member with assigned RBAC role.
+    - `PATCH /api/v1/admin/users/{id}/role`: Update team member RBAC role with sole owner demotion protection.
+    - `DELETE /api/v1/admin/users/{id}`: Deactivate team member account with self-deactivation & sole owner protection.
+    - `GET /api/v1/admin/roles`: Permission boundary matrix comparing OWNER, ADMIN, SECURITY_ANALYST, and VIEWER roles.
+    - `GET /api/v1/admin/api-keys`: List active integration API keys, prefixes, scopes, and last used timestamps.
+    - `POST /api/v1/admin/api-keys`: Generate a machine-to-machine API key (raw secret key returned ONCE).
+    - `DELETE /api/v1/admin/api-keys/{id}`: Revoke integration API key with audit log event recording.
+    - `GET /api/v1/admin/security/status`: Security posture overview & MFA enrollment tracking visibility.
+  - Implemented frontend API service abstraction `AdminService` (`frontend/services/admin.service.ts`).
+  - Created 5 Next.js settings routes (`frontend/app/(dashboard)/settings/`):
+    - `organization/page.tsx`: Workspace profile settings & subscription plan metadata.
+    - `users/page.tsx`: Team user management workspace with search, status filters, and invite modal.
+    - `roles/page.tsx`: RBAC role-permission boundary matrix workspace.
+    - `api-keys/page.tsx`: Machine-to-machine integration API key governance panel.
+    - `security/page.tsx`: Security posture overview & MFA enrollment status card.
+  - Built 5 reusable settings UI components (`frontend/components/settings/`):
+    - `UserManagementTable.tsx`: Team members list table with role badges, status indicators, role select dropdown, and deactivate button.
+    - `InviteUserModal.tsx`: Invite member modal dialog with email input and role selector.
+    - `RolePermissionMatrix.tsx`: Role-permission matrix grid comparing all 4 roles against permission scopes.
+    - `APIKeyManagementPanel.tsx`: Active API keys data table, generate key modal with raw secret show-once dialog, scope tags, and revoke action button.
+    - `SecuritySettingsCard.tsx`: Security configuration overview card showing MFA enrollment status, session security policy, and audit logging state.
+  - Implemented unit test suite `tests/test_admin_management.py` testing organization profile retrieval/update, user invitation/role updates, sole owner demotion protection, self-deactivation prevention, role permission matrix generation, API key creation/revocation audit logging, and REST API endpoints (6/6 passed).
 - **Era 7 Phase 7.5 (Vulnerability Triage, Evidence Record Viewer & AI Remediation Drawer)**:
+
   - Created domain entities `VulnerabilityRiskContext`, `EvidenceType`, and `AttackPathNode` (`app/domain/entities/vulnerability_intelligence.py`).
   - Implemented read-only application service `FindingIntelligenceService` (`app/application/finding/finding_intelligence_service.py`) aggregating vulnerability details, multi-modal evidence lists with human-readable type labels, attack chain node structures, and AI remediation guidance without creating duplicate database tables or risk scoring engines.
   - Extended REST API endpoints (`app/api/v1/routers/vulnerabilities.py`):
