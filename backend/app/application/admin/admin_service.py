@@ -42,7 +42,9 @@ from app.core.logging import get_logger
 from app.domain.entities.role import PERMISSION_MAP, Role, parse_role
 from app.infrastructure.database.models.user import UserModel
 from app.infrastructure.database.repositories.api_key_repository import APIKeyRepository
-from app.infrastructure.database.repositories.organization_repository import OrganizationRepository
+from app.infrastructure.database.repositories.organization_repository import (
+    OrganizationRepository,
+)
 from app.infrastructure.database.repositories.user_repository import UserRepository
 
 logger = get_logger("vulnova.admin_service")
@@ -127,7 +129,6 @@ class AdminService:
             [k for k in api_keys if k.expires_at is None or k.expires_at > now]
         )
 
-
         return OrganizationAdminResponse(
             id=str(org_dto.id),
             name=org_dto.name,
@@ -172,7 +173,9 @@ class AdminService:
 
     async def list_users(self, organization_id: UUID) -> UserAdminListResponse:
         """List all team members belonging to the organization."""
-        users_list_dto = await self.user_service.list_organization_users(organization_id)
+        users_list_dto = await self.user_service.list_organization_users(
+            organization_id
+        )
         admin_items = [
             UserAdminItemDTO(
                 id=str(u.id),
@@ -241,7 +244,9 @@ class AdminService:
         # Sole owner demotion check
         if target_user.role == "OWNER" and req.role != "OWNER":
             org_users = await self.user_repo.list_by_organization(organization_id)
-            owners_count = len([u for u in org_users if u.role == "OWNER" and u.is_active])
+            owners_count = len(
+                [u for u in org_users if u.role == "OWNER" and u.is_active]
+            )
             if owners_count <= 1:
                 raise ValidationException(
                     "Cannot demote the sole organization OWNER. Assign another OWNER first."
@@ -289,7 +294,9 @@ class AdminService:
 
         if target_user.role == "OWNER":
             org_users = await self.user_repo.list_by_organization(organization_id)
-            owners_count = len([u for u in org_users if u.role == "OWNER" and u.is_active])
+            owners_count = len(
+                [u for u in org_users if u.role == "OWNER" and u.is_active]
+            )
             if owners_count <= 1:
                 raise ValidationException(
                     "Cannot deactivate the sole organization OWNER."
@@ -331,7 +338,8 @@ class AdminService:
                 granted_permissions=[
                     p
                     for p, min_r in PERMISSION_MAP.items()
-                    if Role.OWNER >= (min_r if isinstance(min_r, Role) else parse_role(str(min_r)))
+                    if Role.OWNER
+                    >= (min_r if isinstance(min_r, Role) else parse_role(str(min_r)))
                 ],
             ),
             RolePermissionBoundaryDTO(
@@ -341,7 +349,8 @@ class AdminService:
                 granted_permissions=[
                     p
                     for p, min_r in PERMISSION_MAP.items()
-                    if Role.ADMIN >= (min_r if isinstance(min_r, Role) else parse_role(str(min_r)))
+                    if Role.ADMIN
+                    >= (min_r if isinstance(min_r, Role) else parse_role(str(min_r)))
                 ],
             ),
             RolePermissionBoundaryDTO(
@@ -351,7 +360,8 @@ class AdminService:
                 granted_permissions=[
                     p
                     for p, min_r in PERMISSION_MAP.items()
-                    if Role.SECURITY_ANALYST >= (min_r if isinstance(min_r, Role) else parse_role(str(min_r)))
+                    if Role.SECURITY_ANALYST
+                    >= (min_r if isinstance(min_r, Role) else parse_role(str(min_r)))
                 ],
             ),
             RolePermissionBoundaryDTO(
@@ -361,7 +371,8 @@ class AdminService:
                 granted_permissions=[
                     p
                     for p, min_r in PERMISSION_MAP.items()
-                    if Role.VIEWER >= (min_r if isinstance(min_r, Role) else parse_role(str(min_r)))
+                    if Role.VIEWER
+                    >= (min_r if isinstance(min_r, Role) else parse_role(str(min_r)))
                 ],
             ),
         ]
@@ -372,7 +383,9 @@ class AdminService:
                 description=PERMISSION_DESCRIPTIONS.get(
                     perm_key, perm_key.replace(":", " ").title()
                 ),
-                minimum_role=min_role.name if isinstance(min_role, Role) else str(min_role),
+                minimum_role=(
+                    min_role.name if isinstance(min_role, Role) else str(min_role)
+                ),
             )
             for perm_key, min_role in PERMISSION_MAP.items()
         ]
@@ -384,7 +397,9 @@ class AdminService:
 
     # ── API Key Governance ────────────────────────────────
 
-    async def list_organization_api_keys(self, organization_id: UUID) -> APIKeyAdminListResponse:
+    async def list_organization_api_keys(
+        self, organization_id: UUID
+    ) -> APIKeyAdminListResponse:
         """List active integration API keys for the organization."""
         keys = await self.api_key_repo.list_by_organization(organization_id)
         now = datetime.now(timezone.utc)
@@ -412,7 +427,6 @@ class AdminService:
         """Alias for list_organization_api_keys."""
         return await self.list_organization_api_keys(organization_id)
 
-
     async def create_api_key(
         self,
         organization_id: UUID,
@@ -425,7 +439,9 @@ class AdminService:
             scopes=req.scopes,
             expires_in_days=req.expires_in_days,
         )
-        created_dto = await self.api_key_service.create_api_key(create_req, current_user)
+        created_dto = await self.api_key_service.create_api_key(
+            create_req, current_user
+        )
 
         # Record detailed audit log event
         await self.audit_service.record_event(
@@ -438,7 +454,11 @@ class AdminService:
                 "name": req.name,
                 "key_prefix": created_dto.key_prefix,
                 "scopes": req.scopes,
-                "expires_at": created_dto.expires_at.isoformat() if created_dto.expires_at else None,
+                "expires_at": (
+                    created_dto.expires_at.isoformat()
+                    if created_dto.expires_at
+                    else None
+                ),
             },
         )
 
@@ -449,7 +469,9 @@ class AdminService:
             key_prefix=created_dto.key_prefix,
             scopes=created_dto.scopes or [],
             created_at=created_dto.created_at.isoformat(),
-            expires_at=created_dto.expires_at.isoformat() if created_dto.expires_at else None,
+            expires_at=(
+                created_dto.expires_at.isoformat() if created_dto.expires_at else None
+            ),
         )
 
     async def revoke_api_key(
@@ -474,7 +496,6 @@ class AdminService:
         )
 
         return True
-
 
     # ── Security & MFA Overview ───────────────────────────
 
