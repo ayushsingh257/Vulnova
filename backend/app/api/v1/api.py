@@ -18,6 +18,7 @@ from app.api.v1.routers import (
     triage,
     trust,
     users,
+    vulnerabilities,
     workers,
 )
 
@@ -34,6 +35,7 @@ api_v1_router.include_router(scan_stream.router)
 api_v1_router.include_router(assets.router)
 api_v1_router.include_router(trends.router)
 api_v1_router.include_router(triage.router)
+api_v1_router.include_router(vulnerabilities.router)
 api_v1_router.include_router(ai.router)
 api_v1_router.include_router(
     scan_targets.router, prefix="/scan-targets", tags=["Scan Target Management"]

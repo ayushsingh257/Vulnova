@@ -238,6 +238,51 @@ All API errors return a standardized JSON error format:
 #### `PATCH /api/v1/findings/{finding_id}/triage`
 - **Summary**: Triage a security finding status (`UNREVIEWED`, `CONFIRMED`, `FALSE_POSITIVE`, `RISK_ACCEPTED`, `REMEDIATED`, `REOPENED`).
 - **RBAC Guard**: Requires authentication and `findings:triage` permission (`SECURITY_ANALYST`+).
+
+---
+
+### E. Vulnerability Intelligence & Triage (`/vulnerabilities`)
+
+#### `GET /api/v1/vulnerabilities/{finding_id}`
+- **Summary**: Query comprehensive vulnerability intelligence record, CVSS/EPSS scores, risk context, scan origin, and triage history.
+- **RBAC Guard**: Requires authentication (`get_current_user_or_api_key`) and `findings:read` permission.
+- **Response (200 OK)**:
+  ```json
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "organization_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "title": "SQL Injection in Authentication API",
+    "description": "Unsanitized login parameter vulnerable to blind SQL injection.",
+    "severity": "CRITICAL",
+    "category": "INJECTION",
+    "cve_id": "CVE-2024-9999",
+    "cwe_id": "CWE-89",
+    "cvss": { "version": "3.1", "base_score": 9.8, "exploitability_score": 3.9, "impact_score": 5.9 },
+    "epss": { "epss_score": 0.95, "percentile": 0.99 },
+    "risk_context": { "composite_risk_score": 95.0, "remediation_sla_hours": 24, "risk_level": "CRITICAL", "affected_asset_count": 1 },
+    "scan_origin": { "job_id": "uuid", "target_name": "https://api.staging.enterprise.com", "target_environment": "PRODUCTION", "scan_profile": "full_assessment" },
+    "triage_status": "UNREVIEWED",
+    "triage_history": [],
+    "created_at": "2026-08-01T10:00:00Z"
+  }
+  ```
+
+#### `GET /api/v1/vulnerabilities/{finding_id}/evidence`
+- **Summary**: Query multi-modal proof evidence artifacts (HTTP exchanges, screenshots, DOM snapshots, plugin output) for a finding.
+- **RBAC Guard**: Requires authentication (`get_current_user_or_api_key`) and `findings:read` permission.
+
+#### `GET /api/v1/vulnerabilities/{finding_id}/attack-path`
+- **Summary**: Query graph visualization nodes describing vulnerability exploitation progression.
+- **RBAC Guard**: Requires authentication (`get_current_user_or_api_key`) and `findings:ai_attack_path` permission.
+
+#### `GET /api/v1/vulnerabilities/{finding_id}/remediation`
+- **Summary**: Query AI remediation plan, fix steps, code patch suggestions, and verification checklist.
+- **RBAC Guard**: Requires authentication (`get_current_user_or_api_key`) and `findings:ai_remediate` permission.
+
+#### `POST /api/v1/vulnerabilities/{finding_id}/remediation-ai`
+- **Summary**: Trigger on-demand AI remediation engine synthesis for advisory code fixes.
+- **RBAC Guard**: Requires authentication (`get_current_user_or_api_key`) and `findings:ai_remediate` permission (`SECURITY_ANALYST`+).
+
 - **Request Body**:
   ```json
   {

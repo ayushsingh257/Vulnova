@@ -577,6 +577,50 @@ Phase 7.4 introduces the **Scan Management Portal & Live Monitor Gateway**, esta
 3. **Frontend API Abstraction Service**: `frontend/services/scans.service.ts` encapsulates all REST API calls and WebSocket connections outside React components.
 4. **Visual Scan Activity Execution Timeline**: `ScanActivityTimeline` component renders step execution progression milestones (`QUEUED`, `PROBING`, `CRAWLING`, `ASSESSING`, `VERIFYING`, `COMPLETED`), target verification events, plugin executions, and finding discovery events.
 
+---
+
+## 🔍 13. Vulnerability Investigation Workspace & AI Remediation Architecture (Phase 7.5)
+
+Phase 7.5 introduces a dedicated analyst vulnerability investigation workspace (`/vulnerabilities/[id]`), synthesizing raw security findings, multi-modal evidence artifacts, attack paths, and AI fix guidance:
+
+```text
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                         Security Analyst Investigation                      │
+  │                  (/vulnerabilities/[id] Intelligence Route)                 │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                  Frontend Vulnerabilities Service Abstraction               │
+  │                 (frontend/services/vulnerabilities.service.ts)              │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │ REST API
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                 FastAPI Vulnerability Intelligence Router                   │
+  │                      (/api/v1/vulnerabilities/*)                            │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                     FindingIntelligenceService Aggregator                   │
+  │            (app/application/finding/finding_intelligence_service.py)        │
+  └──────────┬───────────────────┬───────────────────┬───────────────────┬──────┘
+             │                   │                   │                   │
+             ▼                   ▼                   ▼                   ▼
+  ┌────────────────────┐┌──────────────────┐┌──────────────────┐┌──────────────────┐
+  │AssessmentRepository││EvidenceRepository││AIAttackPathRepo  ││AIRemediationRepo │
+  │(SecurityFinding)   ││(EvidenceArtifact)││(AIAttackPath)    ││(AIRemediation)   │
+  └────────────────────┘└──────────────────┘└──────────────────┘└──────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Table Duplication Safeguard**: Operates as a read-only intelligence aggregator on top of 9 existing ORM models (`security_findings`, `evidence_artifacts`, `assessment_jobs`, `finding_triage_history`, `ai_finding_explanations`, `ai_attack_paths`, `ai_remediation_plans`). Introduces zero redundant tables or secondary risk engines.
+2. **Multi-Modal Evidence Normalization**: Maps raw storage evidence artifacts (`HTTP_EXCHANGE`, `SCREENSHOT`, `DOM_SNAPSHOT`, `PLUGIN_OUTPUT`, `TRACE_LOG`) into human-readable UI labels with SHA-256 non-repudiation integrity verification.
+3. **On-Demand Advisory AI Fix Generation**: `POST /api/v1/vulnerabilities/{id}/remediation-ai` invokes `AIRemediationService.generate_remediation_plan()` (Phase 5.4) under a strict non-executable human approval policy.
+4. **Tenant Isolation & RBAC Boundaries**: Every query enforces `organization_id = current_user.organization_id`. Endpoints require permissions (`findings:read`, `findings:ai_attack_path`, `findings:ai_remediate`).
+
+
 
 
 

@@ -20,6 +20,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 7 Phase 7.5 (Vulnerability Triage, Evidence Record Viewer & AI Remediation Drawer)**:
+  - Created domain entities `VulnerabilityRiskContext`, `EvidenceType`, and `AttackPathNode` (`app/domain/entities/vulnerability_intelligence.py`).
+  - Implemented read-only application service `FindingIntelligenceService` (`app/application/finding/finding_intelligence_service.py`) aggregating vulnerability details, multi-modal evidence lists with human-readable type labels, attack chain node structures, and AI remediation guidance without creating duplicate database tables or risk scoring engines.
+  - Extended REST API endpoints (`app/api/v1/routers/vulnerabilities.py`):
+    - `GET /api/v1/vulnerabilities/{id}`: Detailed vulnerability intelligence record with CVSS/EPSS scoring, composite risk context, scan origin, and triage audit history (`findings:read` permission).
+    - `GET /api/v1/vulnerabilities/{id}/evidence`: Multi-modal proof evidence artifacts list with normalized type labels and SHA-256 integrity checksums (`findings:read` permission).
+    - `GET /api/v1/vulnerabilities/{id}/attack-path`: Attack chain relationship node visualization data (`findings:ai_attack_path` permission).
+    - `GET /api/v1/vulnerabilities/{id}/remediation`: AI remediation plan, fix steps, code patch suggestions, and verification checklist (`findings:ai_remediate` permission).
+    - `POST /api/v1/vulnerabilities/{id}/remediation-ai`: Trigger on-demand AI remediation engine synthesis (`findings:ai_remediate` permission).
+  - Created frontend API service abstraction `VulnerabilitiesService` (`frontend/services/vulnerabilities.service.ts`).
+  - Implemented Next.js 14 Vulnerability Investigation UI routes & components:
+    - `VulnerabilityDetailPage` (`frontend/app/(dashboard)/vulnerabilities/[id]/page.tsx`): Main analyst vulnerability investigation workspace with tabbed evidence, attack path, and AI remediation views.
+    - `VulnerabilityHeader` (`frontend/components/vulnerabilities/vulnerability-header.tsx`): Title, severity badges, CVSS gauge, EPSS exploit probability bar, CVE/CWE tags, target asset context.
+    - `CVSSRiskCard` (`frontend/components/vulnerabilities/cvss-risk-card.tsx`): CVSS vector string breakdown, exploitability/impact sub-scores, SLA breach countdown.
+    - `EvidenceViewerDrawer` (`frontend/components/vulnerabilities/evidence-viewer-drawer.tsx`): Tabbed evidence viewer for HTTP request/responses, screenshots, DOM snapshots, plugin traces, and SHA-256 non-repudiation badges.
+    - `AttackPathGraph` (`frontend/components/vulnerabilities/attack-path-graph.tsx`): Vertical attack chain graph node sequence.
+    - `AIRemediationDrawer` (`frontend/components/vulnerabilities/ai-remediation-drawer.tsx`): Advisory copilot panel displaying AI explanation summary, step-by-step fix guides, syntax-highlighted code patches with copy buttons, verification checklist, and on-demand "Trigger AI Fix" button.
+  - Created test suite `tests/test_vulnerability_intelligence.py` verifying service aggregation, evidence listing, tenant isolation boundaries, attack path rendering, AI remediation responses, and REST API endpoints (5/5 passed).
 - **Era 7 Phase 7.4 (Scan Management & Live Monitor Portal)**:
   - Created domain target masking utility `mask_target_url()` (`app/application/assessment/utils.py`) to protect sensitive infrastructure details in list views (`GET /api/v1/assessments`).
   - Implemented decoupled `ScanManagementService` (`app/application/assessment/scan_management_service.py`) for paginated scan listing, telemetry aggregation, and lifecycle state management delegation (`pause`, `resume`, `cancel`, `retry`).

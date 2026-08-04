@@ -778,3 +778,15 @@ CREATE INDEX idx_scan_schedules_next_run ON scan_schedules(status, next_run_at);
 ## 🖥️ 5. Scan Portal Index Usage (Phase 7.4)
 
 Paginated scan listing queries (`GET /api/v1/assessments`) utilize composite index `idx_assessment_jobs_org` (`organization_id`, `created_at DESC`) on `assessment_jobs` to guarantee sub-20ms execution times across large datasets.
+
+---
+
+## 🔍 6. Vulnerability Investigation Workspace Table & Index Reuse (Phase 7.5)
+
+Phase 7.5 requires zero new database tables or schema migrations. `FindingIntelligenceService` queries 9 existing PostgreSQL tables using composite indexes:
+- `security_findings` (`idx_security_findings_org_severity`, `idx_security_findings_org_risk`) for vulnerability metadata.
+- `evidence_artifacts` (`idx_evidence_artifacts_org_finding`) for proof artifact lookups.
+- `finding_triage_history` (`idx_triage_history_org_finding`) for audit history retrieval.
+- `ai_attack_paths` (`idx_ai_paths_org_finding`) and `ai_attack_path_steps` (`idx_ai_paths_org_finding`) for attack graph nodes.
+- `ai_remediation_plans` (`idx_ai_remed_org_finding`), `ai_remediation_steps`, `ai_patch_suggestions` for fix recommendations.
+

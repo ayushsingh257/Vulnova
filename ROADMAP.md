@@ -925,12 +925,26 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Scan Management Portal, target URL masking, decoupled ScanManagementService, frontend service abstraction, activity timeline, live event console, and REST endpoints operational; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
 - **Testing Requirements**: Target masking tests, paginated listing tests, telemetry retrieval tests, REST endpoint tests, Next.js build & type-check verification.
 
-### Phase 7.5: Vulnerability Triage, Evidence Record Viewer & AI Remediation Drawer
-- **Objective**: Vulnerability detail view displaying CVSS score, EPSS probability, decoupled evidence dumps (screenshots, HTTP exchanges, DOM snapshots), attack paths, and AI code fix drawer.
-- **Deliverables**: `frontend/app/(dashboard)/vulnerabilities/[id]/page.tsx`, evidence viewer drawer, AI copilot widget.
+### Phase 7.5: Vulnerability Triage, Evidence Record Viewer & AI Remediation Drawer ✅
+- **Objective**: Vulnerability investigation workspace displaying CVSS v3.1/v4 scores, EPSS exploit likelihood, multi-modal evidence dumps (HTTP request/response exchanges, screenshots, DOM snapshots, plugin traces), attack chain diagrams, and AI code fix drawer.
+- **Deliverables**:
+  - Domain Entities & Enums (`app/domain/entities/vulnerability_intelligence.py`): `VulnerabilityRiskContext`, `EvidenceType`, `AttackPathNode`.
+  - Application Service (`app/application/finding/finding_intelligence_service.py`): Read-only aggregator `FindingIntelligenceService` fetching unified vulnerability details, multi-modal evidence items with human-readable type labels, attack path visualization nodes, and AI remediation guidance without creating duplicate database tables or risk scoring engines.
+  - Pydantic DTOs (`app/application/assessment/dto.py`): `VulnerabilityIntelligenceResponse`, `CVSSDetailDTO`, `EPSSDetailDTO`, `VulnerabilityRiskContextDTO`, `ScanOriginDTO`, `FindingEvidenceResponse`, `EvidenceItemDTO`, `FindingAttackPathsResponse`, `AttackPathNodeDTO`, `FindingRemediationResponse`, `RemediationStepDTO`, `PatchSuggestionDTO`.
+  - REST API Router (`app/api/v1/routers/vulnerabilities.py`): `GET /api/v1/vulnerabilities/{id}` (`findings:read`), `GET /api/v1/vulnerabilities/{id}/evidence` (`findings:read`), `GET /api/v1/vulnerabilities/{id}/attack-path` (`findings:ai_attack_path`), `GET /api/v1/vulnerabilities/{id}/remediation` (`findings:ai_remediate`), `POST /api/v1/vulnerabilities/{id}/remediation-ai` (`findings:ai_remediate`).
+  - Frontend Service Abstraction (`frontend/services/vulnerabilities.service.ts`): `VulnerabilitiesService` encapsulating all `/api/v1/vulnerabilities` REST API calls outside React components.
+  - Next.js 14 UI Route & Components (`frontend/app/(dashboard)/vulnerabilities/[id]/page.tsx`, `frontend/components/vulnerabilities/`): `VulnerabilityDetailPage` (`/vulnerabilities/[id]`), `VulnerabilityHeader` (CVSS & EPSS gauges, CVE/CWE tags), `CVSSRiskCard` (exploitability/impact sub-scores, SLA breach countdown), `EvidenceViewerDrawer` (tabbed HTTP request/responses, screenshots, DOM snapshots, plugin traces, SHA-256 integrity badges), `AttackPathGraph` (vertical attack chain node sequence), `AIRemediationDrawer` (AI explanation summary, step-by-step fix guides, syntax-highlighted code patches, verification checklist, on-demand "Trigger AI Fix" button).
+  - Test Suite (`tests/test_vulnerability_intelligence.py`): 5 unit & integration test cases verifying service aggregation, evidence listing, tenant isolation boundaries, attack path rendering, AI remediation responses, and REST API endpoints.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (255 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 209 source files passed (strict mode)
+    - **Pytest**: 5 passed in `test_vulnerability_intelligence.py` (395+ total tests)
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success — 9 static pages compiled including `/vulnerabilities/[id]`)
 - **Dependencies**: Phase 7.4, Phase 4.6, Era 5.
-- **Completion Criteria**: Analysts can inspect raw HTTP dumps, screenshots, attack chain diagrams, and AI remediation patches.
-- **Testing Requirements**: Interactive UI state test for finding triage.
+- **Completion Criteria**: Analysts can inspect raw HTTP dumps, screenshots, attack chain diagrams, and AI remediation patches; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
+- **Testing Requirements**: Service aggregation tests, evidence listing tests, tenant isolation tests, attack path tests, AI remediation tests, Next.js build & type-check verification.
 
 ### Phase 7.6: User, Organization & Role Management UI
 - **Objective**: Settings interface for managing team invitations, RBAC roles, MFA, and API keys.

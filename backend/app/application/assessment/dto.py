@@ -803,3 +803,166 @@ class AssessmentTelemetrySummaryResponse(BaseModel):
     duration_seconds: int = 0
     assigned_worker_node_id: Optional[str] = "worker-node-01"
     timeline_items: List[ScanActivityTimelineItemDTO] = Field(default_factory=list)
+
+
+# ── Phase 7.5: Vulnerability Triage, Evidence Viewer & AI Remediation DTOs ──
+
+
+class CVSSDetailDTO(BaseModel):
+    """CVSS scoring parameters DTO."""
+
+    version: str = "3.1"
+    base_score: float = 0.0
+    vector_string: Optional[str] = None
+    exploitability_score: Optional[float] = None
+    impact_score: Optional[float] = None
+
+
+class EPSSDetailDTO(BaseModel):
+    """EPSS exploit likelihood DTO."""
+
+    epss_score: float = 0.0
+    percentile: float = 0.0
+
+
+class VulnerabilityRiskContextDTO(BaseModel):
+    """Aggregated risk context metrics DTO."""
+
+    composite_risk_score: float = 0.0
+    remediation_sla_hours: int = 336
+    risk_level: str = "MEDIUM"
+    affected_asset_count: int = 1
+    exploitability_score: Optional[float] = None
+    impact_score: Optional[float] = None
+
+
+class ScanOriginDTO(BaseModel):
+    """Scan origin assessment job and target metadata DTO."""
+
+    job_id: str
+    target_name: str
+    target_environment: str = "PRODUCTION"
+    scan_profile: str = "full_assessment"
+    completed_at: Optional[str] = None
+
+
+class TriageHistoryItemDTO(BaseModel):
+    """Triage workflow historical record DTO."""
+
+    id: str
+    previous_status: str
+    new_status: str
+    actor_user_id: Optional[str] = None
+    comment: Optional[str] = None
+    risk_accepted_until: Optional[str] = None
+    created_at: str
+
+
+class AIExplanationSummaryDTO(BaseModel):
+    """AI Finding Explanation summary DTO."""
+
+    id: str
+    summary: str
+    technical_details: Optional[str] = None
+    impact_analysis: Optional[str] = None
+    confidence_score: float = 1.0
+    status: str = "COMPLETED"
+
+
+class VulnerabilityIntelligenceResponse(BaseModel):
+    """Full vulnerability investigation workspace detail response payload."""
+
+    id: str
+    organization_id: str
+    title: str
+    description: str
+    severity: str
+    category: str
+    cve_id: Optional[str] = None
+    cwe_id: Optional[str] = None
+    remediation: Optional[str] = None
+    cvss: CVSSDetailDTO
+    epss: EPSSDetailDTO
+    risk_context: VulnerabilityRiskContextDTO
+    scan_origin: ScanOriginDTO
+    triage_status: str = "UNREVIEWED"
+    triage_history: List[TriageHistoryItemDTO] = Field(default_factory=list)
+    ai_explanation: Optional[AIExplanationSummaryDTO] = None
+    created_at: str
+
+
+class EvidenceItemDTO(BaseModel):
+    """Multi-modal proof evidence artifact DTO."""
+
+    id: str
+    finding_id: str
+    artifact_type: str
+    type_label: str
+    storage_path: str
+    metadata: Optional[Dict[str, Any]] = None
+    checksum: str
+    created_at: str
+
+
+class FindingEvidenceResponse(BaseModel):
+    """Response payload for finding evidence list."""
+
+    finding_id: str
+    evidence_items: List[EvidenceItemDTO] = Field(default_factory=list)
+    total_count: int = 0
+
+
+class AttackPathNodeDTO(BaseModel):
+    """Attack path step node visualization DTO."""
+
+    id: str
+    asset_name: str
+    asset_type: str
+    vulnerability_title: str
+    relationship: str
+    risk_impact: str
+    sequence_number: int
+
+
+class FindingAttackPathsResponse(BaseModel):
+    """Response payload for attack chain relationship visualization."""
+
+    finding_id: str
+    attack_path_id: Optional[str] = None
+    title: str = "Vulnerability Attack Chain"
+    attack_summary: str = "Discovered attack progression"
+    composite_risk_score: float = 0.0
+    nodes: List[AttackPathNodeDTO] = Field(default_factory=list)
+
+
+class RemediationStepDTO(BaseModel):
+    """Remediation plan step DTO."""
+
+    sequence_number: int
+    step_type: str
+    title: str
+    description: str
+    estimated_minutes: int = 30
+
+
+class PatchSuggestionDTO(BaseModel):
+    """Code or configuration patch suggestion DTO."""
+
+    file_path: Optional[str] = None
+    language: str = "json"
+    patch_code: str
+    explanation: Optional[str] = None
+
+
+class FindingRemediationResponse(BaseModel):
+    """Response payload for AI remediation guidance and verification steps."""
+
+    finding_id: str
+    plan_id: Optional[str] = None
+    title: str
+    summary: str
+    explanation: str
+    verification_steps: List[str] = Field(default_factory=list)
+    steps: List[RemediationStepDTO] = Field(default_factory=list)
+    patch_suggestions: List[PatchSuggestionDTO] = Field(default_factory=list)
+    ai_confidence_score: float = 1.0

@@ -462,3 +462,19 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
 4. **Granular Report RBAC Permissions**:
    - `reports:read` required for retrieving executive posture summaries (`Role.VIEWER` level 10+).
    - `reports:export` required for executing report downloads (`Role.SECURITY_ANALYST` level 20+).
+
+---
+
+## 🔍 17. Vulnerability Investigation Workspace & Evidence Protection Controls (Phase 7.5)
+
+1. **Strict Multi-Tenant Isolation**:
+   - All `/api/v1/vulnerabilities/*` endpoints enforce `organization_id = current_user.organization_id` database query filters. Cross-tenant finding lookups return 404 Not Found to prevent attack surface enumeration.
+2. **Evidence Artifact Integrity & Protection**:
+   - Proof evidence artifacts (HTTP request/response dumps, screenshots, DOM snapshots) are read-only. Every artifact stores a SHA-256 checksum computed at creation time for non-repudiation and proof integrity verification.
+3. **AI Remediation Non-Executable Advisory Safety**:
+   - AI remediation guidance, code diffs, and verification steps are purely advisory text recommendations. The system contains ZERO auto-patch execution, shell invocation, or automated deployment triggers. All code changes require human analyst review.
+4. **RBAC Guarding**:
+   - `findings:read` required for finding details and evidence (`Role.VIEWER` level 10+).
+   - `findings:ai_attack_path` required for attack path graph data (`Role.SECURITY_ANALYST` level 20+).
+   - `findings:ai_remediate` required for AI remediation plan generation (`Role.SECURITY_ANALYST` level 20+).
+
