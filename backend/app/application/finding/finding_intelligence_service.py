@@ -390,7 +390,6 @@ class FindingIntelligenceService:
             for p in plan.patch_suggestions
         ]
 
-
         verification_list = [
             "Re-run Vulnova assessment scan.",
             "Verify finding resolution in security dashboard.",
