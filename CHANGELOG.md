@@ -20,6 +20,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 7 Phase 7.1 (Security Operations Dashboard & Analyst Experience)**:
+  - Created `DashboardAnalyticsService` (`app/application/assessment/dashboard_analytics_service.py`): Backend aggregator computing composite risk scores (0–100), posture status classifications (`SECURE`, `ELEVATED_RISK`, `CRITICAL_RISK`), vulnerability severity distributions, active scan telemetry, target asset risk leaderboards, and recurring schedule summaries with 30s Redis caching (`dashboard:metrics:{org_id}`).
+  - Extended Pydantic v2 DTOs (`app/application/assessment/dto.py`): `DashboardOverviewResponse`, `SecurityPostureSummaryDTO`, `VulnerabilitySeverityBreakdownDTO`, `ActiveScanSummaryDTO`, `TopVulnerableAssetDTO`, `SchedulesOverviewSummaryDTO`.
+  - Implemented FastAPI REST router (`app/api/v1/routers/dashboard.py`): `GET /api/v1/dashboard/overview`, `GET /api/v1/dashboard/posture`, `GET /api/v1/dashboard/scans/active`.
+  - Configured RBAC permissions (`dashboard:read`: VIEWER level 10+, `analytics:read`: SECURITY_ANALYST level 20+) in `PERMISSION_MAP` (`app/domain/entities/role.py`).
+  - Created Next.js 14 UI Design Tokens & Components (`frontend/components/ui/`): `Card`, `Badge`, `ProgressBar`, `Button` styled with Tailwind CSS (Obsidian `#09090B`, Crimson `#DC2626`).
+  - Created SOC Dashboard Components (`frontend/components/dashboard/`): `DashboardLayout`, `SecurityPostureCard`, `ActiveScanMonitor` (WebSocket event subscription), `VulnerabilityChart`, `AssetRiskOverview`, `SchedulesOverview`.
+  - Implemented Next.js SOC Dashboard Route (`frontend/app/(dashboard)/dashboard/page.tsx`).
+  - Created comprehensive test suite (`tests/test_dashboard_analytics.py`) — 3 test cases verifying metrics calculation, REST API endpoints, and tenant boundary isolation.
 - **Era 6 Phase 6.5 (Distributed Scan Scheduler & Recurrence Engine)**:
   - Created domain entities (`app/domain/entities/scan_schedule.py`): `ScanSchedule` dataclass, `RecurrenceFrequency` (`HOURLY`, `DAILY`, `WEEKLY`, `MONTHLY`, `CUSTOM_CRON`), `ScheduleStatus` (`ACTIVE`, `PAUSED`, `DISABLED`), `WorkerAutoscaleMetrics` value object.
   - Created database ORM model (`app/infrastructure/database/models/scan_schedule.py`): `ScanScheduleModel` (`scan_schedules` table) with `organization_id` FK, `scan_target_id` FK, cron expression, frequency, status, profile, enabled_plugins JSON, `total_runs_count`, `next_run_at`, `last_run_at`, `created_by`.

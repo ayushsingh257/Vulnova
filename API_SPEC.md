@@ -1013,6 +1013,63 @@ All API errors return a standardized JSON error format:
   }
   ```
 
+### 3.9 Security Operations Dashboard & Analyst Experience (Phase 7.1)
+
+#### `GET /dashboard/overview`
+- **Summary**: Retrieve consolidated SOC dashboard metrics including composite risk score, posture status, vulnerability distribution, active scan telemetry, top high-risk assets, and schedule summaries (`dashboard:read` permission required).
+- **Response (200 OK)**:
+  ```json
+  {
+    "organization_id": "6bcb30b5-148f-4a15-baf2-3e5598512bd8",
+    "posture_summary": {
+      "composite_risk_score": 78.5,
+      "posture_status": "ELEVATED_RISK",
+      "total_targets_count": 12,
+      "total_open_findings": 47,
+      "critical_findings_count": 3,
+      "high_findings_count": 14
+    },
+    "vulnerability_breakdown": {
+      "critical_count": 3,
+      "high_count": 14,
+      "medium_count": 20,
+      "low_count": 8,
+      "info_count": 2
+    },
+    "active_scans": [
+      {
+        "job_id": "8d48aca2-c4b9-45b2-b42d-e6f2dbfdeb18",
+        "target_name": "Production API Gateway",
+        "target_url": "https://api.staging.example.com",
+        "execution_state": "ASSESSING",
+        "current_step": "Executing Active Security Plugins",
+        "started_at": "2026-08-04T08:30:00Z"
+      }
+    ],
+    "top_vulnerable_assets": [
+      {
+        "target_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "target_url": "https://auth.staging.example.com",
+        "environment": "STAGING",
+        "risk_score": 92.0,
+        "critical_count": 2,
+        "high_count": 5
+      }
+    ],
+    "schedules_summary": {
+      "total_active_schedules": 4,
+      "next_scheduled_run_at": "2026-08-05T02:00:00Z"
+    },
+    "cached_at": "2026-08-04T09:15:00Z"
+  }
+  ```
+
+#### `GET /dashboard/posture`
+- **Summary**: Retrieve detailed organization posture risk score and status summary (`analytics:read` permission required).
+
+#### `GET /dashboard/scans/active`
+- **Summary**: Retrieve real-time active scan job details for live dashboard display (`scans:read` permission required).
+
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol

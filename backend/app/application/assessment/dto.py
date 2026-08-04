@@ -553,3 +553,77 @@ class WorkerAutoscaleMetricsResponse(BaseModel):
     recommended_workers_count: int
     scaling_action_suggested: str
     timestamp: str
+
+
+# ── Phase 7.1: Security Operations Dashboard & Analyst Experience DTOs ──
+
+
+class SecurityPostureSummaryDTO(BaseModel):
+    """Summary of organization security posture and composite risk score."""
+
+    composite_risk_score: float = Field(
+        ..., description="Risk score from 0.0 (safe) to 100.0 (critical)"
+    )
+    posture_status: str = Field(
+        ..., description="SECURE, ELEVATED_RISK, or CRITICAL_RISK"
+    )
+    total_targets_count: int = Field(..., description="Total active scan targets")
+    total_open_findings: int = Field(
+        ..., description="Total unhandled security findings"
+    )
+    critical_findings_count: int = Field(
+        0, description="Count of CRITICAL severity findings"
+    )
+    high_findings_count: int = Field(0, description="Count of HIGH severity findings")
+
+
+class VulnerabilitySeverityBreakdownDTO(BaseModel):
+    """Distribution of open security findings by severity level."""
+
+    critical_count: int = 0
+    high_count: int = 0
+    medium_count: int = 0
+    low_count: int = 0
+    info_count: int = 0
+
+
+class ActiveScanSummaryDTO(BaseModel):
+    """Summary of an active scan execution job."""
+
+    job_id: str
+    target_name: str
+    target_url: str
+    execution_state: str
+    current_step: Optional[str] = None
+    started_at: Optional[str] = None
+    running_duration_seconds: int = 0
+
+
+class TopVulnerableAssetDTO(BaseModel):
+    """High-risk target asset requiring analyst attention."""
+
+    target_id: str
+    target_url: str
+    environment: str
+    risk_score: float
+    critical_count: int = 0
+    high_count: int = 0
+
+
+class SchedulesOverviewSummaryDTO(BaseModel):
+    """Summary of recurring scan schedules for the dashboard."""
+
+    total_active_schedules: int = 0
+    next_scheduled_run_at: Optional[str] = None
+
+
+class DashboardOverviewResponse(BaseModel):
+    """Consolidated SOC Dashboard overview payload."""
+
+    organization_id: str
+    posture_summary: SecurityPostureSummaryDTO
+    vulnerability_breakdown: VulnerabilitySeverityBreakdownDTO
+    active_scans: List[ActiveScanSummaryDTO] = Field(default_factory=list)
+    top_vulnerable_assets: List[TopVulnerableAssetDTO] = Field(default_factory=list)
+    schedules_summary: SchedulesOverviewSummaryDTO
+    cached_at: str

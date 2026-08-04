@@ -768,3 +768,4 @@ CREATE INDEX idx_scan_schedules_next_run ON scan_schedules(status, next_run_at);
 | `ws_channel:{scan_id}` | Pub/Sub Channel | Real-time | Live progress streaming to clients |
 | `lock:scan:{org_id}:{url_hash}` | String | 1 hr | Distributed scan target lock (Phase 6.3) |
 | `vulnova:scan:events:{org_id}:{scan_id}` | Pub/Sub Channel | Real-time | Scan event streaming (Phase 6.4) |
+| `dashboard:metrics:{org_id}` | String (JSON) | 30 sec | Consolidated SOC dashboard metrics cache per organization (Phase 7.1) |

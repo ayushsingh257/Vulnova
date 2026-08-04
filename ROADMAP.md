@@ -834,12 +834,28 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 
 ## 🖥️ Era 7: Enterprise Web Application, Dashboard & Trust Center
 
-### Phase 7.1: UI Design System Tokens & Component Library Setup
-- **Objective**: Implement Tailwind design tokens for Crimson/Obsidian color system and core UI components.
-- **Deliverables**: `frontend/components/ui/` (buttons, cards, badges, dialogs, tables).
+### ✅ Phase 7.1: Security Operations Dashboard & Analyst Experience
+- **Status**: Completed ✅
+- **Objective**: Analyst-facing Security Operations Center (SOC) dashboard unifying security posture risk scores, active scan telemetry monitor with WebSocket streaming, vulnerability severity breakdown, high-risk target asset rankings, and recurring scan schedule summaries.
+- **Deliverables**:
+  - `DashboardAnalyticsService` (`app/application/assessment/dashboard_analytics_service.py`): Backend aggregator using SQL `GROUP BY` metrics over existing PostgreSQL indexes with 30s Redis caching (`dashboard:metrics:{org_id}`).
+  - Pydantic v2 DTO Schemas (`app/application/assessment/dto.py`): `DashboardOverviewResponse`, `SecurityPostureSummaryDTO`, `VulnerabilitySeverityBreakdownDTO`, `ActiveScanSummaryDTO`, `TopVulnerableAssetDTO`, `SchedulesOverviewSummaryDTO`.
+  - FastAPI REST Router (`app/api/v1/routers/dashboard.py`): `GET /api/v1/dashboard/overview` (`dashboard:read`), `GET /api/v1/dashboard/posture` (`analytics:read`), `GET /api/v1/dashboard/scans/active` (`scans:read`).
+  - RBAC Permissions: Registered `dashboard:read` (Role.VIEWER level 10+) and `analytics:read` (Role.SECURITY_ANALYST level 20+) in `PERMISSION_MAP` (`app/domain/entities/role.py`).
+  - Next.js UI Design System Tokens (`frontend/components/ui/`): `Card`, `Badge`, `ProgressBar`, `Button` components styled with Tailwind CSS (Obsidian `#09090B`, Crimson `#DC2626`).
+  - SOC Dashboard UI Components (`frontend/components/dashboard/`): `DashboardLayout`, `SecurityPostureCard`, `ActiveScanMonitor` (WebSocket event subscription), `VulnerabilityChart`, `AssetRiskOverview`, `SchedulesOverview`.
+  - Next.js SOC Dashboard Route (`frontend/app/(dashboard)/dashboard/page.tsx`).
+  - Comprehensive Unit & Integration Test Suite (`tests/test_dashboard_analytics.py`): 3 test cases verifying service metrics calculation, REST API endpoints, and multi-tenant boundary isolation.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (236 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 194 source files passed (strict mode)
+    - **Pytest**: 3 passed in `test_dashboard_analytics.py` (376+ total tests)
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success)
 - **Dependencies**: Era 1, Era 6.
-- **Completion Criteria**: UI components render with consistent light/dark theme styling.
-- **Testing Requirements**: Component visual & accessibility tests.
+- **Completion Criteria**: SOC Dashboard, active scan monitor, vulnerability distribution charts, target risk rankings, and REST endpoints operational; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
+- **Testing Requirements**: Analytics aggregation tests, REST API endpoint tests, tenant boundary isolation tests, Next.js build & type-check verification.
 
 ### Phase 7.2: Public Marketing Pages & Enterprise Trust Center
 - **Objective**: Build animated public pages including dedicated Trust Center (`/trust`).

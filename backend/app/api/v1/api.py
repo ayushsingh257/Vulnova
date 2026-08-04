@@ -7,6 +7,7 @@ from app.api.v1.routers import (
     assets,
     audit_logs,
     auth,
+    dashboard,
     discovery,
     organizations,
     scan_schedules,
@@ -39,4 +40,5 @@ api_v1_router.include_router(
 api_v1_router.include_router(
     scan_schedules.router, prefix="/scan-schedules", tags=["Scan Schedule Management"]
 )
+api_v1_router.include_router(dashboard.router)
 api_v1_router.include_router(workers.router, prefix="/workers", tags=["Workers"])

@@ -420,3 +420,18 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
    - Every schedule lifecycle action generates structured audit logs capturing `organization_id`, `schedule_id`, `actor_user_id`, and event type (`scan_schedule.created`, `scan_schedule.updated`, `scan_schedule.paused`, `scan_schedule.resumed`, `scan_schedule.disabled`, `scan_schedule.triggered`).
 5. **Governance-Only Autoscale Metrics**:
    - `WorkerAutoscalerService` provides capacity monitoring and scaling recommendations without direct infrastructure provisioning or cloud API execution, preventing unauthorized compute creation.
+
+---
+
+## 🖥️ 14. Security Operations Dashboard & Analyst Controls (Phase 7.1)
+
+1. **Mandatory Tenant Boundary Isolation**:
+   - All SQL queries within `DashboardAnalyticsService` enforce strict `WHERE organization_id = current_user.organization_id` clauses.
+   - Redis cache key topologies incorporate tenant organization IDs (`dashboard:metrics:{org_id}`), preventing cross-tenant posture data leakage.
+2. **Granular RBAC Authorization**:
+   - `dashboard:read` permission required for viewing high-level SOC dashboard overview metrics (`Role.VIEWER` level 10+).
+   - `analytics:read` permission required for accessing detailed composite risk trajectories and security posture analytics (`Role.SECURITY_ANALYST` level 20+).
+3. **Sensitive Credential Sanitization**:
+   - Scan targets, active scan step descriptions, and finding previews rendered on the dashboard pass through `mask_sensitive_headers` and `mask_sensitive_cookies` to sanitize tokens or secrets.
+4. **Denial-of-Service Defense**:
+   - 30s Redis cache TTL buffers the PostgreSQL database against high-frequency browser tab refreshes or concurrent analyst dashboard views.
