@@ -5,6 +5,9 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.assessment.scan_event_publisher import (
+    ScanEventPublisherService,
+)
 from app.application.audit_logs.services import AuditLogService
 from app.core.exceptions import (
     ConflictException,
@@ -68,11 +71,13 @@ class ScanLifecycleManagerService:
         self,
         session: AsyncSession,
         repo: Optional[AssessmentRepository] = None,
+        publisher: Optional[ScanEventPublisherService] = None,
     ) -> None:
         self.session = session
         self.repo = repo or AssessmentRepository(session)
         self.audit_service = AuditLogService(session)
         self.lock_manager = DistributedScanLockManager()
+        self.publisher = publisher or ScanEventPublisherService()
 
     def is_valid_transition(
         self, current_state: ScanExecutionState, target_state: ScanExecutionState
@@ -183,6 +188,17 @@ class ScanLifecycleManagerService:
                 "target_url": job.target_url,
             },
         )
+
+        try:
+            await self.publisher.publish_state_change(
+                organization_id=organization_id,
+                job_id=job_id,
+                previous_state=current_enum.value,
+                new_state=target_state.value,
+                current_step=current_step,
+            )
+        except Exception as e:
+            logger.warning("scan_lifecycle.publish_event_failed", error=str(e))
 
         logger.info(
             "scan_lifecycle.state_transition",

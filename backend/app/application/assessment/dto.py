@@ -459,3 +459,25 @@ class DistributedLockStatusDTO(BaseModel):
     owner_id: Optional[str] = None
     acquired_at: Optional[str] = None
     ttl_seconds: int = 3600
+
+
+# ── Phase 6.4: Real-Time WebSocket Scan Event Stream DTOs ──
+
+
+class ScanStreamEventDTO(BaseModel):
+    """DTO representing a single real-time scan stream event payload."""
+
+    event_id: str
+    job_id: str
+    organization_id: str
+    event_type: str
+    payload: Dict[str, Any] = Field(default_factory=dict)
+    timestamp: str
+
+
+class ScanEventHistoryResponse(BaseModel):
+    """Response model for REST scan execution event history queries."""
+
+    job_id: str
+    total_events: int
+    events: List[ScanStreamEventDTO] = Field(default_factory=list)

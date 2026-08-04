@@ -899,11 +899,62 @@ All API errors return a standardized JSON error format:
 #### `POST /assessments/{assessment_id}/cancel`
 - **Summary**: Signal abort and transition active assessment job to `CANCELLED` (`scans:cancel` permission required). Releases target lock.
 
+---
 
+### O. Real-Time Scan Progress & WebSocket Event Stream (`/ws/scans` & `/assessments/{id}/events`) (Phase 6.4)
+
+#### `WebSocket /ws/scans/{scan_id}?token={jwt}`
+- **Protocol**: `ws://` or `wss://`
+- **Query Parameter**: `token` (string, required) - Valid JWT Access Token
+- **Close Codes**:
+  - `4001`: Missing or invalid JWT access token (Unauthorized)
+  - `4003`: Cross-tenant mismatch or missing `scans:read` permission (Forbidden)
+  - `4004`: Assessment job not found (Not Found)
+  - `4008`: Maximum organization connection limit (50) exceeded
+- **Sample Event Payload (`STATE_CHANGE`)**:
+  ```json
+  {
+    "event_id": "evt_123456789abc",
+    "job_id": "8d48aca2-c4b9-45b2-b42d-e6f2dbfdeb18",
+    "organization_id": "6bcb30b5-148f-4a15-baf2-3e5598512bd8",
+    "event_type": "STATE_CHANGE",
+    "payload": {
+      "previous_state": "CRAWLING",
+      "new_state": "ASSESSING",
+      "current_step": "Plugin Vulnerability Scanning"
+    },
+    "timestamp": "2026-08-04T01:10:00Z"
+  }
+  ```
+
+#### `GET /assessments/{scan_id}/events`
+- **Summary**: Retrieve recent execution event history for a scan job (`scans:read` permission required).
+- **Response (200 OK)**:
+  ```json
+  {
+    "job_id": "8d48aca2-c4b9-45b2-b42d-e6f2dbfdeb18",
+    "total_events": 1,
+    "events": [
+      {
+        "event_id": "evt_init_8d48aca2",
+        "job_id": "8d48aca2-c4b9-45b2-b42d-e6f2dbfdeb18",
+        "organization_id": "6bcb30b5-148f-4a15-baf2-3e5598512bd8",
+        "event_type": "STATE_CHANGE",
+        "payload": {
+          "previous_state": "QUEUED",
+          "new_state": "CRAWLING",
+          "current_step": "Crawling Target Endpoints"
+        },
+        "timestamp": "2026-08-04T01:10:00Z"
+      }
+    ]
+  }
+  ```
 
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol
+
 
 ### Connection: `GET /api/v1/ws/scans/{scan_id}`
 Clients connect to receive live streaming updates during scan execution.

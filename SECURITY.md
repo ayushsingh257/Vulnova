@@ -387,15 +387,19 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
 
 ---
 
-## 🔄 11. Scan Execution State Machine & Distributed Lock Security Controls (Phase 6.3)
+## 📡 12. Real-Time WebSocket Event Stream Security Controls (Phase 6.4)
 
-1. **Distributed Target Concurrency Protection**:
-   - `DistributedScanLockManager` uses atomic Redis SETNX keys (`lock:scan:{organization_id}:{target_url_sha256}`) to prevent concurrent duplicate scan runs against identical target assets.
-   - Prevents resource exhaustion and accidental denial-of-service against customer infrastructure.
-2. **Strict State Machine Governance**:
-   - State machine enforces a strict transition matrix (`VALID_TRANSITIONS`).
-   - Out-of-order state transitions (e.g. `COMPLETED` → `CRAWLING`) are blocked and logged.
-3. **Controlled Retry Backoff**:
-   - Exponential backoff algorithm (`max_retries=3`, `base_delay=5s`, `backoff_factor=2.0`) prevents retry storms.
-4. **Terminal Failure & Lock Cleanup**:
-   - Terminal failure or cancellation hooks release distributed locks automatically and log structured audit entries (`scan.state_transition`).
+1. **JWT Handshake Authentication**:
+   - WebSocket connection upgrades require valid JWT access tokens via query parameter (`?token=<jwt_access_token>`).
+   - Unauthenticated or expired tokens cause immediate socket termination (Close Code `4001 Unauthorized`).
+2. **Strict Multi-Tenant Boundary Enforcement**:
+   - WebSocket connection requests validate that `user.organization_id` strictly matches target scan `organization_id`.
+   - Cross-tenant connection attempts are terminated with Close Code `4003 Forbidden`.
+3. **Connection Rate Limiting & Resource Protection**:
+   - `MAX_CONNECTIONS_PER_ORG = 50`: Clamps total concurrent active WebSocket connections per organization. Connection attempts exceeding this limit are rejected with Close Code `4008 Limit Exceeded`.
+   - `HEARTBEAT_INTERVAL_SECONDS = 30`: Sends periodic ping/pong heartbeats.
+   - `CONNECTION_TIMEOUT_SECONDS = 90`: Background pruning drops stale connections inactive for >90s.
+   - `MAX_EVENT_PAYLOAD_SIZE = 64KB`: Validates and caps event payload size. Oversized event payloads raise `ValueError` and trigger security warnings.
+4. **Credential & Sensitive Payload Masking**:
+   - Authorization headers and session cookies are sanitized (`mask_sensitive_headers`) before being emitted over real-time WebSocket event streams.
+

@@ -139,6 +139,19 @@ CREATE INDEX idx_assessment_jobs_org_exec_state ON assessment_jobs(organization_
 
 CREATE INDEX idx_assessment_jobs_org_profile ON assessment_jobs(organization_id, profile_id);
 
+-- ── Real-Time Scan Event Stream Architecture (Phase 6.4) ──
+-- Real-time events stream ephemerally over Redis Pub/Sub channels (key format: 'vulnova:scan:events:{organization_id}:{scan_id}')
+-- Ephemeral Event Payload JSON Schema:
+-- {
+--   "event_id": "evt_123456789abc",
+--   "job_id": "UUID",
+--   "organization_id": "UUID",
+--   "event_type": "STATE_CHANGE | PROGRESS_UPDATE | PLUGIN_STARTED | PLUGIN_COMPLETED | FINDING_DISCOVERED | ERROR_LOG | HEARTBEAT",
+--   "payload": { ... },
+--   "timestamp": "ISO-8601 UTC string"
+-- }
+
+
 -- Security Findings (Normalized, Evidence Enriched, & Asset Correlated - Phase 4.5, 4.6, 4.8)
 CREATE TABLE security_findings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

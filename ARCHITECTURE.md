@@ -495,5 +495,45 @@ Phase 6.3 establishes Vulnova's scan execution state machine, distributed Redis 
 3. **Exponential Backoff Retry Engine**: Transient scan failures trigger managed retries with exponential backoff (`base_delay=5s`, `backoff_factor=2.0`, `max_retries=3`).
 4. **Terminal Failure & Lock Cleanup**: Terminal failure or cancellation hooks release distributed locks automatically and record timestamped audit entries (`scan.state_transition`).
 
+---
+
+## 📡 11. Real-Time Scan Progress & WebSocket Event Stream Architecture (Phase 6.4)
+
+Phase 6.4 introduces a high-throughput, low-latency WebSocket event streaming server and Redis Pub/Sub adapter (`/api/v1/ws/scans/{scan_id}`):
+
+```text
+         [ ScanLifecycleManagerService ]  (Single Source of Truth)
+                       │
+                       ▼
+          [ ScanEventPublisherService ]
+                       │
+                       ▼
+      [ RedisPubSubManager (Redis Channel) ]
+   "vulnova:scan:events:{org_id}:{scan_id}"
+                       │
+                       ▼
+         [ ScanStreamManagerService ]
+       ├── WebSocket Connection Registry
+       ├── Heartbeat Timeout Cleanup (90s)
+       └── Payload Size Validation (64KB)
+                       │
+                       ▼
+    [ WebSocket Endpoint: /api/v1/ws/scans/{scan_id} ]
+       ├── 1. JWT Auth Handshake (?token=...)
+       ├── 2. Tenant Isolation Check (org_id match)
+       ├── 3. RBAC Permission (scans:read)
+       └── 4. Real-Time JSON Event Fanout (<100ms)
+```
+
+### Key Architectural Safeguards:
+1. **Single Source of Truth**: State transition logic strictly resides in `ScanLifecycleManagerService`. The WebSocket streaming layer never mutates scan states; it listens to and broadcasts lifecycle events.
+2. **Decoupled Redis Pub/Sub**: `RedisPubSubManager` decouples background Celery scanner workers from web server processes, allowing multi-node event fanout with an in-memory queue fallback for offline/test environments.
+3. **Connection Rate Limiting & Protection**:
+   - `MAX_CONNECTIONS_PER_ORG = 50` (Max concurrent WebSocket connections per tenant).
+   - `HEARTBEAT_INTERVAL_SECONDS = 30` (30s ping/pong heartbeats).
+   - `CONNECTION_TIMEOUT_SECONDS = 90` (Stale connection pruning).
+   - `MAX_EVENT_PAYLOAD_SIZE = 64KB` (Event payload size cap).
+
+
 
 

@@ -20,6 +20,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 6 Phase 6.4 (Real-Time Scan Progress & WebSocket Event Stream)**:
+  - Created domain entities (`app/domain/entities/scan_stream.py`): `ScanEventType` (`STATE_CHANGE`, `PROGRESS_UPDATE`, `PLUGIN_STARTED`, `PLUGIN_COMPLETED`, `FINDING_DISCOVERED`, `ERROR_LOG`, `HEARTBEAT`), `ScanStreamEvent`, `WebSocketConnectionParams`.
+  - Built Redis Pub/Sub Event Manager (`app/infrastructure/workers/redis_pubsub_manager.py`): `RedisPubSubManager` handling channel naming (`vulnova:scan:events:{org_id}:{scan_id}`), 64KB event payload size cap validation (`MAX_EVENT_PAYLOAD_SIZE`), and in-memory pub/sub queue fallback for offline/test environments.
+  - Built `ScanEventPublisherService` (`app/application/assessment/scan_event_publisher.py`): Application service emitting typed events (`publish_state_change`, `publish_plugin_started`, `publish_plugin_completed`, `publish_finding_discovered`, `publish_error`).
+  - Built `ScanStreamManagerService` (`app/application/assessment/scan_stream_manager.py`): Application service managing active client WebSocket connections per org/scan, enforcing connection rate limits (`MAX_CONNECTIONS_PER_ORG = 50`), sending 30s heartbeats, and pruning stale connections inactive for >90s.
+  - Integrated `ScanEventPublisherService` into `ScanLifecycleManagerService.transition_state()` as the single source of truth for scan state machine transitions.
+  - Implemented FastAPI WebSocket & REST router (`app/api/v1/routers/scan_stream.py`):
+    - `WebSocket /api/v1/ws/scans/{scan_id}?token=<jwt>`: Authenticated low-latency (<100ms) event streaming socket with query parameter JWT authentication (`decode_access_token`) and multi-tenant boundary verification.
+    - `GET /api/v1/assessments/{scan_id}/events`: REST history fallback endpoint (`scans:read` permission required).
+  - Created comprehensive test suite (`tests/test_scan_stream_websocket.py`) — 12 test functions verifying event serialization, Pub/Sub channel formatting, payload size caps, publisher methods, connection rate limits, stale timeout pruning, and REST fallback endpoints.
+  - Total backend test suite now stands at **359 passing tests** (347 previous + 12 new).
 - **Era 6 Phase 6.3 (Scan Execution Lifecycle State Machine & Retry Engine)**:
   - Created domain entities (`app/domain/entities/scan_lifecycle.py`): `ScanExecutionState` (`QUEUED`, `CRAWLING`, `ASSESSING`, `AI_ANALYSIS`, `COMPLETED`, `FAILED`, `CANCELLED`, `RETRYING`), `ScanStateTransitionEvent`, `RetryPolicy` (exponential backoff computation: `max_retries=3`, `base_delay=5s`, `backoff_factor=2.0`), `ScanLockMetadata`.
   - Built Redis Distributed Lock Engine (`app/infrastructure/workers/scan_lock_manager.py`): `DistributedScanLockManager` using atomic Redis SETNX keys (`lock:scan:{org_id}:{target_url_sha256}`) with lock TTL auto-expiry, collision prevention, and fallback in-memory registry.

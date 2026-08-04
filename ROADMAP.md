@@ -785,11 +785,25 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Testing Requirements**: State transition matrix tests, Redis lock collision tests, exponential backoff calculation tests, retry/failure hook tests, API state query tests.
 
 ### Phase 6.4: Real-Time Scan Progress & WebSocket Event Stream
-- **Objective**: WebSocket connection manager streaming live progress, target URLs, active plugin metrics, and finding alerts to connected clients.
-- **Deliverables**: `/api/v1/ws/scans/{scan_id}` WebSocket endpoint with pub/sub Redis adapter.
+- **Status**: Completed ✅
+- **Objective**: Real-Time Scan Progress & WebSocket Event Stream server broadcasting live state machine transitions, plugin execution progress, finding alerts, and diagnostic logs to connected clients.
+- **Deliverables**:
+  - `ScanStreamEvent` & `ScanEventType` domain entities (`app/domain/entities/scan_stream.py`).
+  - `RedisPubSubManager` (`app/infrastructure/workers/redis_pubsub_manager.py`): Decoupled Pub/Sub event broadcasting over `vulnova:scan:events:{org_id}:{scan_id}` with 64KB max payload size validation and in-memory queue fallback for offline/testing.
+  - `ScanEventPublisherService` (`app/application/assessment/scan_event_publisher.py`): Application publisher broadcasting typed stream events during execution.
+  - `ScanStreamManagerService` (`app/application/assessment/scan_stream_manager.py`): Active WebSocket connection registry enforcing tenant boundary isolation, rate limiting (max 50 connections per org), 30s heartbeats, and 90s inactive connection pruning.
+  - Integration with `ScanLifecycleManagerService` (`app/application/assessment/scan_lifecycle_manager.py`) as the single source of truth for state machine transitions.
+  - FastAPI WebSocket & REST router endpoints (`app/api/v1/routers/scan_stream.py`): `/api/v1/ws/scans/{scan_id}` with query parameter JWT authentication (`?token=...`) and REST fallback endpoint `/api/v1/assessments/{scan_id}/events`.
+  - Comprehensive unit & integration test suite (`tests/test_scan_stream_websocket.py`) — 12 test functions verifying event serialization, Pub/Sub channel formatting, payload size caps, publisher methods, connection rate limits, stale timeout pruning, and REST fallback endpoints.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (225 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 185 source files passed (strict mode)
+    - **Pytest**: **359/359 passed** (347 previous + 12 new)
 - **Dependencies**: Phase 6.3.
-- **Completion Criteria**: Real-time event updates delivered to connected clients with <100ms latency.
-- **Testing Requirements**: WebSocket streaming integration test.
+- **Completion Criteria**: Real-time event streaming operational over WebSockets with query param JWT auth, tenant isolation, rate limiting safeguards, and REST fallback endpoint; pytest (359 passed), Ruff, Black, Mypy (strict) pass cleanly.
+- **Testing Requirements**: Serialization tests, payload size cap tests, Pub/Sub fallback tests, connection rate limit tests, stale timeout pruning tests, REST fallback tests.
 
 ### Phase 6.5: Distributed Scan Scheduler & Recurrence Engine
 - **Objective**: Support automated recurring scans (daily, weekly, custom cron) via Celery Beat with worker autoscaling and health monitoring.
