@@ -20,6 +20,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 7 Phase 7.2 (Public Marketing Pages, Enterprise Trust Center & Security Disclosure Gateway)**:
+  - Created domain entities (`app/domain/entities/trust_center.py`): `SystemHealthStatus` enum (`OPERATIONAL`, `DEGRADED_PERFORMANCE`, `UNDER_MAINTENANCE`), `ASVSCategory` enum, `SecurityPracticeItem`, `SecurityDisclosureInfo`.
+  - Implemented `TrustCenterService` (`app/application/assessment/trust_center_service.py`): Application service compiling OWASP ASVS v4.0 security control mappings across 7 core categories, AES-256-GCM envelope encryption specifications, container sandbox isolation bounds (UID 10001 unprivileged, read-only rootfs), RFC 9116 security disclosure policies, and 300s Redis caching (`trust_center:public_summary`).
+  - Extended Pydantic v2 DTOs (`app/application/assessment/dto.py`): `TrustCenterSummaryResponse`, `SecurityPracticeItemDTO`, `SecurityDisclosureResponse`.
+  - Implemented FastAPI public REST router (`app/api/v1/routers/trust.py`): `GET /api/v1/public/trust`, `GET /api/v1/public/status`, `GET /api/v1/public/security-disclosure`, `GET /api/v1/public/security.txt`.
+  - Implemented RFC 9116 top-level endpoint (`GET /.well-known/security.txt`) in `app/main.py` providing standard security contact email (`security@vulnova.com`), PGP encryption key, canonical URL, and expiration date.
+  - Created Next.js 14 Trust Center UI components (`frontend/components/trust/`): `TrustHeader`, `StatusWidget`, `ASVSGrid`, `EncryptionCard`, `SecurityDisclosureCard`.
+  - Implemented Next.js public routes with SEO & OpenGraph Metadata exports: Enterprise Trust Center (`frontend/app/(public)/trust/page.tsx`), Vulnerability Disclosure Policy (`frontend/app/(public)/security/page.tsx`), SEO handler (`frontend/app/robots.ts`), and redesigned root landing page (`frontend/app/page.tsx`).
+  - Created comprehensive test suite (`tests/test_trust_center.py`) — 6 test cases verifying service summary generation, RFC 9116 text formatting, public REST endpoints, and zero tenant/target data leakage boundaries.
 - **Era 7 Phase 7.1 (Security Operations Dashboard & Analyst Experience)**:
   - Created `DashboardAnalyticsService` (`app/application/assessment/dashboard_analytics_service.py`): Backend aggregator computing composite risk scores (0–100), posture status classifications (`SECURE`, `ELEVATED_RISK`, `CRITICAL_RISK`), vulnerability severity distributions, active scan telemetry, target asset risk leaderboards, and recurring schedule summaries with 30s Redis caching (`dashboard:metrics:{org_id}`).
   - Extended Pydantic v2 DTOs (`app/application/assessment/dto.py`): `DashboardOverviewResponse`, `SecurityPostureSummaryDTO`, `VulnerabilitySeverityBreakdownDTO`, `ActiveScanSummaryDTO`, `TopVulnerableAssetDTO`, `SchedulesOverviewSummaryDTO`.

@@ -520,4 +520,16 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Priority Queue Routing**: Distributed tasks are routed across priority task queues: `scans.high`, `scans.default`, `scans.low`, and `ai.priority` with `task_ack_late=True` and `worker_prefetch_multiplier=1`.
     - **Multi-Tenant Database Tracking**: `WorkerNodeModel` (`worker_nodes`) and `WorkerTaskModel` (`worker_task_executions`) include `organization_id` and `requested_by` fields for multi-tenant isolation and capacity metrics calculation.
     - **RBAC & Audit Logging**: Worker cluster operations enforce permissions (`workers:read`, `workers:manage`, `scans:dispatch`) and audit events (`worker_task.dispatched`, `worker_task.cancelled`).
+26. **Security Operations Dashboard & Analyst Experience Architecture (Phase 7.1)**: Unified analyst SOC dashboard & metrics engine:
+    - **`DashboardAnalyticsService` Aggregator**: Computes composite risk scores (0–100), posture status classifications (`SECURE`, `ELEVATED_RISK`, `CRITICAL_RISK`), vulnerability severity breakdowns, active scan telemetry, target asset risk leaderboards, and schedule summaries.
+    - **Sub-20ms Redis Caching Layer (`dashboard:metrics:{org_id}`)**: 30s TTL buffers PostgreSQL against high-frequency browser refreshes.
+    - **Tenant Isolation Safeguard**: Every SQL query enforces `organization_id = current_user.organization_id`.
+    - **FastAPI REST Router (`/api/v1/dashboard`)**: `GET /overview` (`dashboard:read`), `GET /posture` (`analytics:read`), `GET /scans/active` (`scans:read`).
+    - **Next.js SOC Dashboard Components**: `DashboardLayout`, `SecurityPostureCard`, `ActiveScanMonitor` (WebSocket event subscription), `VulnerabilityChart`, `AssetRiskOverview`, `SchedulesOverview`.
+27. **Public Marketing Pages, Enterprise Trust Center & Security Disclosure Gateway Architecture (Phase 7.2)**: Public compliance & disclosure gateway:
+    - **`TrustCenterService` Aggregator**: Aggregates high-level system operational status (`OPERATIONAL`, `DEGRADED_PERFORMANCE`, `UNDER_MAINTENANCE`), OWASP ASVS v4.0 control mappings across 7 core categories, AES-256-GCM envelope encryption specifications, container sandbox isolation bounds, and RFC 9116 security disclosure policies.
+    - **RFC 9116 `security.txt` Support**: Generates plain text `/.well-known/security.txt` and `/api/v1/public/security.txt` directives with security contact email (`security@vulnova.com`), PGP encryption key URL, canonical URL, and expiration date.
+    - **300s Redis Caching Layer (`trust_center:public_summary`)**: Buffers backend services against automated public crawler traffic.
+    - **Strict Public Data Boundary Safeguard**: Public endpoints expose ONLY static platform architecture specifications, compliance frameworks, and high-level health indicators. ZERO tenant data, target URLs, vulnerability findings, or credentials are exposed.
+    - **SEO, OpenGraph & Next.js Public Pages**: `frontend/app/(public)/trust/page.tsx`, `frontend/app/(public)/security/page.tsx`, `frontend/app/robots.ts`, and redesigned root landing page `frontend/app/page.tsx`.
 

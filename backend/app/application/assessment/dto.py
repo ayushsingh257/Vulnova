@@ -627,3 +627,54 @@ class DashboardOverviewResponse(BaseModel):
     top_vulnerable_assets: List[TopVulnerableAssetDTO] = Field(default_factory=list)
     schedules_summary: SchedulesOverviewSummaryDTO
     cached_at: str
+
+
+# Phase 7.2 Public Trust Center & Security Disclosure Gateway DTOs
+
+
+class SecurityPracticeItemDTO(BaseModel):
+    """OWASP ASVS v4.0 aligned security practice control item."""
+
+    category: str
+    title: str
+    description: str
+    status: str = "ENFORCED"
+    asvs_ref: Optional[str] = None
+
+
+class TrustCenterSummaryResponse(BaseModel):
+    """Public-facing Enterprise Trust Center overview payload."""
+
+    platform_name: str = "Vulnova Enterprise AI Application Security Platform"
+    version: str = "1.0.0"
+    system_status: str = "OPERATIONAL"
+    asvs_alignment: str = "Security Controls Mapped Against OWASP ASVS v4.0"
+    encryption_standards: Dict[str, str] = Field(
+        default_factory=lambda: {
+            "data_at_rest": "AES-256-GCM Envelope Encryption",
+            "data_in_transit": "TLS 1.3 / HSTS Preloaded",
+            "token_signing": "RS256 / EdDSA",
+        }
+    )
+    sandbox_isolation: Dict[str, str] = Field(
+        default_factory=lambda: {
+            "execution_user": "UID 10001 (Unprivileged)",
+            "filesystem": "read_only_rootfs: true",
+            "egress_filtering": "Strict Private Subnet Egress Proxy",
+            "capabilities": "CAP_DROP ALL",
+        }
+    )
+    security_practices_grid: List[SecurityPracticeItemDTO] = Field(default_factory=list)
+    cached_at: str
+
+
+class SecurityDisclosureResponse(BaseModel):
+    """RFC 9116 security disclosure policy & vulnerability contact response."""
+
+    contact_email: str = "security@vulnova.com"
+    pgp_key_url: str = "https://vulnova.com/security.asc"
+    policy_url: str = "https://vulnova.com/security"
+    preferred_languages: str = "en, es"
+    canonical_url: str = "https://vulnova.com/.well-known/security.txt"
+    expires_at: str = "2027-12-31T23:59:59.000Z"
+    hiring_url: str = "https://vulnova.com/careers"

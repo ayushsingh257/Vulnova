@@ -1070,6 +1070,49 @@ All API errors return a standardized JSON error format:
 #### `GET /dashboard/scans/active`
 - **Summary**: Retrieve real-time active scan job details for live dashboard display (`scans:read` permission required).
 
+### 3.10 Public Enterprise Trust Center & Security Disclosure Gateway (Phase 7.2)
+
+#### `GET /public/trust`
+- **Summary**: Retrieve public Enterprise Trust Center summary, OWASP ASVS control mappings, encryption specifications, and operational status (Unauthenticated public endpoint).
+- **Response (200 OK)**:
+  ```json
+  {
+    "platform_name": "Vulnova Enterprise AI Application Security Platform",
+    "version": "1.0.0",
+    "system_status": "OPERATIONAL",
+    "asvs_alignment": "Security Controls Mapped Against OWASP ASVS v4.0",
+    "encryption_standards": {
+      "data_at_rest": "AES-256-GCM Envelope Encryption",
+      "data_in_transit": "TLS 1.3 / HSTS Preloaded",
+      "token_signing": "RS256 / EdDSA"
+    },
+    "sandbox_isolation": {
+      "execution_user": "UID 10001 (Unprivileged)",
+      "filesystem": "read_only_rootfs: true",
+      "egress_filtering": "Strict Private Subnet Egress Proxy"
+    },
+    "security_practices_grid": [
+      {
+        "category": "V17_WORKER_SANDBOX",
+        "title": "Container Sandbox Worker Isolation",
+        "description": "Scanner workers execute in unprivileged containers with dropped Linux capabilities.",
+        "status": "ENFORCED",
+        "asvs_ref": "V14.2.1"
+      }
+    ],
+    "cached_at": "2026-08-04T09:40:00Z"
+  }
+  ```
+
+#### `GET /public/status`
+- **Summary**: Retrieve high-level operational system status (Unauthenticated public endpoint).
+
+#### `GET /public/security-disclosure`
+- **Summary**: Retrieve vulnerability disclosure policy details, PGP key link, and security contact email (Unauthenticated public endpoint).
+
+#### `GET /.well-known/security.txt`
+- **Summary**: RFC 9116 standard plain text security disclosure directives for security researchers (Unauthenticated public endpoint).
+
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol

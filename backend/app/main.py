@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from app.api.v1.api import api_v1_router
 from app.core.config import settings
@@ -120,6 +120,18 @@ async def readiness_check() -> Dict[str, str]:
         "database": db_status,
         "cache": "connected",
     }
+
+
+@app.get("/.well-known/security.txt", status_code=status.HTTP_200_OK)
+async def well_known_security_txt() -> Response:
+    """RFC 9116 standard security.txt endpoint."""
+    from fastapi import Response
+
+    from app.application.assessment.trust_center_service import TrustCenterService
+
+    service = TrustCenterService(session=None)  # type: ignore[arg-type]
+    content = service.get_security_txt_content()
+    return Response(content=content, media_type="text/plain; charset=utf-8")
 
 
 logger.info(

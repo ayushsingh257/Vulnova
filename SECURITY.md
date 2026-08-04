@@ -435,3 +435,16 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
    - Scan targets, active scan step descriptions, and finding previews rendered on the dashboard pass through `mask_sensitive_headers` and `mask_sensitive_cookies` to sanitize tokens or secrets.
 4. **Denial-of-Service Defense**:
    - 30s Redis cache TTL buffers the PostgreSQL database against high-frequency browser tab refreshes or concurrent analyst dashboard views.
+
+---
+
+## 🔒 15. Public Enterprise Trust Center & Security Disclosure Controls (Phase 7.2)
+
+1. **Strict Public Data Boundary Isolation**:
+   - Public endpoints (`/api/v1/public/trust`, `/api/v1/public/status`, `/.well-known/security.txt`) strictly return static platform compliance control mappings, encryption specifications, and high-level health indicators.
+   - ZERO tenant organization IDs, target URLs, vulnerability findings, user PII, or internal credentials are exposed.
+2. **RFC 9116 Vulnerability Disclosure Standardization**:
+   - Implements standard `/.well-known/security.txt` and `/security` route providing security researchers with PGP public keys, security contact emails (`security@vulnova.com`), and response SLAs (24-hour triage, 72-hour remediation plan, 14-day resolution).
+3. **Public Scraping & DoS Defense**:
+   - 300s Redis cache TTL (`trust_center:public_summary`) buffers backend services against automated public crawler traffic.
+   - IP-based rate limiting token bucket (`rate_limit:public:{ip}`) caps public requests at 60 req/min per client IP.

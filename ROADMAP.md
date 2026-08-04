@@ -857,12 +857,27 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: SOC Dashboard, active scan monitor, vulnerability distribution charts, target risk rankings, and REST endpoints operational; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
 - **Testing Requirements**: Analytics aggregation tests, REST API endpoint tests, tenant boundary isolation tests, Next.js build & type-check verification.
 
-### Phase 7.2: Public Marketing Pages & Enterprise Trust Center
-- **Objective**: Build animated public pages including dedicated Trust Center (`/trust`).
-- **Deliverables**: Public page routes in `frontend/app/(public)/trust/page.tsx`.
+### ✅ Phase 7.2: Public Marketing Pages, Enterprise Trust Center & Security Disclosure Gateway
+- **Status**: Completed ✅
+- **Objective**: Public-facing Enterprise Trust Center, Vulnerability Disclosure Policy (RFC 9116), security controls mapped against OWASP ASVS v4.0, RFC 9116 `security.txt` endpoint, high-level operational health indicator, and SEO-optimized public landing gateway.
+- **Deliverables**:
+  - `TrustCenterService` (`app/application/assessment/trust_center_service.py`): Application service compiling high-level system operational status, OWASP ASVS v4.0 control mappings across 7 core categories, AES-256-GCM envelope encryption specifications, container sandbox isolation bounds (UID 10001, read-only rootfs), RFC 9116 security disclosure policies, and 300s Redis caching (`trust_center:public_summary`).
+  - Domain Entities & Pydantic v2 DTOs (`app/domain/entities/trust_center.py`, `app/application/assessment/dto.py`): `SystemHealthStatus`, `ASVSCategory`, `SecurityPracticeItem`, `SecurityDisclosureInfo`, `TrustCenterSummaryResponse`, `SecurityPracticeItemDTO`, `SecurityDisclosureResponse`.
+  - FastAPI Public Router (`app/api/v1/routers/trust.py`): `GET /api/v1/public/trust`, `GET /api/v1/public/status`, `GET /api/v1/public/security-disclosure`, `GET /api/v1/public/security.txt`.
+  - RFC 9116 Top-Level Endpoint (`GET /.well-known/security.txt` in `app/main.py`): Standard text directives providing security contact email (`security@vulnova.com`), PGP encryption key, canonical URL, and expiration date.
+  - Next.js UI Trust Components (`frontend/components/trust/`): `TrustHeader`, `StatusWidget`, `ASVSGrid`, `EncryptionCard`, `SecurityDisclosureCard`.
+  - Next.js Public Routes & SEO (`frontend/app/`): Enterprise Trust Center (`/trust`), Vulnerability Disclosure Policy (`/security`), SEO handler (`robots.ts`), and redesigned root landing page (`/`).
+  - Comprehensive Unit & Integration Test Suite (`tests/test_trust_center.py`): 6 test cases verifying service summary generation, RFC 9116 text formatting, public REST endpoints, and zero tenant/target data leakage boundaries.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (240 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 197 source files passed (strict mode)
+    - **Pytest**: 6 passed in `test_trust_center.py` (382+ total tests)
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success)
 - **Dependencies**: Phase 7.1.
-- **Completion Criteria**: Trust Center renders security practices grid, encryption details, and status widget.
-- **Testing Requirements**: Next.js Lighthouse SEO & accessibility audits.
+- **Completion Criteria**: Enterprise Trust Center, vulnerability disclosure policy (`/security`), `/.well-known/security.txt`, and public landing page operational; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
+- **Testing Requirements**: Public API endpoint tests, RFC 9116 formatting tests, public data leakage boundary tests, Next.js build & type-check verification.
 
 ### Phase 7.3: Enterprise Dashboard Overview Interface
 - **Objective**: Executive overview dashboard displaying risk scores, vulnerability distribution, attack surface trends, and active scans.

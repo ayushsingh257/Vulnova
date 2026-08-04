@@ -769,3 +769,4 @@ CREATE INDEX idx_scan_schedules_next_run ON scan_schedules(status, next_run_at);
 | `lock:scan:{org_id}:{url_hash}` | String | 1 hr | Distributed scan target lock (Phase 6.3) |
 | `vulnova:scan:events:{org_id}:{scan_id}` | Pub/Sub Channel | Real-time | Scan event streaming (Phase 6.4) |
 | `dashboard:metrics:{org_id}` | String (JSON) | 30 sec | Consolidated SOC dashboard metrics cache per organization (Phase 7.1) |
+| `trust_center:public_summary` | String (JSON) | 300 sec | Cached public Enterprise Trust Center summary & OWASP ASVS control mappings (Phase 7.2) |
