@@ -7,6 +7,10 @@ import { ActiveScanMonitor } from "@/components/dashboard/active-scan-monitor";
 import { VulnerabilityChart } from "@/components/dashboard/vulnerability-chart";
 import { AssetRiskOverview } from "@/components/dashboard/asset-risk-overview";
 import { SchedulesOverview } from "@/components/dashboard/schedules-overview";
+import { HistoricalRiskChart } from "@/components/dashboard/historical-risk-chart";
+import { AttackSurfaceCoverageWidget } from "@/components/dashboard/attack-surface-coverage-widget";
+import { ThreatAdvisoriesDrawer } from "@/components/dashboard/threat-advisories-drawer";
+import { ExecutiveReportExportButton } from "@/components/dashboard/executive-report-export-button";
 
 export default function DashboardPage() {
   const [data, setData] = React.useState({
@@ -61,32 +65,40 @@ export default function DashboardPage() {
   });
 
   React.useEffect(() => {
-    // Attempt fetching live data from API Gateway if available
     fetch("/api/v1/dashboard/overview")
-      .then((res) => {
-        if (res.ok) return res.json();
-        return null;
-      })
-      .then((json) => {
-        if (json) {
-          setData(json);
-        }
-      })
-      .catch(() => {
-        // Fallback to client state
-      });
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => json && setData(json))
+      .catch(() => {});
   }, []);
 
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Top Hero Section: Security Posture Summary */}
+        {/* Header CTA Action Bar */}
+        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight">Security Operations Command</h2>
+            <p className="text-xs text-zinc-400">Continuous vulnerability monitoring & threat intelligence posture.</p>
+          </div>
+          <ExecutiveReportExportButton />
+        </div>
+
+        {/* Top Section: Security Posture Summary */}
         <SecurityPostureCard summary={data.posture_summary} />
+
+        {/* Phase 7.3 Section: Historical Trajectory & Velocity */}
+        <HistoricalRiskChart />
 
         {/* Middle Grid: Active Scan Monitor & Vulnerability Distribution */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <ActiveScanMonitor scans={data.active_scans} />
           <VulnerabilityChart breakdown={data.vulnerability_breakdown} />
+        </div>
+
+        {/* Phase 7.3 Section: Attack Surface Coverage & Threat Advisories */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <AttackSurfaceCoverageWidget />
+          <ThreatAdvisoriesDrawer />
         </div>
 
         {/* Bottom Grid: Top Target Assets & Recurring Schedules */}

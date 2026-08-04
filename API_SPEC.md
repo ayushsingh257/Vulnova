@@ -1113,6 +1113,45 @@ All API errors return a standardized JSON error format:
 #### `GET /.well-known/security.txt`
 - **Summary**: RFC 9116 standard plain text security disclosure directives for security researchers (Unauthenticated public endpoint).
 
+### 3.11 Enterprise Executive Analytics & Report Export Gateway (Phase 7.3)
+
+#### `GET /dashboard/trends`
+- **Summary**: Retrieve historical risk score trajectory points, baseline score, and risk velocity (`analytics:read` permission required).
+- **Query Parameters**: `timeframe_days` (default `30`, values: `7`, `30`, `90`).
+- **Response (200 OK)**:
+  ```json
+  {
+    "organization_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "timeframe_days": 30,
+    "current_risk_score": 65.0,
+    "baseline_risk_score": 78.0,
+    "risk_velocity": "IMPROVING",
+    "mean_time_to_remediate_hours": 32.5,
+    "trend_points": [
+      {
+        "date_str": "2026-07-05",
+        "composite_risk_score": 78.0,
+        "open_findings_count": 55,
+        "critical_findings_count": 5
+      }
+    ],
+    "cached_at": "2026-08-04T10:00:00Z"
+  }
+  ```
+
+#### `GET /dashboard/coverage`
+- **Summary**: Retrieve attack surface coverage percentage and environment asset breakdown (`dashboard:read` permission required).
+
+#### `GET /dashboard/threat-advisories`
+- **Summary**: Retrieve active executive security threat advisories, CVSS 9.0+ findings, and SLA breach warnings (`dashboard:read` permission required).
+
+#### `GET /dashboard/executive-summary`
+- **Summary**: Retrieve consolidated executive security posture report payload (`reports:read` permission required).
+
+#### `GET /dashboard/export`
+- **Summary**: Export executive security posture report in JSON or CSV format (`reports:export` permission required).
+- **Query Parameters**: `format` (`json` or `csv`).
+
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol

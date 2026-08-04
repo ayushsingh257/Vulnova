@@ -678,3 +678,71 @@ class SecurityDisclosureResponse(BaseModel):
     canonical_url: str = "https://vulnova.com/.well-known/security.txt"
     expires_at: str = "2027-12-31T23:59:59.000Z"
     hiring_url: str = "https://vulnova.com/careers"
+
+
+# Phase 7.3 Executive Analytics & Trend DTOs
+
+
+class RiskTrendPointDTO(BaseModel):
+    """Single historical risk score snapshot data point."""
+
+    date_str: str
+    composite_risk_score: float
+    open_findings_count: int = 0
+    critical_findings_count: int = 0
+
+
+class HistoricalRiskTrendResponse(BaseModel):
+    """Time-series risk trajectory and velocity response payload."""
+
+    organization_id: str
+    timeframe_days: int = 30
+    current_risk_score: float
+    baseline_risk_score: float
+    risk_velocity: str = "STABLE"  # STABLE, IMPROVING, DETERMINATING
+    mean_time_to_remediate_hours: float = 0.0
+    trend_points: List[RiskTrendPointDTO] = Field(default_factory=list)
+    cached_at: str
+
+
+class AttackSurfaceEnvironmentBreakdownDTO(BaseModel):
+    """Asset metric breakdown per deployment environment."""
+
+    environment: str
+    target_count: int
+    risk_score: float
+
+
+class AttackSurfaceCoverageResponse(BaseModel):
+    """Attack surface environment and asset discovery coverage payload."""
+
+    organization_id: str
+    total_targets_count: int
+    assessed_targets_count: int
+    unassessed_targets_count: int
+    coverage_percentage: float
+    environments_breakdown: List[AttackSurfaceEnvironmentBreakdownDTO] = Field(
+        default_factory=list
+    )
+
+
+class ExecutiveThreatAlertDTO(BaseModel):
+    """Executive security threat advisory or SLA breach alert."""
+
+    severity: str
+    category: str
+    title: str
+    description: str
+    affected_target_url: Optional[str] = None
+
+
+class ExecutiveSummaryReportResponse(BaseModel):
+    """Consolidated executive security posture report payload."""
+
+    organization_id: str
+    generated_at: str
+    posture_summary: SecurityPostureSummaryDTO
+    historical_trends: HistoricalRiskTrendResponse
+    attack_surface_coverage: AttackSurfaceCoverageResponse
+    vulnerability_breakdown: VulnerabilitySeverityBreakdownDTO
+    threat_advisories: List[ExecutiveThreatAlertDTO] = Field(default_factory=list)

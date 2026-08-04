@@ -20,6 +20,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 7 Phase 7.3 (Enterprise Executive Analytics, Risk Snapshot Engine & Threat Advisory System)**:
+  - Created ORM model `RiskPostureSnapshotModel` (`app/infrastructure/database/models/risk_snapshot.py`): `risk_posture_snapshots` table persisting daily risk posture snapshots (`composite_risk_score`, `total_open_findings`, `critical_count`, `high_count`, `mttr_hours`, `snapshot_date`) with index `idx_risk_snapshots_org_date`.
+  - Created domain entities (`app/domain/entities/analytics_trend.py`): `RiskVelocity` enum (`STABLE`, `IMPROVING`, `DETERIORATING`), `TimeframePeriod` enum, `RiskTrendPoint`, `AttackSurfaceEnvironmentBreakdown`, `ExecutiveThreatAlert`.
+  - Implemented decoupled application services:
+    - `ExecutiveAnalyticsService` (`app/application/assessment/executive_analytics_service.py`): Historical risk trend trajectory over 7d/30d/90d periods, risk velocity classification, MTTR calculation, and attack surface coverage breakdown with 300s Redis caching (`dashboard:trends:{org_id}:{timeframe}`).
+    - `ThreatAdvisoryService` (`app/application/assessment/threat_advisory_service.py`): Automated evaluation of CVSS 9.0+ critical findings, SLA breach warnings (>14 days for Critical / >30 days for High), and active target authorization contracts.
+    - `ExecutiveReportService` (`app/application/assessment/executive_report_service.py`): Executive posture report payload assembly, downloadable JSON & CSV report formatting, and future PDF/compliance package export readiness.
+  - Implemented Celery Beat daily snapshot task `capture_daily_risk_snapshots()` (`app/infrastructure/workers/snapshot_tasks.py`) running every 24 hours to record posture metrics per active organization.
+  - Extended Pydantic v2 DTOs (`app/application/assessment/dto.py`): `RiskTrendPointDTO`, `HistoricalRiskTrendResponse`, `AttackSurfaceCoverageResponse`, `ExecutiveThreatAlertDTO`, `ExecutiveSummaryReportResponse`.
+  - Extended FastAPI REST router (`app/api/v1/routers/dashboard.py`): `GET /trends` (`analytics:read`), `GET /coverage` (`dashboard:read`), `GET /threat-advisories` (`dashboard:read`), `GET /executive-summary` (`reports:read`), `GET /export` (`reports:export`).
+  - Created Next.js 14 Executive UI components (`frontend/components/dashboard/`): `HistoricalRiskChart` (7d/30d/90d selector, velocity badge, MTTR meter), `AttackSurfaceCoverageWidget`, `ThreatAdvisoriesDrawer`, `ExecutiveReportExportButton`.
+  - Updated Next.js SOC Dashboard route (`frontend/app/(dashboard)/dashboard/page.tsx`).
+  - Created test suite (`tests/test_dashboard_trends.py`) — 4 test cases verifying snapshot model, trends service, threat advisory evaluation, JSON/CSV exports, REST endpoints, and multi-tenant boundary isolation.
 - **Era 7 Phase 7.2 (Public Marketing Pages, Enterprise Trust Center & Security Disclosure Gateway)**:
   - Created domain entities (`app/domain/entities/trust_center.py`): `SystemHealthStatus` enum (`OPERATIONAL`, `DEGRADED_PERFORMANCE`, `UNDER_MAINTENANCE`), `ASVSCategory` enum, `SecurityPracticeItem`, `SecurityDisclosureInfo`.
   - Implemented `TrustCenterService` (`app/application/assessment/trust_center_service.py`): Application service compiling OWASP ASVS v4.0 security control mappings across 7 core categories, AES-256-GCM envelope encryption specifications, container sandbox isolation bounds (UID 10001 unprivileged, read-only rootfs), RFC 9116 security disclosure policies, and 300s Redis caching (`trust_center:public_summary`).

@@ -47,6 +47,7 @@ from app.infrastructure.database.models.asset_graph import (
 from app.infrastructure.database.models.audit_log import AuditLogModel
 from app.infrastructure.database.models.organization import OrganizationModel
 from app.infrastructure.database.models.refresh_token import RefreshTokenModel
+from app.infrastructure.database.models.risk_snapshot import RiskPostureSnapshotModel
 from app.infrastructure.database.models.scan_schedule import ScanScheduleModel
 from app.infrastructure.database.models.scan_target import (
     AuthorizationDeclarationModel,
@@ -106,4 +107,5 @@ __all__ = [
     "WorkerNodeModel",
     "WorkerTaskModel",
     "ScanScheduleModel",
+    "RiskPostureSnapshotModel",
 ]

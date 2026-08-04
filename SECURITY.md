@@ -448,3 +448,17 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
 3. **Public Scraping & DoS Defense**:
    - 300s Redis cache TTL (`trust_center:public_summary`) buffers backend services against automated public crawler traffic.
    - IP-based rate limiting token bucket (`rate_limit:public:{ip}`) caps public requests at 60 req/min per client IP.
+
+---
+
+## 📊 16. Executive Analytics, Risk Snapshot & Export Controls (Phase 7.3)
+
+1. **Persistent Risk Snapshot Isolation**:
+   - Every `RiskPostureSnapshotModel` record strictly belongs to a specific `organization_id`. Celery Beat daily snapshot generation (`capture_daily_risk_snapshots`) enforces tenant boundaries during periodic background execution.
+2. **Export Rate Limiting & DoS Defense**:
+   - `/api/v1/dashboard/export` endpoints are protected by rate-limiting counter (`rate_limit:export:{org_id}`, max 10 req/min) to prevent bulk data extraction or server memory exhaustion.
+3. **Structured Export Audit Logging**:
+   - Every report download triggers an audit event (`dashboard.executive_report.exported`) capturing `organization_id`, `actor_user_id`, requested format (`json` or `csv`), and timestamp.
+4. **Granular Report RBAC Permissions**:
+   - `reports:read` required for retrieving executive posture summaries (`Role.VIEWER` level 10+).
+   - `reports:export` required for executing report downloads (`Role.SECURITY_ANALYST` level 20+).

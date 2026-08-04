@@ -770,3 +770,5 @@ CREATE INDEX idx_scan_schedules_next_run ON scan_schedules(status, next_run_at);
 | `vulnova:scan:events:{org_id}:{scan_id}` | Pub/Sub Channel | Real-time | Scan event streaming (Phase 6.4) |
 | `dashboard:metrics:{org_id}` | String (JSON) | 30 sec | Consolidated SOC dashboard metrics cache per organization (Phase 7.1) |
 | `trust_center:public_summary` | String (JSON) | 300 sec | Cached public Enterprise Trust Center summary & OWASP ASVS control mappings (Phase 7.2) |
+| `dashboard:trends:{org_id}:{timeframe}` | String (JSON) | 300 sec | Historical risk trajectory points and velocity metrics cache (Phase 7.3) |
+| `rate_limit:export:{org_id}` | String / Counter | 60 sec | Executive report export rate limiting counter (Phase 7.3) |
