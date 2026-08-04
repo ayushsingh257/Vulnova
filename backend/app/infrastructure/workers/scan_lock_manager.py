@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Dict, Optional, Tuple
 from uuid import UUID
 
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.domain.entities.scan_lifecycle import ScanLockMetadata
 from app.infrastructure.workers.celery_config import broker_url
@@ -22,7 +23,12 @@ class DistributedScanLockManager:
     _in_memory_locks: Dict[str, Tuple[ScanLockMetadata, float]] = {}
 
     def __init__(self, redis_url: Optional[str] = None) -> None:
-        self.redis_url = redis_url or broker_url
+        self.redis_url: str = str(
+            redis_url
+            or getattr(settings, "REDIS_URL", None)
+            or broker_url
+            or "redis://localhost:6379/0"
+        )
         self._redis_client: Optional[object] = None
 
     def _generate_lock_key(self, organization_id: UUID, target_url: str) -> str:

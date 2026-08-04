@@ -19,8 +19,10 @@ class RedisPubSubManager:
     """Infrastructure Manager handling Redis Pub/Sub channels for scan execution event fanout."""
 
     def __init__(self, redis_url: Optional[str] = None) -> None:
-        self.redis_url = redis_url or getattr(
-            settings, "REDIS_URL", "redis://localhost:6379/0"
+        self.redis_url: str = str(
+            redis_url
+            or getattr(settings, "REDIS_URL", None)
+            or "redis://localhost:6379/0"
         )
         self._redis_client: Optional[object] = None
         # Offline in-memory Pub/Sub subscriber queues for fallback & unit testing
