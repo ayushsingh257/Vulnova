@@ -25,6 +25,9 @@ from app.infrastructure.database.repositories.organization_repository import (
 from app.infrastructure.database.repositories.refresh_token_repository import (
     RefreshTokenRepository,
 )
+from app.infrastructure.database.repositories.scan_schedule_repository import (
+    ScanScheduleRepository,
+)
 from app.infrastructure.database.repositories.scan_target_repository import (
     ScanTargetRepository,
 )
@@ -44,4 +47,5 @@ __all__ = [
     "AICopilotRepository",
     "WorkerRepository",
     "ScanTargetRepository",
+    "ScanScheduleRepository",
 ]

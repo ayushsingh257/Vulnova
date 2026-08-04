@@ -729,6 +729,33 @@ CREATE INDEX idx_worker_task_org_state ON worker_task_executions(organization_id
 CREATE INDEX idx_worker_task_scan ON worker_task_executions(scan_id);
 ```
 
+### Scan Schedules (Phase 6.5)
+
+```sql
+-- Recurring Scan Schedules
+CREATE TABLE scan_schedules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id),
+    scan_target_id UUID NOT NULL REFERENCES scan_targets(id),
+    name VARCHAR(255) NOT NULL,
+    cron_expression VARCHAR(100) NOT NULL,
+    frequency VARCHAR(20) NOT NULL DEFAULT 'DAILY', -- 'HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'CUSTOM_CRON'
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',   -- 'ACTIVE', 'PAUSED', 'DISABLED'
+    profile_id VARCHAR(50) DEFAULT 'full_assessment',
+    enabled_plugins_json TEXT,
+    total_runs_count INT NOT NULL DEFAULT 0,
+    next_run_at TIMESTAMP WITH TIME ZONE,
+    last_run_at TIMESTAMP WITH TIME ZONE,
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_scan_schedules_org ON scan_schedules(organization_id);
+CREATE INDEX idx_scan_schedules_target ON scan_schedules(scan_target_id);
+CREATE INDEX idx_scan_schedules_status ON scan_schedules(organization_id, status);
+CREATE INDEX idx_scan_schedules_next_run ON scan_schedules(status, next_run_at);
+```
+
 ---
 
 ## ⚡ 4. Redis Cache Key Topologies
@@ -739,3 +766,5 @@ CREATE INDEX idx_worker_task_scan ON worker_task_executions(scan_id);
 | `session:{user_id}` | Hash | 15 min | User active session data |
 | `scan_progress:{scan_id}`| Hash | 24 hrs | Real-time scan execution metrics |
 | `ws_channel:{scan_id}` | Pub/Sub Channel | Real-time | Live progress streaming to clients |
+| `lock:scan:{org_id}:{url_hash}` | String | 1 hr | Distributed scan target lock (Phase 6.3) |
+| `vulnova:scan:events:{org_id}:{scan_id}` | Pub/Sub Channel | Real-time | Scan event streaming (Phase 6.4) |

@@ -83,6 +83,8 @@ PERMISSION_MAP: Dict[str, Role] = {
     "scans:read": Role.VIEWER,
     "scans:create": Role.SECURITY_ANALYST,
     "scans:cancel": Role.SECURITY_ANALYST,
+    "scans:retry": Role.SECURITY_ANALYST,
+    "scans:schedule": Role.SECURITY_ANALYST,
     "scans:delete": Role.ADMIN,
     # ── Asset Inventory ──
     "assets:read": Role.VIEWER,
@@ -112,7 +114,6 @@ PERMISSION_MAP: Dict[str, Role] = {
     # ── Scan Authorization & Target Management (Phase 6.2) ──
     "scans:authorize": Role.SECURITY_ANALYST,
     # ── Scan Execution Lifecycle State Machine & Retry Engine (Phase 6.3) ──
-    "scans:retry": Role.SECURITY_ANALYST,
     # ── Reports ──
     "reports:read": Role.VIEWER,
     "reports:generate": Role.SECURITY_ANALYST,

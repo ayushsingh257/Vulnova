@@ -20,6 +20,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 6 Phase 6.5 (Distributed Scan Scheduler & Recurrence Engine)**:
+  - Created domain entities (`app/domain/entities/scan_schedule.py`): `ScanSchedule` dataclass, `RecurrenceFrequency` (`HOURLY`, `DAILY`, `WEEKLY`, `MONTHLY`, `CUSTOM_CRON`), `ScheduleStatus` (`ACTIVE`, `PAUSED`, `DISABLED`), `WorkerAutoscaleMetrics` value object.
+  - Created database ORM model (`app/infrastructure/database/models/scan_schedule.py`): `ScanScheduleModel` (`scan_schedules` table) with `organization_id` FK, `scan_target_id` FK, cron expression, frequency, status, profile, enabled_plugins JSON, `total_runs_count`, `next_run_at`, `last_run_at`, `created_by`.
+  - Implemented `ScanScheduleRepository` (`app/infrastructure/database/repositories/scan_schedule_repository.py`): Full CRUD, `list_schedules_due_for_execution()`, `update_schedule_after_run()` with atomic run counter increment, `count_active_schedules()`.
+  - Built `ScanSchedulerService` (`app/application/assessment/scan_scheduler_service.py`): Business orchestrator enforcing max 20 active schedules per tenant, target existence/status validation, `execute_due_schedules()` periodic tick with distributed lock integration (Phase 6.3), audit event emission (`scan_schedule.created/updated/paused/resumed/disabled/triggered`).
+  - Built `CeleryBeatSchedulerManager` (`app/infrastructure/workers/celery_beat_scheduler.py`): `calculate_next_run_timestamp()` cron recurrence engine with optional `croniter` integration and built-in interval fallbacks; `execute_beat_tick()` periodic tick wrapper.
+  - Built `WorkerAutoscalerService` (`app/infrastructure/workers/worker_autoscaler.py`): Non-invasive governance-only autoscaler computing cluster metrics and scaling signals (`STABLE`, `SCALE_UP`, `SCALE_DOWN`) without infrastructure provisioning.
+  - Extended Pydantic v2 DTOs (`app/application/assessment/dto.py`): `CreateScanScheduleRequest`, `UpdateScanScheduleRequest`, `ScanScheduleResponse`, `ScanScheduleListResponse`, `WorkerAutoscaleMetricsResponse`.
+  - Implemented FastAPI REST router (`app/api/v1/routers/scan_schedules.py`): `POST /`, `GET /`, `GET /{id}`, `PUT /{id}`, `POST /{id}/pause`, `POST /{id}/resume`, `DELETE /{id}`, `POST /tick`, `GET /workers/autoscale-metrics`.
+  - Configured RBAC permission (`scans:schedule`: SECURITY_ANALYST+) in `PERMISSION_MAP`.
+  - Created comprehensive test suite (`tests/test_scan_scheduler.py`) — 14 tests covering domain entities, recurrence calculation, repository mapping, service lifecycle, worker autoscaler metrics, Celery Beat tick, and REST API endpoints.
 - **Era 6 Phase 6.4 (Real-Time Scan Progress & WebSocket Event Stream)**:
   - Created domain entities (`app/domain/entities/scan_stream.py`): `ScanEventType` (`STATE_CHANGE`, `PROGRESS_UPDATE`, `PLUGIN_STARTED`, `PLUGIN_COMPLETED`, `FINDING_DISCOVERED`, `ERROR_LOG`, `HEARTBEAT`), `ScanStreamEvent`, `WebSocketConnectionParams`.
   - Built Redis Pub/Sub Event Manager (`app/infrastructure/workers/redis_pubsub_manager.py`): `RedisPubSubManager` handling channel naming (`vulnova:scan:events:{org_id}:{scan_id}`), 64KB event payload size cap validation (`MAX_EVENT_PAYLOAD_SIZE`), and in-memory pub/sub queue fallback for offline/test environments.

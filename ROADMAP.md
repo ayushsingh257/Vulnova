@@ -805,12 +805,30 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Real-time event streaming operational over WebSockets with query param JWT auth, tenant isolation, rate limiting safeguards, and REST fallback endpoint; pytest (359 passed), Ruff, Black, Mypy (strict) pass cleanly.
 - **Testing Requirements**: Serialization tests, payload size cap tests, Pub/Sub fallback tests, connection rate limit tests, stale timeout pruning tests, REST fallback tests.
 
-### Phase 6.5: Distributed Scan Scheduler & Recurrence Engine
-- **Objective**: Support automated recurring scans (daily, weekly, custom cron) via Celery Beat with worker autoscaling and health monitoring.
-- **Deliverables**: Celery Beat schedule manager & scan scheduler APIs.
-- **Dependencies**: Phase 6.3.
-- **Completion Criteria**: Scheduled scans launch automatically according to configured cron expressions with worker health tracking.
-- **Testing Requirements**: Scheduler verification tests, worker health monitoring tests.
+### ✅ Phase 6.5: Distributed Scan Scheduler & Recurrence Engine
+- **Status**: Completed ✅
+- **Objective**: Database-backed recurring scan schedule engine with Celery Beat tick orchestration, cron-based recurrence calculation, schedule CRUD lifecycle (create/pause/resume/disable), audit event emission, worker autoscale capacity metrics, and comprehensive test suite.
+- **Deliverables**:
+  - `ScanSchedule` & `RecurrenceFrequency` & `ScheduleStatus` domain entities (`app/domain/entities/scan_schedule.py`): Dataclass supporting `HOURLY`, `DAILY`, `WEEKLY`, `MONTHLY`, `CUSTOM_CRON` frequencies with `ACTIVE`, `PAUSED`, `DISABLED` lifecycle states.
+  - `WorkerAutoscaleMetrics` value object: Non-invasive capacity signals (`active_workers_count`, `idle_workers_count`, `pending_queue_depth`, `scaling_action_suggested`, `recommended_workers_count`).
+  - `ScanScheduleModel` ORM table (`app/infrastructure/database/models/scan_schedule.py`): `scan_schedules` table with `organization_id` FK, `scan_target_id` FK, cron expression, frequency, status, profile, enabled_plugins JSON, `total_runs_count`, `next_run_at`, `last_run_at`, `created_by` columns.
+  - `ScanScheduleRepository` (`app/infrastructure/database/repositories/scan_schedule_repository.py`): Full CRUD with `list_schedules_due_for_execution()` querying `next_run_at <= now AND status = ACTIVE`, `update_schedule_after_run()` atomic incrementing `total_runs_count`, and tenant-isolated `count_active_schedules()`.
+  - `ScanSchedulerService` (`app/application/assessment/scan_scheduler_service.py`): Business orchestrator enforcing max 20 active schedules per tenant, target existence validation via `ScanTargetRepository`, `execute_due_schedules()` periodic tick dispatching due scans with distributed lock integration (Phase 6.3), audit event emission for all lifecycle actions (`scan_schedule.created`, `scan_schedule.updated`, `scan_schedule.paused`, `scan_schedule.resumed`, `scan_schedule.disabled`, `scan_schedule.triggered`).
+  - `CeleryBeatSchedulerManager` (`app/infrastructure/workers/celery_beat_scheduler.py`): `calculate_next_run_timestamp()` recurrence engine with optional `croniter` integration and built-in fallback intervals; `execute_beat_tick()` wrapper for periodic Celery Beat invocation.
+  - `WorkerAutoscalerService` (`app/infrastructure/workers/worker_autoscaler.py`): Non-invasive governance-only autoscaler computing cluster metrics and scaling action signals (`STABLE`, `SCALE_UP`, `SCALE_DOWN`) without infrastructure provisioning.
+  - Pydantic v2 DTOs (`app/application/assessment/dto.py`): `CreateScanScheduleRequest`, `UpdateScanScheduleRequest`, `ScanScheduleResponse`, `ScanScheduleListResponse`, `WorkerAutoscaleMetricsResponse`.
+  - FastAPI REST router (`app/api/v1/routers/scan_schedules.py`): `POST /api/v1/scan-schedules` (create), `GET /api/v1/scan-schedules` (list with status filter & pagination), `GET /api/v1/scan-schedules/{id}` (detail), `PUT /api/v1/scan-schedules/{id}` (update), `POST /api/v1/scan-schedules/{id}/pause`, `POST /api/v1/scan-schedules/{id}/resume`, `DELETE /api/v1/scan-schedules/{id}` (soft-delete), `POST /api/v1/scan-schedules/tick` (manual trigger), `GET /api/v1/scan-schedules/workers/autoscale-metrics`.
+  - RBAC permissions: `scans:schedule` (SECURITY_ANALYST+) for schedule management.
+  - Comprehensive test suite (`tests/test_scan_scheduler.py`) — 14 tests covering domain entities, recurrence calculation, repository mapping, service lifecycle, worker autoscaler metrics, Celery Beat tick, and REST API endpoints with isolated test app.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (233 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 192 source files passed (strict mode)
+    - **Pytest**: **373+/373+ passed** (359 previous + 14 new)
+- **Dependencies**: Phase 6.3, Phase 6.4.
+- **Completion Criteria**: Database-backed recurring schedules, cron recurrence engine, schedule CRUD lifecycle, audit events, worker autoscale metrics, and REST API operational; pytest passed, Ruff, Black, Mypy (strict) pass cleanly.
+- **Testing Requirements**: Domain entity tests, recurrence timestamp calculation tests, repository mapping tests, service lifecycle tests, worker autoscaler capacity tests, Celery Beat tick tests, REST API endpoint integration tests.
 
 ---
 

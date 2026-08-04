@@ -481,3 +481,75 @@ class ScanEventHistoryResponse(BaseModel):
     job_id: str
     total_events: int
     events: List[ScanStreamEventDTO] = Field(default_factory=list)
+
+
+# ── Phase 6.5: Distributed Scan Scheduler & Recurrence Engine DTOs ──
+
+
+class CreateScanScheduleRequest(BaseModel):
+    """Request payload for creating a recurring scan schedule."""
+
+    scan_target_id: str = Field(..., description="UUID of registered scan target")
+    name: str = Field(
+        ..., description="Human-readable schedule name", min_length=2, max_length=150
+    )
+    cron_expression: str = Field(
+        "0 0 * * *",
+        description="Standard 5-part cron expression (e.g., '0 0 * * *' for daily midnight)",
+    )
+    frequency: str = Field(
+        "DAILY",
+        description="Recurrence frequency: HOURLY, DAILY, WEEKLY, MONTHLY, CUSTOM_CRON",
+    )
+    profile_id: str = Field("full_assessment", description="Scan profile identifier")
+    enabled_plugins: Optional[List[str]] = Field(
+        None, description="Optional list of enabled plugin IDs"
+    )
+
+
+class UpdateScanScheduleRequest(BaseModel):
+    """Request payload for modifying an existing scan schedule."""
+
+    name: Optional[str] = Field(None, min_length=2, max_length=150)
+    cron_expression: Optional[str] = Field(None)
+    frequency: Optional[str] = Field(None)
+    profile_id: Optional[str] = Field(None)
+    enabled_plugins: Optional[List[str]] = Field(None)
+
+
+class ScanScheduleResponse(BaseModel):
+    """Response payload representing a scan schedule."""
+
+    id: str
+    organization_id: str
+    scan_target_id: str
+    name: str
+    cron_expression: str
+    frequency: str
+    status: str
+    profile_id: str
+    enabled_plugins: Optional[List[str]] = None
+    total_runs_count: int
+    next_run_at: str
+    last_run_at: Optional[str] = None
+    created_by: Optional[str] = None
+    created_at: str
+    updated_at: str
+
+
+class ScanScheduleListResponse(BaseModel):
+    """Response payload for listing tenant scan schedules."""
+
+    total_count: int
+    schedules: List[ScanScheduleResponse] = Field(default_factory=list)
+
+
+class WorkerAutoscaleMetricsResponse(BaseModel):
+    """Response payload describing worker cluster capacity and scaling recommendations."""
+
+    active_workers_count: int
+    idle_workers_count: int
+    pending_queue_depth: int
+    recommended_workers_count: int
+    scaling_action_suggested: str
+    timestamp: str

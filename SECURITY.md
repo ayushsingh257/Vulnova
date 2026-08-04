@@ -403,3 +403,20 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
 4. **Credential & Sensitive Payload Masking**:
    - Authorization headers and session cookies are sanitized (`mask_sensitive_headers`) before being emitted over real-time WebSocket event streams.
 
+---
+
+## ⏰ 13. Distributed Scan Scheduler & Recurrence Security Controls (Phase 6.5)
+
+1. **Active Schedule Quota & Rate Safeguards**:
+   - `MAX_ACTIVE_SCHEDULES_PER_ORG = 20`: Enforces active schedule quotas per tenant organization to prevent scheduling resource exhaustion or runaway scan proliferation.
+   - Creating a new active schedule when at capacity raises `QuotaExceededException` (422 Unprocessable Entity).
+2. **Target Scope & Target Existence Controls**:
+   - Creating or updating a schedule verifies target existence and status in `ScanTargetRepository`.
+   - Scheduled execution against archived or suspended targets is automatically skipped with `scan_schedule.skipped_target_inactive` audit logs.
+3. **Concurrency & Lock Guard Integration**:
+   - Scheduler execution tick (`ScanSchedulerService.execute_due_schedules()`) acquires target concurrency locks via Phase 6.3 `DistributedScanLockManager` before triggering scan execution.
+   - Concurrency lock collisions cleanly skip duplicate execution without crashing or creating race conditions.
+4. **Audit Trail Traceability**:
+   - Every schedule lifecycle action generates structured audit logs capturing `organization_id`, `schedule_id`, `actor_user_id`, and event type (`scan_schedule.created`, `scan_schedule.updated`, `scan_schedule.paused`, `scan_schedule.resumed`, `scan_schedule.disabled`, `scan_schedule.triggered`).
+5. **Governance-Only Autoscale Metrics**:
+   - `WorkerAutoscalerService` provides capacity monitoring and scaling recommendations without direct infrastructure provisioning or cloud API execution, preventing unauthorized compute creation.

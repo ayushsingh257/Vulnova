@@ -951,6 +951,68 @@ All API errors return a standardized JSON error format:
   }
   ```
 
+### 3.8 Distributed Scan Schedules & Autoscale Metrics (Phase 6.5)
+
+#### `POST /scan-schedules`
+- **Summary**: Create a new recurring scan schedule (`scans:schedule` permission required).
+- **Request Body**:
+  ```json
+  {
+    "scan_target_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "name": "Daily Staging Security Scan",
+    "cron_expression": "0 2 * * *",
+    "frequency": "DAILY",
+    "profile_id": "full_assessment"
+  }
+  ```
+- **Response (201 Created)**:
+  ```json
+  {
+    "id": "e7b92c41-8d2a-431e-b811-9f201b543201",
+    "organization_id": "6bcb30b5-148f-4a15-baf2-3e5598512bd8",
+    "scan_target_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "name": "Daily Staging Security Scan",
+    "cron_expression": "0 2 * * *",
+    "frequency": "DAILY",
+    "status": "ACTIVE",
+    "profile_id": "full_assessment",
+    "enabled_plugins": null,
+    "total_runs_count": 0,
+    "next_run_at": "2026-08-05T02:00:00Z",
+    "last_run_at": null,
+    "created_by": "11111111-1111-1111-1111-111111111111",
+    "created_at": "2026-08-04T02:00:00Z",
+    "updated_at": "2026-08-04T02:00:00Z"
+  }
+  ```
+
+#### `GET /scan-schedules`
+- **Summary**: List recurring scan schedules with optional status filter (`scans:schedule` permission required).
+- **Query Parameters**: `status` (`ACTIVE`, `PAUSED`, `DISABLED`), `limit`, `offset`.
+
+#### `POST /scan-schedules/{schedule_id}/pause`
+- **Summary**: Pause an active scan schedule (`scans:schedule` permission required).
+
+#### `POST /scan-schedules/{schedule_id}/resume`
+- **Summary**: Resume a paused scan schedule (`scans:schedule` permission required).
+
+#### `POST /scan-schedules/tick`
+- **Summary**: Manually trigger a Celery Beat scheduler tick executing all due active schedules (`scans:schedule` permission required).
+
+#### `GET /scan-schedules/workers/autoscale-metrics`
+- **Summary**: Retrieve worker capacity metrics and non-invasive autoscaling signals (`workers:read` permission required).
+- **Response (200 OK)**:
+  ```json
+  {
+    "active_workers_count": 4,
+    "idle_workers_count": 2,
+    "pending_queue_depth": 0,
+    "recommended_workers_count": 4,
+    "scaling_action_suggested": "STABLE",
+    "timestamp": "2026-08-04T02:00:00Z"
+  }
+  ```
+
 ---
 
 ## ⚡ 4. WebSocket Streaming Protocol
