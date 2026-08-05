@@ -79,8 +79,9 @@ def test_audit_log_model_table_structure() -> None:
 
 
 def test_alembic_revision_chain() -> None:
-    """Verify Alembic script directory has valid revision chain ending in head."""
+    """Verify Alembic script directory has a valid single revision head."""
     alembic_cfg = Config("alembic.ini")
     script = ScriptDirectory.from_config(alembic_cfg)
-    head = script.get_current_head()
-    assert head == "0002_create_core_platform_tables"
+    heads = script.get_heads()
+    assert len(heads) == 1
+    assert heads[0] == script.get_current_head()
