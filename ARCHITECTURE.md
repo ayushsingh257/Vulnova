@@ -1509,6 +1509,52 @@ Vulnova provides an automated threat model verification engine (`ThreatValidatio
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 29. Automated Security Regression Testing Framework Architecture (Phase 10.9)
+
+Vulnova provides an automated security regression engine (`RegressionValidationRunnerService`) that continuously evaluates all 10 Security Regression categories: REGRESSION1 (OWASP Web Top 10), REGRESSION2 (OWASP API Security Top 10), REGRESSION3 (Security Config & Infrastructure), REGRESSION4 (Penetration Exploits), REGRESSION5 (SCA Supply Chain), REGRESSION6 (Container Hardening), REGRESSION7 (Secrets & Cryptography), REGRESSION8 (STRIDE Threat Model), REGRESSION9 (RBAC Hierarchy & Privilege Escalation), and REGRESSION10 (Audit Logging Non-Repudiation).
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│          Next.js 14 Security Regression Testing Workspace                   │
+│      (/validation/regression, PassRateCard, CategoryGrid, DetailsModal)     │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (Bearer JWT / X-API-Key)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│       FastAPI Security Regression Router (/api/v1/validation/regression/*)  │
+│      (validation:read, validation:execute RBAC Guards & Audit Log Hooks)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│               RegressionValidationRunnerService                             │
+│ (Executes Assertion Matrix REGRESSION1 - REGRESSION10 against Platform)     │
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│  Security Findings   │    │ Auth & Policy Engine │    │   AuditLogService    │
+│  Regression State    │    │(RBAC / Tenant Scope) │    │(regression_completed)│
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication**:
+   - Matches Phase 10.1 through 10.8 & Era 8 design patterns: zero new database tables, zero schema migrations, and zero archival storage overhead.
+   - Operates in memory: `Run Regression Suite -> Execute Security Assertion Matrix -> Record Audit Event -> Return DTO`.
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Each validation execution generates a runtime `uuid4()` string (`suite_id`) recorded in audit log events (`validation.regression_suite_started`, `validation.regression_suite_completed`).
+3. **Explainable Failure Diagnostics & Component Mapping**:
+   - Every regression category result returns explicit diagnostic feedback: `failure_reason`, target `affected_component` (e.g. `FastAPI Web Routers & Middleware`, `AuditLogService Mandatory Event Dispatcher`), and actionable `remediation_guidance`.
+4. **Continuous Regression Assertion Matrix**:
+   - Verifies zero active SQLi/XSS/SSRF/RCE regressions, BOLA/BFLA guards, header hardening, pentest exploit re-execution blocking, supply chain lockfile hash integrity, container capability dropping, secret entropy, tenant isolation boundaries, RBAC decorators, and non-repudiation audit tracking.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

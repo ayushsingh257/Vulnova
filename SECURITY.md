@@ -774,6 +774,25 @@ Phase 10.8 introduces automated threat model review & STRIDE verification contro
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 🛡️ 33. Security Regression Testing Controls (Phase 10.9)
+
+Phase 10.9 introduces automated security regression controls evaluating all 10 Security Regression categories: REGRESSION1 (OWASP Web Top 10), REGRESSION2 (OWASP API Security Top 10), REGRESSION3 (Security Config & Infrastructure), REGRESSION4 (Penetration Exploits), REGRESSION5 (SCA Supply Chain), REGRESSION6 (Container Hardening), REGRESSION7 (Secrets & Cryptography), REGRESSION8 (STRIDE Threat Model), REGRESSION9 (RBAC Hierarchy & Privilege Escalation), and REGRESSION10 (Audit Logging Non-Repudiation):
+
+1. **Zero Database Table Duplication**:
+   - In-memory Security Regression assertion engine operating without document archival tables or schema migrations (`Run Regression Suite -> Execute Security Assertion Matrix -> Record Audit Event -> Return DTO`).
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Runtime `uuid4()` token string (`suite_id`) recorded in audit log events (`validation.regression_suite_started`, `validation.regression_suite_completed`).
+3. **Explainable Failure Diagnostics & Platform Security Area Mapping**:
+   - Every regression category result returns diagnostic `failure_reason`, target `affected_component` (e.g. `FastAPI Web Routers & Middleware`, `AuditLogService Mandatory Event Dispatcher`), and actionable `remediation_guidance`.
+4. **Continuous Regression Protection Matrix**:
+   - Verifies zero active SQLi/XSS/SSRF/RCE regressions, BOLA/BFLA guards, header hardening, pentest exploit re-execution blocking, supply chain lockfile hash integrity, container capability dropping, secret entropy, tenant isolation boundaries, RBAC decorators, and non-repudiation audit tracking.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

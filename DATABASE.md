@@ -915,6 +915,14 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `validation.threat_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
   - `validation.threat_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
 
+### 8.19 Automated Security Regression Validation Schema Strategy (Era 10 Phase 10.9)
+- **Zero Database Table Duplication**: Introduces **zero new database tables** and **zero schema migrations**. Evaluates security regression assertions dynamically against existing `security_findings`, `api_keys`, `users`, and `audit_logs`.
+- **In-Memory Regression Assertion Engine**: `RegressionValidationRunnerService` evaluates REGRESSION1 through REGRESSION10 assertions dynamically in memory.
+- **Ephemeral Audit Correlation Token (`suite_id`)**: Each validation run generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log details.
+- **Immutable Security Regression Audit Trail**:
+  - `validation.regression_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
+  - `validation.regression_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
+
 
 ---
 

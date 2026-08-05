@@ -210,6 +210,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <ShieldCheck className="h-4 w-4 text-orange-400" />
               <span>Threat Model & STRIDE Validation</span>
             </a>
+            <a
+              href="/validation/regression"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <ShieldAlert className="h-4 w-4 text-teal-400" />
+              <span>Automated Security Regression</span>
+            </a>
           </div>
 
           <div className="mt-auto pt-6 border-t border-zinc-800/80">

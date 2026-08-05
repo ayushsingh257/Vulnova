@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
 [![Security: OWASP ASVS](https://img.shields.io/badge/Security-OWASP_ASVS_v4.0-crimson.svg)](SECURITY.md)
 [![Architecture: Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20DDD-black.svg)](ARCHITECTURE.md)
-[![Status: Era 8 Complete](https://img.shields.io/badge/Status-Era%208%20Complete-green.svg)](ROADMAP.md)
+[![Status: Era 10 Complete](https://img.shields.io/badge/Status-Era%2010%20Validation%20Suite%20Complete-green.svg)](ROADMAP.md)
 
 [![Build Status](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](.github/workflows/ci.yml)
 
@@ -145,6 +145,13 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ Deep Architectural Verification**: Verifies identity authentication guards, API key hashing, input sanitization, webhook signatures, audit event tracking, multi-tenant boundaries, field encryption & SSRF egress blocking, Redis rate limiting, RBAC permission hierarchy, and container sandbox capability dropping.
   - **✓ REST Validation Router & RBAC**: `/api/v1/validation/threat` endpoints backed by `validation:read` (VIEWER+) and `validation:execute` (SECURITY_ANALYST+) permissions.
   - **✓ Next.js Threat Workspace**: Dashboard `/validation/threat`, `ThreatPassRateCard`, `ThreatCategoryGrid`, `ThreatValidationRunButton`, `ThreatDetailsModal`, and sidebar navigation integration.
+- **Automated Security Regression Testing Framework (Phase 10.9)**: Continuous security regression testing engine (`app/application/regression_validation/`) providing verified capabilities:
+  - **✓ In-Memory Security Regression Engine**: `RegressionValidationRunnerService` evaluating all 10 Security Regression categories: REGRESSION1 (OWASP Web Top 10), REGRESSION2 (OWASP API Security Top 10), REGRESSION3 (Security Config & Infrastructure), REGRESSION4 (Penetration Exploits), REGRESSION5 (SCA Supply Chain), REGRESSION6 (Container Hardening), REGRESSION7 (Secrets & Cryptography), REGRESSION8 (STRIDE Threat Model), REGRESSION9 (RBAC Hierarchy & Privilege Escalation), and REGRESSION10 (Audit Logging Non-Repudiation) with zero database table changes.
+  - **✓ Ephemeral Audit Correlation**: Generates runtime `suite_id` UUIDs for audit log tracking (`validation.regression_suite_started`, `validation.regression_suite_completed`).
+  - **✓ Explainable Regression Diagnostics**: Every category result returns diagnostic `failure_reason`, target `affected_component` (e.g. `FastAPI Web Routers & Middleware`, `AuditLogService Mandatory Event Dispatcher`), and actionable `remediation_guidance`.
+  - **✓ Continuous Protection Matrix**: Verifies zero active SQLi/XSS/SSRF/RCE regressions, BOLA/BFLA guards, header hardening, pentest exploit re-execution blocking, supply chain lockfile hash integrity, container capability dropping, secret entropy, tenant isolation boundaries, RBAC decorators, and non-repudiation audit tracking.
+  - **✓ REST Validation Router & RBAC**: `/api/v1/validation/regression` endpoints backed by `validation:read` (VIEWER+) and `validation:execute` (SECURITY_ANALYST+) permissions.
+  - **✓ Next.js Security Regression Workspace**: Dashboard `/validation/regression`, `RegressionPassRateCard`, `RegressionCategoryGrid`, `RegressionValidationRunButton`, `RegressionDetailsModal`, and sidebar navigation integration.
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).
@@ -383,11 +390,25 @@ python -m pytest -v
   - ✅ Phase 7.4 — Scan Management Portal & Live Monitor Gateway
   - ✅ Phase 7.5 — Vulnerability Triage, Evidence Record Viewer & AI Remediation Drawer
   - ✅ Phase 7.6 — User, Organization & Role Management UI
-- 🟡 **Era 8**: Reporting, Executive Metrics & Export System *(PLANNED / NEXT)*
-  - ⏳ Phase 8.1 — PDF & HTML Executive Security Report Generator
-- ⏳ **Era 9**: Enterprise Integration & Developer Workflows
-- ⏳ **Era 10**: Complete Security Validation Lifecycle & OWASP Verification
-- ⏳ **Era 11**: Enterprise Scale, Performance Tuning & Reliability
+- ✅ **Era 8**: Reporting, Executive Metrics & Export System *(COMPLETED)*
+  - ✅ Phase 8.1 — PDF & HTML Executive Security Report Generator
+  - ✅ Phase 8.2 — Developer Technical Remediation Export System
+  - ✅ Phase 8.3 — Compliance Framework Mapping Engine & Workspace
+- ✅ **Era 9**: Enterprise Integration & Developer Workflows *(COMPLETED)*
+  - ✅ Phase 9.1 — Jira & GitHub Issues Integration Plugin
+  - ✅ Phase 9.2 — Slack & Microsoft Teams Security Alert Webhooks
+  - ✅ Phase 9.3 — CI/CD Pipeline Scanning CLI Tool (`vulnova-cli`)
+- ✅ **Era 10**: Complete Security Validation Lifecycle & OWASP Verification *(COMPLETED)*
+  - ✅ Phase 10.1 — OWASP Top 10 (2021) Security Validation Suite
+  - ✅ Phase 10.2 — OWASP API Security Top 10 (2023) Validation Suite
+  - ✅ Phase 10.3 — Security Configuration & Infrastructure Validation Suite
+  - ✅ Phase 10.4 — Platform Penetration Testing & Exploit Verification Suite
+  - ✅ Phase 10.5 — Dependency Security Audit & SCA Enforcement Suite
+  - ✅ Phase 10.6 — Container Image Security Audit & Runtime Hardening Suite
+  - ✅ Phase 10.7 — Secrets & Cryptographic Management Audit Suite
+  - ✅ Phase 10.8 — Threat Model Review & STRIDE Verification Suite
+  - ✅ Phase 10.9 — Automated Security Regression Testing Framework
+- 🟡 **Era 11**: Enterprise Scale, Performance Tuning & Reliability *(PLANNED / NEXT)*
 - ⏳ **Era 12**: Final Security Audit, Production Deployment & Release
 
 

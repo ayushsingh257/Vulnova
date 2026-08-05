@@ -1598,6 +1598,26 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning `ThreatValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
 
+---
+
+### Section T: Automated Security Regression Endpoints (Phase 10.9)
+
+#### `POST /api/v1/validation/regression/run` (Phase 10.9)
+- **Summary**: Trigger an automated in-memory Automated Security Regression Testing assertion suite scan. Dispatches audit events (`validation.regression_suite_started`, `validation.regression_suite_completed`).
+- **RBAC Guard**: `validation:execute` (`Role.SECURITY_ANALYST`+).
+- **Response**: `200 OK` returning `RegressionValidationSuiteResponse` (`suite_id`, `overall_status`, `overall_pass_rate`, `category_results`).
+
+#### `GET /api/v1/validation/regression/results` (Phase 10.9)
+- **Summary**: Fetch full security regression category assertion evaluation metrics and results for tenant organization.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `RegressionValidationSuiteResponse`.
+
+#### `GET /api/v1/validation/regression/summary` (Phase 10.9)
+- **Summary**: Fetch high-level security regression health summary metrics.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `RegressionValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
+
+
 
 
 
