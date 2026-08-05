@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Fixed
+- **Reporting Dependencies CI Fix**: Added `jinja2>=3.1.4` and `weasyprint>=62.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure fresh CI runner environments resolve Jinja2 template rendering and WeasyPrint PDF compilation modules during Mypy type-checking and pytest execution.
 - **CI Dependency Installation**: Configured `.github/workflows/ci.yml` backend verification step to install directly from the authoritative `backend/requirements.txt` source, ensuring `sqlalchemy`, `asyncpg`, `alembic`, `black`, and all backend dependencies are available during CI execution.
 - **DevSecOps Security Pipeline Stabilization (Phase 1.6)**:
   - Replaced deprecated Semgrep `p/owasp-top-10` ruleset with active `p/default` and `p/security-audit` rulesets.
