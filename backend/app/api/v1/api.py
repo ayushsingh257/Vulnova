@@ -8,6 +8,7 @@ from app.api.v1.routers import (
     assets,
     audit_logs,
     auth,
+    compliance,
     dashboard,
     discovery,
     organizations,
@@ -53,3 +54,4 @@ api_v1_router.include_router(trust.router)
 api_v1_router.include_router(workers.router, prefix="/workers", tags=["Workers"])
 api_v1_router.include_router(reports.router)
 api_v1_router.include_router(report_exports.router)
+api_v1_router.include_router(compliance.router)

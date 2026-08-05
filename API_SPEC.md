@@ -1294,6 +1294,24 @@ All API errors return a standardized JSON error format:
 - **Query Parameters**: `format` (`json` | `csv` | `markdown`, default: `markdown`).
 - **Response**: Downloadable file with matching media type and filename (`Vulnova_Finding_{finding_id[:8]}.{ext}`).
 
+#### `GET /api/v1/compliance/{framework}/overview` (Phase 8.3)
+- **Summary**: Returns compliance posture overview payload for the specified framework (`owasp_top10`, `asvs_v4`, `pci_dss`, `iso27001`). Evaluates score dynamically from active open findings, formats framework version metadata, and dispatches audit event (`compliance.viewed`).
+- **RBAC Guard**: `compliance:read` (`Role.VIEWER`+).
+- **Path Parameters**: `framework` (`owasp_top10` | `asvs_v4` | `pci_dss` | `iso27001`).
+- **Response**: `200 OK` returning `ComplianceOverviewResponse` (framework metadata, score, controls list, top failed controls, top remediation priorities).
+
+#### `GET /api/v1/compliance/{framework}/controls` (Phase 8.3)
+- **Summary**: Returns all framework controls mapped to active vulnerability findings and evidence artifact checksums with full traceability (`Framework Control -> Vulnerability Finding -> Evidence Artifact -> Target Asset -> Remediation Guidance`).
+- **RBAC Guard**: `compliance:read` (`Role.VIEWER`+).
+- **Path Parameters**: `framework` (`owasp_top10` | `asvs_v4` | `pci_dss` | `iso27001`).
+- **Response**: `200 OK` returning `List[ComplianceControlDTO]`.
+
+#### `GET /api/v1/compliance/{framework}/export` (Phase 8.3)
+- **Summary**: Generates and downloads dynamic JSON compliance report payload. Dispatches audit event (`compliance.exported`).
+- **RBAC Guard**: `compliance:export` (`Role.SECURITY_ANALYST`+).
+- **Path Parameters**: `framework` (`owasp_top10` | `asvs_v4` | `pci_dss` | `iso27001`).
+- **Response**: `200 OK` `application/json` (`Content-Disposition: attachment; filename="Vulnova_Compliance_{framework}_...json"`).
+
 ---
 
 ### Section H: Production Operational & Health Telemetry Endpoints (Planned Era 11 📋)

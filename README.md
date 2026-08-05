@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
 [![Security: OWASP ASVS](https://img.shields.io/badge/Security-OWASP_ASVS_v4.0-crimson.svg)](SECURITY.md)
 [![Architecture: Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20DDD-black.svg)](ARCHITECTURE.md)
-[![Status: Era 8 Phase 8.2 Complete](https://img.shields.io/badge/Status-Era%208%20Phase%208.2%20Complete-green.svg)](ROADMAP.md)
+[![Status: Era 8 Complete](https://img.shields.io/badge/Status-Era%208%20Complete-green.svg)](ROADMAP.md)
 
 [![Build Status](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](.github/workflows/ci.yml)
 
@@ -68,6 +68,12 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ Sensitive Credential Masking**: `sanitize_sensitive_data` automatically scrubs Bearer tokens, authorization headers, and session cookies from exported proof snippets.
   - **✓ REST Export Router & RBAC**: `/api/v1/reports/export` router (`reports:export` permission) with `GET /json`, `GET /csv`, `GET /markdown`, `GET /{finding_id}` endpoints.
   - **✓ Next.js Technical Export UI Panel**: `TechnicalExportPanel` component with format selection tabs, scope controls, one-click file download, and copy-to-clipboard for Markdown ticket descriptions integrated into `/reports/[id]` and `/vulnerabilities/[id]`.
+- **Compliance Framework Mapping Engine & Workspace (Phase 8.3)**: Enterprise compliance intelligence layer (`app/application/compliance/`) providing verified capabilities:
+  - **✓ Multi-Standard Compliance Mapping**: `ComplianceMappingService` evaluating findings against OWASP Top 10 2021, OWASP ASVS 4.0.3, PCI DSS 4.0, and ISO 27001:2022 without database table changes.
+  - **✓ Active Finding Filter & Posture Scoring**: Evaluates posture score `(passed_controls / total_controls) * 100.0` strictly filtering for active open findings (`OPEN`, `CONFIRMED`, `NEW`, `UNREAD`, `TRIAGED`, `IN_REMEDIATION`), excluding resolved and false-positive findings.
+  - **✓ Full Control-to-Evidence Traceability**: Formats complete traceability chain (`Framework Control -> Vulnerability Finding -> Evidence Artifact Checksum -> Target Asset -> Remediation Guidance`).
+  - **✓ REST Compliance Router & Audit Trail**: `/api/v1/compliance` endpoints backed by `compliance:read` and `compliance:export` permissions with audit logging (`compliance.viewed`, `compliance.exported`).
+  - **✓ Next.js Compliance Workspace**: Dashboard `/compliance`, detail view `/compliance/[framework]`, framework selector tabs (`FrameworkSelector`), posture score card (`ComplianceScoreCard`), controls table (`ComplianceControlTable`), slide-in evidence drawer (`ComplianceEvidenceDrawer`), and JSON report downloader (`ComplianceExportButton`).
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).

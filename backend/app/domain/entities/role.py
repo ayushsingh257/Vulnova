@@ -122,6 +122,9 @@ PERMISSION_MAP: Dict[str, Role] = {
     "reports:generate": Role.SECURITY_ANALYST,
     "reports:create": Role.ADMIN,
     "reports:export": Role.SECURITY_ANALYST,
+    # ── Compliance Framework Mapping (Phase 8.3) ──
+    "compliance:read": Role.VIEWER,
+    "compliance:export": Role.SECURITY_ANALYST,
     # ── API Keys ──
     "api_keys:read": Role.ADMIN,
     "api_keys:create": Role.ADMIN,

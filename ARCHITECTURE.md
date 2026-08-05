@@ -716,6 +716,59 @@ Phase 8.1 introduces the enterprise executive security report generation engine 
 
 ---
 
+## 📊 17. Compliance Intelligence Layer & Framework Mapping Architecture (Phase 8.3)
+
+Phase 8.3 introduces a zero-duplication compliance intelligence layer that dynamically evaluates tenant security findings against enterprise compliance standards:
+
+```text
+                               ┌──────────────────────────────────────────────┐
+                               │       Next.js 14 Compliance Workspace        │
+                               │  (/compliance, /compliance/[framework], DTOs)│
+                               └──────────────────────┬───────────────────────┘
+                                                      │ GET /api/v1/compliance/*
+                                                      ▼
+                               ┌──────────────────────────────────────────────┐
+                               │           FastAPI Compliance Router          │
+                               │  (compliance:read, compliance:export RBAC)   │
+                               └──────────────────────┬───────────────────────┘
+                                                      │
+                                                      ▼
+                               ┌──────────────────────────────────────────────┐
+                               │          ComplianceMappingService            │
+                               │  (Batch Cursors & Audit Event Dispatcher)    │
+                               └──────────┬────────────────────────┬──────────┘
+                                          │                        │
+                                          ▼                        ▼
+                               ┌──────────────────────┐ ┌─────────────────────┐
+                               │   FrameworkMapper    │ │   AuditLogService   │
+                               │(Active Finding Filter│ │(compliance.viewed,  │
+                               │ & Score Calculation) │ │ compliance.exported)│
+                               └──────────┬───────────┘ └─────────────────────┘
+                                          │
+                                          ▼
+                       ┌──────────────────────────────────────┐
+                       │  Static Framework Mapping Modules    │
+                       │ ┌──────────────────────────────────┐ │
+                       │ │ OWASP Top 10 (OWASP Top 10 2021) │ │
+                       │ ├──────────────────────────────────┤ │
+                       │ │ OWASP ASVS (OWASP ASVS 4.0.3)     │ │
+                       │ ├──────────────────────────────────┤ │
+                       │ │ PCI-DSS (PCI DSS 4.0)            │ │
+                       │ ├──────────────────────────────────┤ │
+                       │ │ ISO 27001 (ISO 27001:2022)        │ │
+                       │ └──────────────────────────────────┘ │
+                       └──────────────────────────────────────┘
+```
+
+### Key Architectural Controls:
+1. **Explicit Version Metadata**: Framework mapping definitions maintain authoritative version strings: `OWASP Top 10 2021`, `OWASP ASVS 4.0.3`, `PCI DSS 4.0`, and `ISO 27001:2022`.
+2. **Zero Database Table Duplication**: Reuses existing `security_findings`, `evidence_artifacts`, and `assessment_jobs` tables. Compliance posture scores and control statuses are evaluated on demand without introducing compliance mapping database tables or document archival storage.
+3. **Active Open Finding Filter**: `FrameworkMapper` strictly filters for active open findings (`OPEN`, `CONFIRMED`, `NEW`, `UNREAD`, `TRIAGED`, `IN_REMEDIATION`). Resolved, verified fixed, and false-positive findings do not impact compliance scores.
+4. **End-to-End Control-to-Evidence Traceability**: Every evaluated control maintains complete traceability: `Framework Control -> Vulnerability Finding -> Evidence Artifact Checksum -> Target Asset -> Remediation Guidance` (`ComplianceFindingMappingDTO`).
+5. **Granular RBAC & Audit Trail**: REST endpoints enforce `compliance:read` (`Role.VIEWER` level 10+) for overview and controls retrieval, and `compliance:export` (`Role.SECURITY_ANALYST` level 20+) for report downloads. Dispatches immutable audit log events (`compliance.viewed`, `compliance.exported`) via `AuditLogService`.
+
+---
+
 ## 📈 16. Enterprise Production Reliability & Observability Architecture (Planned Era 11)
 
 Era 11 introduces the production reliability, observability, disaster recovery, and incident response architecture designed for high-availability enterprise SaaS operation:

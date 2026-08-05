@@ -1015,12 +1015,37 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: JSON, CSV, and Markdown technical exports streaming operational; sensitive credential masking verified; tenant isolation and RBAC enforced; audit logging active; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
 - **Testing Requirements**: Memory-efficient stream generator tests, CSV header formatting tests, Markdown ticket template tests, single finding export tests, API endpoint tests, sensitive data masking tests, audit log integration tests.
 
-### Phase 8.3: Compliance Framework Mapping (OWASP, PCI-DSS, ISO 27001, ASVS)
-- **Objective**: Map discovered vulnerabilities to compliance requirements and generate compliance checklists.
-- **Deliverables**: Compliance mapping engine & report view.
+### ✅ Phase 8.3: Compliance Framework Mapping (OWASP, PCI-DSS, ISO 27001, ASVS)
+- **Status**: Completed ✅
+- **Objective**: Compliance framework mapping engine evaluating security findings against OWASP Top 10 2021, OWASP ASVS 4.0.3, PCI DSS 4.0, and ISO 27001:2022 with dynamic posture score calculation, active open finding filtering, full control-to-evidence traceability, RBAC guards (`compliance:read`, `compliance:export`), audit event logging (`compliance.viewed`, `compliance.exported`), and Next.js compliance workspace (`/compliance`, `/compliance/[framework]`).
+- **Deliverables**:
+  - Compliance Mapping Engine (`app/application/compliance/`):
+    - `dto.py`: `ComplianceControlDTO`, `ComplianceFrameworkDTO`, `ComplianceFindingMappingDTO`, `ComplianceScoreResponse`, `ComplianceOverviewResponse`.
+    - `mappings/`: Framework mapping definitions for `owasp_top10.py` (OWASP Top 10 2021), `asvs_v4.py` (OWASP ASVS 4.0.3), `pci_dss.py` (PCI DSS 4.0), and `iso27001.py` (ISO 27001:2022).
+    - `framework_mapper.py`: `FrameworkMapper` evaluating findings against framework control definitions with active finding filtering (`OPEN`, `CONFIRMED`, `NEW`, `UNREAD`, `TRIAGED`, `IN_REMEDIATION`) excluding resolved and false-positive findings from score calculation.
+    - `compliance_service.py`: `ComplianceMappingService` orchestrating findings retrieval via memory-efficient batch cursors, posture evaluations, and audit logging.
+  - REST API Compliance Router (`app/api/v1/routers/compliance.py`):
+    - `GET /api/v1/compliance/{framework}/overview`: Returns posture score, controls status, and top remediation priorities (`compliance:read`).
+    - `GET /api/v1/compliance/{framework}/controls`: Returns full controls list with mapped findings evidence (`compliance:read`).
+    - `GET /api/v1/compliance/{framework}/export`: Returns downloadable JSON compliance report payload (`compliance:export`).
+  - Next.js Compliance Workspace (`frontend/`):
+    - `ComplianceService` (`frontend/services/compliance.service.ts`): Client-side API abstraction and Blob downloader.
+    - `ComplianceScoreCard` (`frontend/components/compliance/ComplianceScoreCard.tsx`): Posture score card with percentage indicator and passed/failed badges.
+    - `FrameworkSelector` (`frontend/components/compliance/FrameworkSelector.tsx`): Tab selector for switching between OWASP Top 10, ASVS v4.0, PCI DSS 4.0, and ISO 27001:2022.
+    - `ComplianceControlTable` (`frontend/components/compliance/ComplianceControlTable.tsx`): Controls table with PASS/FAIL status badges and mapped findings count.
+    - `ComplianceEvidenceDrawer` (`frontend/components/compliance/ComplianceEvidenceDrawer.tsx`): Slide-in drawer rendering full traceability chain (`Framework Control -> Vulnerability Finding -> Evidence Artifact Checksum -> Target Asset -> Remediation Guidance`).
+    - `ComplianceExportButton` (`frontend/components/compliance/ComplianceExportButton.tsx`): Report export button with loading state.
+    - Pages: `/compliance` (Dashboard) and `/compliance/[framework]` (Detail view).
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (281 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 231 source files passed (strict mode)
+    - **Pytest**: 8 passed in `tests/test_compliance_mapping.py` (414+ total tests)
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success — 17 static/dynamic pages compiled including compliance routes)
 - **Dependencies**: Phase 8.1, Phase 4.5.
-- **Completion Criteria**: Reports display compliance score percentage against PCI-DSS, OWASP Top 10, and ISO 27001.
-- **Testing Requirements**: Mapping accuracy tests against compliance standards.
+- **Completion Criteria**: Compliance scores displayed against OWASP Top 10 2021, ASVS 4.0.3, PCI DSS 4.0, and ISO 27001:2022; active finding filtering verified; full traceability maintained; RBAC and audit logging active; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
+- **Testing Requirements**: Mapping accuracy tests against all 4 standards, compliance score calculation tests, active finding filter tests, tenant isolation tests, RBAC permission tests, audit logging integration tests.
 
 ---
 

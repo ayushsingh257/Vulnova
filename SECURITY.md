@@ -520,6 +520,28 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
 
 ---
 
+## 🛡️ 21. Compliance Governance & Security Controls (Phase 8.3)
+
+Phase 8.3 establishes Vulnova's compliance intelligence layer and governance controls:
+
+1. **Granular RBAC Authorization**:
+   - `compliance:read`: Granted to `Role.VIEWER` (level 10+) and above. Authorizes access to framework overview posture scores and control status lists (`GET /api/v1/compliance/{framework}/overview`, `GET /api/v1/compliance/{framework}/controls`).
+   - `compliance:export`: Restricted to `Role.SECURITY_ANALYST` (level 20+) and above. Authorizes export of downloadable JSON compliance report packages (`GET /api/v1/compliance/{framework}/export`).
+
+2. **Strict Multi-Tenant Query Boundaries**:
+   - Every compliance evaluation query strictly filters by `organization_id = current_user.organization_id`. Cross-tenant compliance posture inspection or report export requests return 403 Forbidden / 404 Not Found.
+
+3. **Active Finding Compliance Filtering**:
+   - Compliance posture score calculation strictly filters for active open findings (`OPEN`, `CONFIRMED`, `NEW`, `UNREAD`, `TRIAGED`, `IN_REMEDIATION`).
+   - Findings marked as `RESOLVED`, `VERIFIED_FIXED`, or `FALSE_POSITIVE` do not cause compliance control failures, incentivizing remediation workflows.
+
+4. **Non-Repudiable Audit Event Logging**:
+   - Viewing compliance overviews and exporting compliance reports dispatch immutable audit events:
+     - `compliance.viewed`: Captures `actor_user_id`, `organization_id`, `resource_id` (`framework_id`), `framework_version`, `compliance_percentage`, `failed_controls_count`, and UTC `timestamp`.
+     - `compliance.exported`: Captures `actor_user_id`, `organization_id`, `resource_id` (`framework_id`), `framework_version`, `compliance_percentage`, and UTC `timestamp`.
+
+---
+
 ## 🚨 20. Security Operations Maturity, Incident Response & Breach Readiness (Planned Era 11)
 
 Era 11 establishes Vulnova's operational security maturity, security monitoring, and incident response governance:

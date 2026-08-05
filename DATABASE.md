@@ -811,6 +811,15 @@ Phase 8.2 introduces **zero new database tables** and **zero schema migrations**
   - `report.exported`: Records bulk export details (`format`: `json` | `csv` | `markdown`, `findings_count`, `export_type`: `bulk_findings`).
   - `vulnerability.exported`: Records single vulnerability export details (`resource_id`: `finding_id`, `format`, `finding_title`, `severity`).
 
+### Compliance Framework Mapping Engine Table Reuse (Phase 8.3)
+Phase 8.3 introduces **zero new database tables** and **zero schema migrations**. `ComplianceMappingService` (`app/application/compliance/compliance_service.py`) and `FrameworkMapper` (`app/application/compliance/framework_mapper.py`) evaluate compliance dynamically against existing database models:
+- `security_findings`: Queried using batch cursors (`_fetch_tenant_findings`, batch size 100) filtered by `organization_id` and `is_duplicate = False`. Active open findings (`status` in `OPEN`, `CONFIRMED`, `NEW`, `UNREAD`, `TRIAGED`, `IN_REMEDIATION`) are evaluated against static CWE and category mapping definitions (`owasp_top10.py`, `asvs_v4.py`, `pci_dss.py`, `iso27001.py`). Resolved and false-positive findings do not impact compliance scores.
+- `evidence_artifacts`: Reused for evidence checksum and artifact traceability verification (`ComplianceFindingMappingDTO`).
+- `assessment_jobs`: Target URL and asset name resolution.
+- `audit_logs`: Records compliance audit events:
+  - `compliance.viewed`: Records `framework_id`, `framework_version`, `compliance_percentage`, `failed_controls_count`, and `actor_user_id`.
+  - `compliance.exported`: Records `framework_id`, `framework_version`, `compliance_percentage`, and timestamp.
+
 ---
 
 ## 💾 9. Database Production Reliability & Disaster Recovery Considerations (Planned Era 11)

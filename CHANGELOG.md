@@ -21,6 +21,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 8 Phase 8.3 (Compliance Framework Mapping Engine & Compliance Report View)**:
+  - Created compliance mapping engine (`app/application/compliance/`) supporting OWASP Top 10 2021 (`owasp_top10.py`), OWASP ASVS 4.0.3 (`asvs_v4.py`), PCI DSS 4.0 (`pci_dss.py`), and ISO 27001:2022 (`iso27001.py`).
+  - Evaluated compliance posture dynamically from existing `security_findings` with zero database table changes or document storage dependencies.
+  - Implemented active finding filtering (`OPEN`, `CONFIRMED`, `NEW`, `UNREAD`, `TRIAGED`, `IN_REMEDIATION`), ensuring resolved, verified fixed, and false-positive findings do not impact compliance scores.
+  - Formatted end-to-end traceability chain: `Framework Control -> Vulnerability Finding -> Evidence Artifact Checksum -> Target Asset -> Remediation Guidance` (`ComplianceFindingMappingDTO`).
+  - Created REST API compliance router (`app/api/v1/routers/compliance.py`) with endpoints:
+    - `GET /api/v1/compliance/{framework}/overview`: Compliance score, control status, and top remediation priorities (`compliance:read` permission).
+    - `GET /api/v1/compliance/{framework}/controls`: Complete controls evaluation list (`compliance:read` permission).
+    - `GET /api/v1/compliance/{framework}/export`: Downloadable JSON compliance report payload (`compliance:export` permission).
+  - Integrated security audit logging (`compliance.viewed`, `compliance.exported`) recording actor ID, organization ID, framework ID, version, compliance percentage, and timestamp.
+  - Implemented client-side `ComplianceService` (`frontend/services/compliance.service.ts`), `ComplianceScoreCard`, `FrameworkSelector`, `ComplianceControlTable`, `ComplianceEvidenceDrawer`, `ComplianceExportButton`, and Next.js pages `/compliance` and `/compliance/[framework]`.
 - **Era 8 Phase 8.2 (Developer Technical Remediation Export - Markdown / CSV / JSON)**:
   - Created developer-focused technical export service (`app/application/reporting/developer_export_service.py`) supporting memory-efficient batch chunking (`_stream_findings`) and streaming generators for JSON, CSV, and Markdown formats without loading entire finding datasets into memory.
   - Implemented `export_single_finding` compiling detailed vulnerability intelligence, multi-modal evidence artifacts, attack path node chains, and AI remediation guidance into ticket-ready Markdown, JSON, or CSV formats.
