@@ -1133,6 +1133,38 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: API Gateway handles 2000+ requests/sec with rate limiting protection.
 - **Testing Requirements**: Locust load testing for API endpoints.
 
+### Phase 11.3: Centralized Observability, Telemetry & Distributed Monitoring
+- **Status**: Planned 📋
+- **Objective**: Establish production-grade observability infrastructure including Prometheus metrics collection (`/metrics`), Grafana dashboard visualization, Loki/ELK centralized log aggregation, Sentry-style application error tracking, automated alerting rules, service health probes (`/health`, `/health/liveness`, `/health/readiness`), and incident visibility.
+- **Deliverables**: Prometheus exporter middleware, Grafana dashboard templates, Loki logging integration, health probe endpoints, and alerting rules.
+- **Dependencies**: Phase 11.2.
+- **Completion Criteria**: Centralized logging, error tracking, Prometheus metrics, and Grafana dashboards operational with zero missing health signals.
+- **Testing Requirements**: Synthetic health probe tests, error logging capture tests, metric export validation.
+
+### Phase 11.4: Database Backup Strategy & Point-in-Time Recovery (PITR)
+- **Status**: Planned 📋
+- **Objective**: Automated PostgreSQL database backup scheduling, Write-Ahead Logging (WAL) archiving for Point-in-Time Recovery (PITR), 30-day retention policies, AES-256 backup encryption at rest, automated restore verification testing, and database disaster recovery procedures.
+- **Deliverables**: Automated WAL archiving scripts, pgBackRest / Barman configuration, encrypted backup storage pipeline, and automated restore verification tests.
+- **Dependencies**: Phase 11.3.
+- **Completion Criteria**: Automated daily backups and WAL archiving active; automated restore test successfully recovers database to targeted timestamp.
+- **Testing Requirements**: Backup restoration dry-run, PITR verification test, backup encryption validation.
+
+### Phase 11.5: Enterprise Disaster Recovery, RTO/RPO & Rollback Infrastructure
+- **Status**: Planned 📋
+- **Objective**: Establish production disaster recovery protocols defining Recovery Time Objective (RTO < 1 hour) and Recovery Point Objective (RPO < 5 minutes), automated service recovery procedures, multi-region database failover workflows, single-command zero-downtime deployment rollback strategies, and annual DR fire-drill procedures.
+- **Deliverables**: Disaster recovery runbook (`docs/operations/DISASTER_RECOVERY.md`), failover automation scripts, and automated deployment rollback hooks.
+- **Dependencies**: Phase 11.4.
+- **Completion Criteria**: DR runbook documented; simulated regional failover and deployment rollback execute within RTO/RPO bounds.
+- **Testing Requirements**: Failover simulation test, deployment rollback execution check.
+
+### Phase 11.6: Security Incident Response & Audit Escalation Lifecycle
+- **Status**: Planned 📋
+- **Objective**: Production security incident response lifecycle covering 4-tier severity classification (`SEV-1 Critical` to `SEV-4 Low`), automated PagerDuty/Slack alert escalation rules, forensic audit log investigation workflows (`AuditLogService`), post-incident review (PIR) root cause analysis templates, and breach notification readiness protocols.
+- **Deliverables**: Security Incident Response Plan (`docs/operations/INCIDENT_RESPONSE.md`), PagerDuty/Slack escalation rules, and PIR template.
+- **Dependencies**: Phase 11.5.
+- **Completion Criteria**: Incident response lifecycle, automated escalation rules, and audit investigation workflows documented and verified.
+- **Testing Requirements**: Incident escalation rule simulation, audit trail investigation query test.
+
 ---
 
 ## 🚀 Era 12: Final Security Audit, Production Deployment & Release

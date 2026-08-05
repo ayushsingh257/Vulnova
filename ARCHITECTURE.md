@@ -709,3 +709,51 @@ Phase 8.1 introduces the enterprise executive security report generation engine 
 3. **Tenant Boundary Isolation & Audit Trail Non-Repudiation**: Enforces strict tenant boundary isolation (`organization_id = current_user.organization_id`). Every report payload generation and PDF download records immutable security audit events (`report.generated`, `report.downloaded`) via `AuditLogService`.
 4. **Canonical RBAC Permissions**: Endpoint handlers enforce canonical permissions (`reports:create`, `reports:read`, `reports:export`) matching `PERMISSION_MAP`.
 
+---
+
+## 📈 16. Enterprise Production Reliability & Observability Architecture (Planned Era 11)
+
+Era 11 introduces the production reliability, observability, disaster recovery, and incident response architecture designed for high-availability enterprise SaaS operation:
+
+```text
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                    Vulnova Application Layer & Web Services                 │
+  │            (FastAPI Gateway, Celery Workers, Next.js 14 Frontend)           │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                 Monitoring & Observability Telemetry Layer                  │
+  │  (Prometheus Exporter /metrics, Structlog JSON Formatter, Sentry SDK Hook)  │
+  └──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+             │ Metrics                   │ JSON Logs                 │ Exception Traces
+             ▼                           ▼                           ▼
+  ┌────────────────────┐      ┌────────────────────┐      ┌────────────────────┐
+  │Prometheus TimeSeries│      │ Loki / ELK Central │      │ Sentry Error       │
+  │     Database       │      │   Log Aggregator   │      │ Tracking Platform  │
+  └──────────┬─────────┘      └──────────┬─────────┘      └──────────┬─────────┘
+             │                           │                           │
+             └───────────────────────────┼───────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │             Grafana Unified Operational Dashboards & Alert Rules            │
+  │     (Latency SLAs, Queue Depth, DB Pool Exhaustion, SEV-1 Escalations)     │
+  └─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Multi-Layer Observability & Telemetry**:
+   - Application Layer emits structured JSON logs (`structlog`), Prometheus time-series metrics (`/metrics`), and Sentry exception stack traces without impacting worker thread throughput.
+   - Health probes (`/health`, `/health/liveness`, `/health/readiness`) monitor database connection pool availability, Redis Pub/Sub connectivity, and Celery worker queue health.
+2. **Database Reliability & Recovery Layer**:
+   - **Continuous WAL Archiving**: PostgreSQL Write-Ahead Logs (WAL) streamed continuously to encrypted object storage for Point-in-Time Recovery (PITR) up to any specific second within 30 days.
+   - **Automated Restore Verification**: Daily automated restore dry-runs in an isolated sandbox environment validate snapshot integrity and measure restore speed.
+3. **Infrastructure Failover & Zero-Downtime Rollbacks**:
+   - Health monitors detect node failures and trigger multi-region database failover within Recovery Time Objective (RTO < 1 hour) and Recovery Point Objective (RPO < 5 minutes).
+   - Single-command zero-downtime deployment rollback strategies (`docker compose rollback` / Helm rollback) guarantee instant mitigation if problematic releases pass staging.
+4. **Security Incident Escalation & Response**:
+   - Automated PagerDuty/Slack escalation rules route `SEV-1 Critical` and `SEV-2 High` incidents directly to on-call security engineers.
+   - Forensic audit investigation workflows leverage immutable `AuditLogService` records with actor user ID, client IP, timestamp, and target resource context.
+
+

@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Enterprise Production Reliability Roadmap Expansion**: Expanded master roadmap (ROADMAP.md Era 11), system architecture (ARCHITECTURE.md Section 16), database reliability (DATABASE.md Section 9), security operations (SECURITY.md Section 20), API specifications (API_SPEC.md Section H), README.md, and BRAIN.md (Entry 33) to incorporate the 4 core pillars of enterprise SaaS production reliability: Observability & Monitoring, Backup Strategy & PITR, Disaster Recovery & Failover, and Security Incident Response.
 - **Era 8 Phase 8.1 (PDF & HTML Executive Security Report Generator)**:
   - Created CISO executive report generation application module (`app/application/reporting/`):
     - `dto.py`: Report request/metadata/payload DTOs (`CreateExecutiveReportRequest`, `ExecutiveReportMetadataResponse`, `ExecutiveReportDataPayload`, `TopVulnerabilityReportDTO`).

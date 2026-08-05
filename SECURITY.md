@@ -512,3 +512,32 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
 4. **Audit Trail Non-Repudiation**:
    - Report generation and PDF downloads dispatch immutable audit events (`report.generated`, `report.downloaded`) capturing `actor_user_id`, `organization_id`, `resource_id` (report ID), `timestamp`, `format`, and byte size.
 
+---
+
+## 🚨 20. Security Operations Maturity, Incident Response & Breach Readiness (Planned Era 11)
+
+Era 11 establishes Vulnova's operational security maturity, security monitoring, and incident response governance:
+
+1. **Security Monitoring & Threat Detection**:
+   - Continuous log analysis (Loki/ELK) scanning application logs for authentication brute-force patterns, invalid token usage, rate limit violations (`rate_limit:exceeded`), and unauthorized permission attempts (`403 Forbidden`).
+   - Automated SIEM integration streaming structured JSON audit logs (`AuditLogService`) to external SIEM platforms.
+
+2. **Forensic Audit Log Analysis**:
+   - Every operational and security event includes immutable actor attribution: `actor_user_id`, `organization_id`, `client_ip`, `user_agent`, `action`, `resource_id`, and UTC `timestamp`.
+   - Audit trail tamper-resistance via append-only database constraints and WAL archiving.
+
+3. **Security Incident Response Lifecycle (SEV-1 to SEV-4)**:
+   - **SEV-1 (Critical)**: Active breach or privilege escalation; automated PagerDuty alert; 15-minute response SLA; immediate isolation of compromised tenant context.
+   - **SEV-2 (High)**: Discovered unpatched vulnerability or worker queue compromise; 1-hour SLA.
+   - **SEV-3 (Medium)**: Non-exploitable policy violation or rate-limit anomaly; 24-hour SLA.
+   - **SEV-4 (Low)**: Informational security query or non-critical log error; 72-hour SLA.
+
+4. **Recovery Procedures & Post-Incident Review (PIR)**:
+   - Emergency API key & JWT secret rotation runbooks.
+   - Blameless Post-Incident Review (PIR) mandatory within 48 hours of any SEV-1/SEV-2 incident, documenting root cause analysis, timeline, remediation items, and prevention controls.
+
+5. **Breach Response & Regulatory Compliance**:
+   - Customer notification protocol within 72 hours of verified security breach.
+   - Evidence preservation runbooks ensuring database snapshots, WAL archives, and container logs are frozen for forensic analysis.
+
+

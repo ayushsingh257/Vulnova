@@ -1273,6 +1273,27 @@ All API errors return a standardized JSON error format:
 - **Summary**: Generates and streams binary PDF document file (`application/pdf`) generated via WeasyPrint with graceful fallback. Records audit event (`report.downloaded`).
 - **RBAC Guard**: `reports:export` (`Role.SECURITY_ANALYST`+).
 
+---
+
+### Section H: Production Operational & Health Telemetry Endpoints (Planned Era 11 📋)
+
+#### `GET /health`
+- **Summary**: Platform root health check returning high-level status indicator (`HEALTHY`, `DEGRADED`, `UNHEALTHY`). Publicly accessible.
+- **Planned Era**: Era 11 (Phase 11.3).
+
+#### `GET /health/liveness`
+- **Summary**: Kubernetes / container orchestra liveness probe checking FastAPI process responsiveness. Publicly accessible.
+- **Planned Era**: Era 11 (Phase 11.3).
+
+#### `GET /health/readiness`
+- **Summary**: Readiness probe checking active connections to PostgreSQL 16, Redis 7, and Celery message broker before routing ingress traffic. Publicly accessible.
+- **Planned Era**: Era 11 (Phase 11.3).
+
+#### `GET /metrics`
+- **Summary**: Prometheus format time-series metrics endpoint exposing API request counters, HTTP latency histograms, Celery worker queue depth, and DB connection pool utilization. Protected by operational exporter token.
+- **Planned Era**: Era 11 (Phase 11.3).
+
+
 
 
 ---

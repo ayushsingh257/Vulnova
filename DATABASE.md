@@ -802,5 +802,27 @@ Phase 8.1 requires zero new database tables or schema migrations. `ExecutiveSecu
   - `report.generated`: Records report ID, title, analysis window timeframe, posture score, and total open findings count.
   - `report.downloaded`: Records report ID, download format (`pdf`, `html`, `json`, `csv`), title, and byte size payload.
 
+---
+
+## 💾 9. Database Production Reliability & Disaster Recovery Considerations (Planned Era 11)
+
+Era 11 specifies the database production reliability strategy for PostgreSQL 16:
+
+### 1. Backup Strategy & Scheduling
+- **Full Base Backups**: Daily automated full physical backups taken via `pgBackRest` or `pg_dumpall`, stored in multi-region encrypted S3/GCS buckets (`AES-256` encryption at rest).
+- **WAL Streaming & Retention**: Continuous Write-Ahead Log (WAL) archiving enabled with a strict 30-day retention policy to support granular recovery windows.
+
+### 2. Point-in-Time Recovery (PITR)
+- **Targeted PITR Restoration**: Enables restoring PostgreSQL state to any precise millisecond within the 30-day retention window.
+- **Recovery Point Objective (RPO)**: Guarantees RPO < 5 minutes of potential data loss in catastrophic hardware failure scenarios.
+
+### 3. Read Replication & Connection Pooling
+- **Streaming Replication**: Primary-replica PostgreSQL streaming replication topology with automated health failover.
+- **PgBouncer Connection Pooling**: Transaction-level connection pooling (`PgBouncer`) capping active backend PostgreSQL connections and preventing pool exhaustion under peak API concurrency.
+
+### 4. Restore Verification & Automated Testing
+- **Automated Restore Testing**: Daily automated sandbox restore job that downloads the latest backup, performs PITR recovery to an isolated test database, runs integrity verification queries (`SELECT count(*) FROM security_findings`), and reports restore duration metrics.
+
+
 
 

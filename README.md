@@ -107,8 +107,21 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ Next.js 14 CISO Reporting Workspace**: CISO reporting dashboard (`/reports`), report detail view (`/reports/[id]`), report generation modal (`ReportGenerationModal`), security metrics summary cards (`SecurityMetricsSummary`), and PDF export buttons (`ReportDownloadActions`).
 
 
----
+### 🛡️ Enterprise Production Reliability & Operational Pillars
+Vulnova is designed not only to provide security capabilities, but also to operate reliably as an enterprise SaaS platform. Its engineering roadmap integrates **Security Engineering**, **Scalability Engineering**, **Reliability Engineering**, **Observability**, and **Disaster Recovery readiness**.
 
+#### ✅ Completed Operational Foundations:
+- **Security Engineering**: Argon2id password hashing, short-lived HS256 JWT access tokens, token family rotation, multi-tenant isolation, OWASP ASVS v4.0 compliance, and zero auto-execution human safety policies.
+- **Distributed Worker Sandbox Cluster**: Multi-queue Celery architecture (`celery_app.py`) with strict container resource limits (1 vCPU, 512MB RAM, `no_new_privs=True`, dropped capabilities, UID/GID 10001).
+- **Audit Logging & Non-Repudiation**: Immutable audit log event tracking (`audit_logs`) across administrative mutations, finding triage, scan controls, and report exports.
+
+#### 📋 Planned Enterprise Reliability Capabilities (Era 11 Roadmap):
+- **Observability & Telemetry**: Prometheus metrics export (`/metrics`), Grafana dashboard visualization, Loki/ELK centralized logging, Sentry error tracking, automated alert rules, and `/health` liveness/readiness probes.
+- **Backup Strategy & Point-in-Time Recovery**: Automated PostgreSQL WAL archiving, 30-day backup retention, AES-256 backup encryption at rest, and automated PITR restore verification testing.
+- **Disaster Recovery & Failover**: Recovery Time Objective (RTO < 1h), Recovery Point Objective (RPO < 5m), automated multi-region failover, and deployment rollback strategies.
+- **Incident Response Lifecycle**: 4-tier severity classification (`SEV-1` to `SEV-4`), automated PagerDuty/Slack alert escalation rules, forensic audit log investigation, and post-incident review (PIR) workflows.
+
+---
 
 ## ⚡ 4. Why Vulnova is Different
 
@@ -116,7 +129,7 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
 2. **AI-Native AppSec Workflows**: Built specifically to integrate Large Language Models (LLMs) for intelligent vulnerability scoring (CVSS 4.0), false-positive mitigation, attack path generation, and automated patch code fixes.
 3. **Clean Architecture & Domain Isolation**: Strict separation of concerns (`api` → `application` → `domain` ← `infrastructure`) ensures core business logic remains independent of web frameworks and database drivers.
 4. **Enterprise Multi-Tenancy**: Built from day one for multi-organization SaaS deployments with zero cross-tenant data leakage.
-5. **Security-First Engineering**: OWASP ASVS v4.0 aligned, strict Python type annotations (`mypy --strict`), automated supply chain vulnerability scanning (Trivy, Semgrep, Gitleaks), and immutable audit trails.
+5. **Security-First & Reliability Engineering**: OWASP ASVS v4.0 aligned, strict Python type annotations (`mypy --strict`), automated supply chain vulnerability scanning (Trivy, Semgrep, Gitleaks), immutable audit trails, and planned observability/DR readiness.
 
 ---
 
