@@ -16,6 +16,7 @@ import {
   Search,
   Server,
   PackageCheck,
+  Boxes,
 } from "lucide-react";
 
 export interface DashboardLayoutProps {
@@ -186,6 +187,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <PackageCheck className="h-4 w-4 text-blue-400" />
               <span>Dependency Security Validation</span>
+            </a>
+            <a
+              href="/validation/container"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <Boxes className="h-4 w-4 text-cyan-400" />
+              <span>Container Security Validation</span>
             </a>
           </div>
 

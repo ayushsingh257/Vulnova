@@ -1374,6 +1374,52 @@ Vulnova provides an automated Software Composition Analysis (SCA) verification e
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 26. Container Image Security Audit & Runtime Hardening Suite Architecture (Phase 10.6)
+
+Vulnova provides an automated container security verification engine (`ContainerValidationRunnerService`) that continuously evaluates base image CVEs, unprivileged execution (`USER appuser`), minimal distroless footprints, Linux capability drops (`cap_drop: [ALL]`), `HEALTHCHECK` directives, secret exposure in layers, cgroup resource throttling, custom bridge network isolation (`vulnova-network`), Seccomp profiles, and SHA-256 image digest pinning across all 10 Container categories (CONTAINER1 through CONTAINER10).
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│             Next.js 14 Container Security Workspace                          │
+│     (/validation/container, PassRateCard, CategoryGrid, DetailsModal)      │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (Bearer JWT / X-API-Key)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│          FastAPI Container Router (/api/v1/validation/container/*)          │
+│      (validation:read, validation:execute RBAC Guards & Audit Log Hooks)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 ContainerValidationRunnerService                            │
+│  (Executes Hardening Checks CONTAINER1 - CONTAINER10 against Docker Profiles)│
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│ Dockerfile & Compose │    │  Trivy Image Scanner │    │   AuditLogService    │
+│  Hardening Verifier  │    │  (Container Audit)   │    │(container_completed) │
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication**:
+   - Matches Phase 10.1 through 10.5 & Era 8 design patterns: zero new database tables, zero schema migrations, and zero archival storage overhead.
+   - Operates in memory: `Run Container Validation -> Execute Hardening Assertions -> Record Audit Event -> Return DTO`.
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Each validation execution generates a runtime `uuid4()` string (`suite_id`) recorded in audit log events (`validation.container_suite_started`, `validation.container_suite_completed`).
+3. **Explainable Failure Diagnostics & Container Mapping**:
+   - Every Container category result returns explicit diagnostic feedback: `failure_reason`, target `affected_container` (e.g. `Dockerfile & Docker Compose Runtime User`, `Seccomp & AppArmor Security Profiles`), and actionable `remediation_guidance`.
+4. **Deep Container Hardening & Controlled Warning Handling**:
+   - Verifies unprivileged execution (`USER appuser`), Linux capability dropping (`cap_drop: [ALL]`), `no-new-privileges` flag, cgroup CPU/memory limits (`memory: 1g`), `/health` probes, and SHA-256 image digest pinning. Emits controlled `WARNING` status if binary scanner tools are absent.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

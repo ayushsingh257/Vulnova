@@ -11,6 +11,7 @@ from app.api.v1.routers import (
     auth,
     cli,
     compliance,
+    container_validation,
     dashboard,
     discovery,
     infrastructure_validation,
@@ -71,3 +72,4 @@ api_v1_router.include_router(api_security_validation.router)
 api_v1_router.include_router(infrastructure_validation.router)
 api_v1_router.include_router(pentest_validation.router)
 api_v1_router.include_router(sca_validation.router)
+api_v1_router.include_router(container_validation.router)

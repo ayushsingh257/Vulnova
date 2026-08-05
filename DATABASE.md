@@ -891,6 +891,14 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `validation.sca_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
   - `validation.sca_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
 
+### 8.16 Container Image Security Audit & Hardening Validation Schema Strategy (Era 10 Phase 10.6)
+- **Zero Database Table Duplication**: Introduces **zero new database tables** and **zero schema migrations**. Evaluates container image security and runtime hardening assertions dynamically against existing `security_findings`, `api_keys`, `users`, and `audit_logs`.
+- **In-Memory Container Assertion Engine**: `ContainerValidationRunnerService` evaluates CONTAINER1 through CONTAINER10 assertions dynamically in memory.
+- **Ephemeral Audit Correlation Token (`suite_id`)**: Each validation run generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log details.
+- **Immutable Container Security Audit Trail**:
+  - `validation.container_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
+  - `validation.container_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
+
 
 ---
 

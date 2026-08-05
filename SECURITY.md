@@ -720,6 +720,25 @@ Phase 10.5 introduces automated Software Composition Analysis controls verifying
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 🛡️ 30. Container Image Security & Runtime Hardening Controls (Phase 10.6)
+
+Phase 10.6 introduces automated container security controls verifying base image OS package CVEs (Trivy), unprivileged non-root execution (`USER appuser`), minimal distroless footprints, Linux capability drops (`cap_drop: [ALL]`), `HEALTHCHECK` directives, secret exposure in layers, cgroup resource throttling, custom bridge network isolation (`vulnova-network`), Seccomp profiles, and SHA-256 image digest pinning across all 10 Container categories:
+
+1. **Zero Database Table Duplication**:
+   - In-memory Container security assertion engine operating without document archival tables or schema migrations (`Run Container Validation -> Execute Hardening Assertions -> Record Audit Event -> Return DTO`).
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Runtime `uuid4()` token string (`suite_id`) recorded in audit log events (`validation.container_suite_started`, `validation.container_suite_completed`).
+3. **Explainable Failure Diagnostics & Container Mapping**:
+   - Every Container category result returns diagnostic `failure_reason`, target `affected_container` (e.g. `Dockerfile & Docker Compose Runtime User`, `Seccomp & AppArmor Security Profiles`), and actionable `remediation_guidance`.
+4. **Deep Container Hardening & Controlled Warning Handling**:
+   - Verifies unprivileged execution (`USER appuser`), Linux capability dropping (`cap_drop: [ALL]`), `no-new-privileges` flag, cgroup CPU/memory limits (`memory: 1g`), `/health` probes, and SHA-256 image digest pinning. Emits controlled `WARNING` status if binary scanner tools are absent.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

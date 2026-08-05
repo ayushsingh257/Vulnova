@@ -1541,6 +1541,26 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning `SCAValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
 
+---
+
+### Section Q: Container Image Security Audit & Runtime Hardening Endpoints (Phase 10.6)
+
+#### `POST /api/v1/validation/container/run` (Phase 10.6)
+- **Summary**: Trigger an automated in-memory Container Image Security & Hardening assertion suite scan. Dispatches audit events (`validation.container_suite_started`, `validation.container_suite_completed`).
+- **RBAC Guard**: `validation:execute` (`Role.SECURITY_ANALYST`+).
+- **Response**: `200 OK` returning `ContainerValidationSuiteResponse` (`suite_id`, `overall_status`, `overall_pass_rate`, `category_results`).
+
+#### `GET /api/v1/validation/container/results` (Phase 10.6)
+- **Summary**: Fetch full container security category assertion evaluation metrics and results for tenant organization.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `ContainerValidationSuiteResponse`.
+
+#### `GET /api/v1/validation/container/summary` (Phase 10.6)
+- **Summary**: Fetch high-level container security verification health summary metrics.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `ContainerValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
+
+
 
 
 
