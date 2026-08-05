@@ -620,6 +620,13 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Deep SSRF Egress Firewall Verification**: Direct integration with `is_safe_target_url` verifying private IP range blocking (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.1`, AWS IMDS `169.254.169.254`) and DNS rebinding protections.
     - **REST API Router (`/api/v1/validation/owasp-top-10`) & Granular RBAC**: REST endpoints backed by `validation:read` (`Role.VIEWER` level 10+) and `validation:execute` (`Role.SECURITY_ANALYST` level 20+): `POST /run`, `GET /results`, `GET /summary`.
     - **Next.js OWASP Validation Workspace**: Dashboard `/validation/owasp`, `OWASPValidationService`, `OWASPPassRateCard` (pass rate gauge & health status badge), `OWASPCategoryGrid` (interactive grid for A01 - A10), `OWASPValidationRunButton` (automated suite trigger button), `OWASPTestDetailsModal` (slide-in detail view), and sidebar navigation integration.
+40. **OWASP API Security Top 10 (2023) Validation Suite Architecture (Phase 10.2)**: Automated in-memory API security assertion framework verifying tenant REST API routes and active platform security controls against all 10 OWASP API Security Top 10 (2023) categories (API1 BOLA through API10 Unsafe API Consumption):
+    - **Zero Database Table Duplication & Ephemeral Audit Correlation**: Operates with **zero new database tables** and **zero schema migrations**. `APISecurityValidationRunnerService` evaluates API category assertions dynamically in memory and generates a runtime `uuid4()` token string (`suite_id`) recorded in audit events (`validation.api_security_suite_started`, `validation.api_security_suite_completed`).
+    - **Explainable API Failure Diagnostics**: Every API category result returns diagnostic `failure_reason`, target `affected_endpoint` (e.g. `/api/v1/vulnerabilities/{id}`), `affected_subsystem` (e.g. `OrganizationIsolation`, `RateLimiter`), and actionable `remediation_guidance`.
+    - **Deep BOLA & Security Control Verification**: Verifies BOLA tenant boundaries (`organization_id`), JWT expiration enforcement, API key prefix rules (`vn_live_`, `vn_cli_`), rate limiting (`RateLimiter`), CORS/headers, and third-party integration payload sanitization.
+    - **REST API Router (`/api/v1/validation/api-security`) & Granular RBAC**: REST endpoints backed by `validation:read` (`Role.VIEWER` level 10+) and `validation:execute` (`Role.SECURITY_ANALYST` level 20+): `POST /run`, `GET /results`, `GET /summary`.
+    - **Next.js API Security Workspace**: Dashboard `/validation/api-security`, `APISecurityValidationService`, `APIValidationPassRateCard`, `APIValidationCategoryGrid`, `APIValidationRunButton`, `APITestDetailsModal`, and sidebar navigation integration.
+
 
 
 

@@ -14,6 +14,7 @@ import {
   User,
   Radio,
   Search,
+  Server,
 } from "lucide-react";
 
 export interface DashboardLayoutProps {
@@ -156,6 +157,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <ShieldCheck className="h-4 w-4 text-purple-400" />
               <span>OWASP Validation</span>
+            </a>
+            <a
+              href="/validation/api-security"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <Server className="h-4 w-4 text-blue-400" />
+              <span>API Security Validation</span>
             </a>
           </div>
 

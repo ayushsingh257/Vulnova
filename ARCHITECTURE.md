@@ -1194,3 +1194,49 @@ Vulnova provides an automated, in-memory Security Validation Engine (`OWASPValid
    - All validation runs enforce `organization_id = current_user.organization_id`.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 22. OWASP API Security Top 10 (2023) Validation Suite Architecture (Phase 10.2)
+
+Vulnova provides an automated API security assertion engine (`APISecurityValidationRunnerService`) that continuously evaluates tenant REST API routes and platform security controls against all 10 OWASP API Security Top 10 (2023) categories (API1 BOLA through API10 Unsafe Consumption of APIs).
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 Next.js 14 API Security Workspace                           │
+│     (/validation/api-security, PassRateCard, CategoryGrid, DetailsModal)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (Bearer JWT / X-API-Key)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│             FastAPI API Security Validation Router (/api/v1/validation/api-security/*)
+│      (validation:read, validation:execute RBAC Guards & Audit Log Hooks)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                   APISecurityValidationRunnerService                        │
+│    (Executes Category Checks API1 - API10 against Vulnova REST Layer)       │
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│  RBAC & Auth Engine  │    │  SSRF & Rate Limiter │    │   AuditLogService    │
+│(JWT, API Key, Tenant)│    │(is_safe_target_url)  │    │(validation.api_comp) │
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication**:
+   - Matches Phase 10.1 & Era 8 design patterns: zero new database tables, zero schema migrations, and zero archival storage overhead.
+   - Operates in memory: `Run -> Execute API Category Assertions -> Record Audit Event -> Return DTO`.
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Each validation execution generates a runtime `uuid4()` string (`suite_id`) recorded in audit log events (`validation.api_security_suite_started`, `validation.api_security_suite_completed`).
+3. **Explainable Failure Diagnostics & Endpoint Mapping**:
+   - Every API category result returns explicit diagnostic feedback: `failure_reason`, target `affected_endpoint` (e.g. `/api/v1/vulnerabilities/{id}`), `affected_subsystem` (e.g. `OrganizationIsolation`, `RateLimiter`), and actionable `remediation_guidance`.
+4. **Deep BOLA & Security Control Verification**:
+   - Verifies BOLA tenant boundaries (`organization_id`), JWT expiration enforcement, API key prefixes (`vn_live_`, `vn_cli_`), rate limiting (`RateLimiter`), CORS/headers, and third-party payload sanitization.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+

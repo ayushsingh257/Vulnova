@@ -859,6 +859,14 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `validation.owasp_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
   - `validation.owasp_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
 
+### 8.12 OWASP API Security Top 10 (2023) Validation Schema Strategy (Era 10 Phase 10.2)
+- **Zero Database Table Duplication**: Introduces **zero new database tables** and **zero schema migrations**. Evaluates API security assertions dynamically against existing `security_findings`, `api_keys`, `users`, and `audit_logs`.
+- **In-Memory API Assertion Engine**: `APISecurityValidationRunnerService` evaluates API1:2023 through API10:2023 assertions dynamically in memory.
+- **Ephemeral Audit Correlation Token (`suite_id`)**: Each validation run generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log details.
+- **Immutable API Security Audit Trail**:
+  - `validation.api_security_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
+  - `validation.api_security_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
+
 
 ---
 

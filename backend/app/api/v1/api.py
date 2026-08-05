@@ -4,6 +4,7 @@ from app.api.v1.routers import (
     admin,
     ai,
     api_keys,
+    api_security_validation,
     assessment,
     assets,
     audit_logs,
@@ -63,3 +64,4 @@ api_v1_router.include_router(integrations.router)
 api_v1_router.include_router(notifications.router)
 api_v1_router.include_router(cli.router)
 api_v1_router.include_router(owasp_validation.router)
+api_v1_router.include_router(api_security_validation.router)

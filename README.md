@@ -98,6 +98,13 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ Deep SSRF Firewall Validation**: Direct integration with `is_safe_target_url` verifying private IP range blocking (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.1`, AWS IMDS `169.254.169.254`) and DNS rebinding prevention.
   - **✓ REST Validation Router & RBAC**: `/api/v1/validation/owasp-top-10` endpoints backed by `validation:read` (VIEWER+) and `validation:execute` (SECURITY_ANALYST+) permissions.
   - **✓ Next.js OWASP Validation Workspace**: Dashboard `/validation/owasp`, `OWASPPassRateCard`, `OWASPCategoryGrid`, `OWASPValidationRunButton`, `OWASPTestDetailsModal`, and sidebar navigation integration.
+- **OWASP API Security Top 10 (2023) Validation Suite (Phase 10.2)**: Automated API endpoint security assertion framework (`app/application/api_security_validation/`) providing verified capabilities:
+  - **✓ In-Memory API Verification Engine**: `APISecurityValidationRunnerService` evaluating REST API routes and security controls against all 10 OWASP API Security Top 10 (2023) categories (API1 BOLA through API10 Unsafe API Consumption) with zero database table changes.
+  - **✓ Ephemeral Audit Correlation**: Generates runtime `suite_id` UUIDs for audit log tracking (`validation.api_security_suite_started`, `validation.api_security_suite_completed`).
+  - **✓ Explainable API Failure Diagnostics**: Every API category result returns diagnostic `failure_reason`, target `affected_endpoint` (e.g. `/api/v1/vulnerabilities/{id}`), `affected_subsystem` (e.g. `OrganizationIsolation`, `RateLimiter`), and actionable `remediation_guidance`.
+  - **✓ Deep BOLA & Auth Verification**: Verifies mandatory `organization_id` multi-tenant boundaries, IDOR protections, JWT expiration enforcement, and API key prefix rules (`vn_live_`, `vn_cli_`).
+  - **✓ REST API Validation Router & RBAC**: `/api/v1/validation/api-security` endpoints backed by `validation:read` (VIEWER+) and `validation:execute` (SECURITY_ANALYST+) permissions.
+  - **✓ Next.js API Security Workspace**: Dashboard `/validation/api-security`, `APIValidationPassRateCard`, `APIValidationCategoryGrid`, `APIValidationRunButton`, `APITestDetailsModal`, and sidebar navigation integration.
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).

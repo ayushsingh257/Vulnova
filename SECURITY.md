@@ -648,6 +648,25 @@ Phase 10.1 introduces automated security controls verifying platform and tenant 
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 🛡️ 26. API Security Controls Validation (Phase 10.2)
+
+Phase 10.2 introduces automated API security controls verifying REST endpoints against the **OWASP API Security Top 10 (2023)** standard:
+
+1. **Zero Database Table Duplication**:
+   - In-memory API assertion engine operating without document archival tables or schema migrations (`Run -> Execute API Assertions -> Record Audit Event -> Return DTO`).
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Runtime `uuid4()` token string (`suite_id`) recorded in audit log events (`validation.api_security_suite_started`, `validation.api_security_suite_completed`).
+3. **Explainable Failure Diagnostics & Endpoint Mapping**:
+   - Every API category result returns diagnostic `failure_reason`, target `affected_endpoint` (e.g. `/api/v1/vulnerabilities/{id}`), `affected_subsystem` (e.g. `OrganizationIsolation`, `RateLimiter`), and actionable `remediation_guidance`.
+4. **Deep BOLA & Security Boundary Verification**:
+   - Asserts mandatory `organization_id` multi-tenant boundaries, IDOR protections, JWT signature validation, token expiry rules, and API key prefix rules (`vn_live_`, `vn_cli_`).
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

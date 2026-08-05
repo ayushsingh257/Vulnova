@@ -1465,6 +1465,26 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning `OWASPVerificationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
 
+---
+
+### Section M: OWASP API Security Top 10 (2023) Validation Endpoints (Phase 10.2)
+
+#### `POST /api/v1/validation/api-security/run` (Phase 10.2)
+- **Summary**: Trigger an automated in-memory OWASP API Security Top 10 (2023) assertion suite scan. Dispatches audit events (`validation.api_security_suite_started`, `validation.api_security_suite_completed`).
+- **RBAC Guard**: `validation:execute` (`Role.SECURITY_ANALYST`+).
+- **Response**: `200 OK` returning `APIValidationSuiteResponse` (`suite_id`, `overall_status`, `overall_pass_rate`, `category_results`).
+
+#### `GET /api/v1/validation/api-security/results` (Phase 10.2)
+- **Summary**: Fetch full API category assertion evaluation metrics and results for tenant organization.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `APIValidationSuiteResponse`.
+
+#### `GET /api/v1/validation/api-security/summary` (Phase 10.2)
+- **Summary**: Fetch high-level API security verification health summary metrics.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `APIValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
+
+
 
 
 ---
