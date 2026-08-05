@@ -3,11 +3,11 @@
 from typing import Annotated, List
 
 import structlog
-from app.api.v1.dependencies.permissions import require_permission
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies.auth import get_current_user
+from app.api.v1.dependencies.rbac import require_permission
 from app.infrastructure.database.models.user import UserModel
 from app.infrastructure.database.performance.benchmark_service import (
     DatabaseBenchmarkService,
