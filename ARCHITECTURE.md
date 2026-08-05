@@ -1284,5 +1284,51 @@ Vulnova provides an automated infrastructure security assertion engine (`Infrast
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 24. Platform Penetration Testing & Exploit Verification Suite Architecture (Phase 10.4)
+
+Vulnova provides an automated penetration test assertion engine (`PenTestValidationRunnerService`) that continuously evaluates active exploit scenarios simulating real-world attack vectors against platform API Gateway, Auth, Multi-Tenant Boundaries, Injections, SSRF Egress, Mass Assignment, Rate Limits, CORS, Error Leakages, and Webhooks across all 10 PenTest categories (PEN1 through PEN10).
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│             Next.js 14 Penetration Testing Workspace                         │
+│     (/validation/pentest, PassRateCard, CategoryGrid, DetailsModal)        │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (Bearer JWT / X-API-Key)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│          FastAPI PenTest Router (/api/v1/validation/pentest/*)              │
+│      (validation:read, validation:execute RBAC Guards & Audit Log Hooks)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    PenTestValidationRunnerService                           │
+│  (Executes Exploit Verification Checks PEN1 - PEN10 against Core Services)   │
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│  SSRF & Auth Engine  │    │  RBAC & Rate Limiter │    │   AuditLogService    │
+│(is_safe_target_url)  │    │ (require_permission) │    │(pentest_completed)   │
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication**:
+   - Matches Phase 10.1, 10.2, 10.3 & Era 8 design patterns: zero new database tables, zero schema migrations, and zero archival storage overhead.
+   - Operates in memory: `Run Penetration Suite -> Execute Exploit Assertions -> Record Audit Event -> Return DTO`.
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Each validation execution generates a runtime `uuid4()` string (`suite_id`) recorded in audit log events (`validation.pentest_suite_started`, `validation.pentest_suite_completed`).
+3. **Explainable Failure Diagnostics & Target Mapping**:
+   - Every PenTest category result returns explicit diagnostic feedback: `failure_reason`, target `affected_target` (e.g. `/api/v1/auth/login`, `/api/v1/vulnerabilities/{id}`), and actionable `remediation_guidance`.
+4. **Deep Exploit Vector Verification**:
+   - Verifies JWT signature tampering rejection, multi-tenant IDOR boundaries (`organization_id`), SQL/Command injection protection, AWS IMDS metadata exfiltration blocking (`is_safe_target_url`), rate limit DoS protection (`RateLimiter`), CORS origin whitelisting, production stack trace suppression, and webhook HMAC signature verification.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 

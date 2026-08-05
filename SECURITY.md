@@ -684,6 +684,25 @@ Phase 10.3 introduces automated infrastructure security controls verifying deplo
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 🛡️ 28. Platform Penetration Testing & Exploit Verification Controls (Phase 10.4)
+
+Phase 10.4 introduces automated penetration test assertion controls executing active exploit verification scenarios simulating real-world attack vectors against platform API Gateway, Auth, Multi-Tenant Boundaries, Injections, SSRF Egress, Mass Assignment, Rate Limits, CORS, Error Leakages, and Webhooks across all 10 PenTest categories:
+
+1. **Zero Database Table Duplication**:
+   - In-memory penetration test assertion engine operating without document archival tables or schema migrations (`Run Penetration Suite -> Execute Exploit Assertions -> Record Audit Event -> Return DTO`).
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Runtime `uuid4()` token string (`suite_id`) recorded in audit log events (`validation.pentest_suite_started`, `validation.pentest_suite_completed`).
+3. **Explainable Failure Diagnostics & Target Mapping**:
+   - Every PenTest category result returns diagnostic `failure_reason`, target `affected_target` (e.g. `/api/v1/auth/login`, `/api/v1/vulnerabilities/{id}`), and actionable `remediation_guidance`.
+4. **Deep Exploit Vector Verification**:
+   - Verifies JWT signature tampering rejection, multi-tenant IDOR boundaries (`organization_id`), SQL/Command injection protection, AWS IMDS metadata exfiltration blocking (`is_safe_target_url`), rate limit DoS protection (`RateLimiter`), CORS origin whitelisting, production stack trace suppression, and webhook HMAC signature verification.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

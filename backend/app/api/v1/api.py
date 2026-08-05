@@ -18,6 +18,7 @@ from app.api.v1.routers import (
     notifications,
     organizations,
     owasp_validation,
+    pentest_validation,
     report_exports,
     reports,
     scan_schedules,
@@ -67,3 +68,4 @@ api_v1_router.include_router(cli.router)
 api_v1_router.include_router(owasp_validation.router)
 api_v1_router.include_router(api_security_validation.router)
 api_v1_router.include_router(infrastructure_validation.router)
+api_v1_router.include_router(pentest_validation.router)

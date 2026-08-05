@@ -875,6 +875,14 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `validation.infrastructure_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
   - `validation.infrastructure_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
 
+### 8.14 Platform Penetration Testing Validation Schema Strategy (Era 10 Phase 10.4)
+- **Zero Database Table Duplication**: Introduces **zero new database tables** and **zero schema migrations**. Evaluates penetration test exploit assertions dynamically against existing `security_findings`, `api_keys`, `users`, and `audit_logs`.
+- **In-Memory PenTest Assertion Engine**: `PenTestValidationRunnerService` evaluates PEN1 through PEN10 exploit scenarios dynamically in memory.
+- **Ephemeral Audit Correlation Token (`suite_id`)**: Each validation run generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log details.
+- **Immutable PenTest Security Audit Trail**:
+  - `validation.pentest_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
+  - `validation.pentest_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
+
 
 ---
 

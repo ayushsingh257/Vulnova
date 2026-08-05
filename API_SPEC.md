@@ -1503,6 +1503,26 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning `InfrastructureValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
 
+---
+
+### Section O: Platform Penetration Testing & Exploit Verification Endpoints (Phase 10.4)
+
+#### `POST /api/v1/validation/pentest/run` (Phase 10.4)
+- **Summary**: Trigger an automated in-memory Platform Penetration Testing & Exploit assertion suite scan. Dispatches audit events (`validation.pentest_suite_started`, `validation.pentest_suite_completed`).
+- **RBAC Guard**: `validation:execute` (`Role.SECURITY_ANALYST`+).
+- **Response**: `200 OK` returning `PenTestValidationSuiteResponse` (`suite_id`, `overall_status`, `overall_pass_rate`, `category_results`).
+
+#### `GET /api/v1/validation/pentest/results` (Phase 10.4)
+- **Summary**: Fetch full penetration testing category assertion evaluation metrics and results for tenant organization.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `PenTestValidationSuiteResponse`.
+
+#### `GET /api/v1/validation/pentest/summary` (Phase 10.4)
+- **Summary**: Fetch high-level penetration testing health summary metrics.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `PenTestValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
+
+
 
 
 
