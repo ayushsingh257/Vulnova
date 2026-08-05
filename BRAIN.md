@@ -686,6 +686,13 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Query Analyzer & Slow Query Monitoring**: `QueryAnalyzerService` analyzing execution patterns and generating index recommendations. `DatabaseQueryMonitor` attaching SQLAlchemy cursor event listeners to capture queries > 100ms.
     - **Controlled Query Benchmarking**: `DatabaseBenchmarkService` running batch query latency profiling (avg, p95, p99).
     - **REST API Router & Frontend Workspace**: REST endpoints `/api/v1/database/performance/*` (`/health`, `/benchmark`, `/slow-queries`) and Next.js Workspace `/database/performance` with `DatabasePerformanceCard`, `QueryBenchmarkTable`, and `DatabaseHealthBadge`.
+51. **Redis Caching & Distributed Rate Limiting System Architecture (Phase 11.2)**: Enterprise Redis caching infrastructure (`RedisClientManager`, `CacheService`, `MultiLayerCacheManager`) and distributed token-bucket rate limiter (`DistributedRateLimiter`, `RateLimitMiddleware`):
+    - **Graceful Degradation Connection Management**: `RedisClientManager` managing async connection pooling with fallback in-memory dictionary store if Redis becomes unreachable.
+    - **Multi-Layer Cache Strategy**: Multi-tier caching for tenant metadata (`tenant:{org_id}`, 15 min TTL), user session data (`session:{user_id}`, 30 min TTL), and static policies (`config:{key}`, 1 hr TTL) with automated invalidation hooks.
+    - **Distributed Token Bucket Rate Limiting**: `DistributedRateLimiter` implementing atomic Redis sliding window token buckets per IP, per User, and per Organization (100 req/min anonymous, 1000 req/min user, 5000 req/min admin).
+    - **API Gateway Rate Limit Middleware**: `RateLimitMiddleware` rejecting rate-exceeded requests with HTTP 429 Too Many Requests and injecting `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers.
+    - **Locust Load Test Suite**: `testing/load/locustfile.py` load test scenario targeting 2000+ requests/sec system throughput verification.
+
 
 
 

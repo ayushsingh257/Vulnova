@@ -842,6 +842,22 @@ Phase 11.1 introduces database performance and connection pool security controls
 4. **Slow Query Threshold Logging**:
    - `DatabaseQueryMonitor` capturing and logging queries exceeding 100ms threshold for proactively identifying performance bottlenecks.
 
+---
+
+## 🛡️ 37. Distributed Rate Limiting & Denial-of-Service Defense Controls (Phase 11.2)
+
+Phase 11.2 introduces enterprise distributed rate limiting and caching security controls:
+
+1. **Multi-Tier Token Bucket Enforcement**:
+   - `DistributedRateLimiter` managing rate limit buckets per IP, per User, and per Organization (Anonymous: 100 req/min, Authenticated: 1000 req/min, Admin: 5000 req/min).
+2. **Atomic Redis Operations & Burst Protection**:
+   - Executes atomic Redis pipelines (`INCR` + `EXPIRE`) to prevent race conditions in distributed multi-instance deployments during traffic spikes.
+3. **HTTP 429 Standardized Error Response**:
+   - Rejects rate-exceeded requests with `429 Too Many Requests` containing `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `Retry-After` headers.
+4. **Sensitive Data Caching Exclusion Policy**:
+   - Cryptographic keys, raw API tokens, user passwords, and TOTP secrets are strictly excluded from Redis caching.
+
+
 
 
 

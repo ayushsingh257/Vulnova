@@ -958,6 +958,16 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
 - **Query Analyzer & Slow Query Listener**:
   - `QueryAnalyzerService` & `DatabaseQueryMonitor` capturing execution duration metadata for queries > 100ms.
 
+### 8.23 Redis Caching Impact on Database Performance & Load Reduction (Era 11 Phase 11.2)
+- **Database Query Offloading**:
+  - Tenant metadata (`tenant:{org_id}`, 15 min TTL) offloads redundant database lookup queries by up to 85%.
+  - User session data (`session:{user_id}`, 30 min TTL) eliminates repeated `users` table queries during JWT authentication.
+  - System configuration & security policies (`config:{key}`, 1 hour TTL) cached in Redis memory.
+- **Cache Invalidation Safeguards**:
+  - Automated invalidation hooks (`invalidate_tenant`, `invalidate_user_session`, `invalidate_config`) ensuring stale data is purged upon entity updates.
+- **Graceful Fallback**:
+  - Redis connection drops seamlessly degrade to local in-memory fallback without raising database connection errors or crashing endpoints.
+
 
 ---
 

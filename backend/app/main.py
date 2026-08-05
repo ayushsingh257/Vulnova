@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.exceptions import VulnovaException
 from app.core.logging import get_logger
 from app.infrastructure.database.session import check_database_connection
+from app.security.middleware.rate_limit import RateLimitMiddleware
 from app.security.middleware.request_id import RequestIDMiddleware
 from app.security.middleware.request_logging import RequestLoggingMiddleware
 from app.security.middleware.security_headers import SecurityHeadersMiddleware
@@ -27,8 +28,9 @@ app = FastAPI(
 )
 
 # 1. Security & Traceability Middleware Stack
-# Order matters: RequestID first (outermost), then logging, then security headers
+# Order matters: RequestID first (outermost), then rate limiting, then logging, then security headers
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(

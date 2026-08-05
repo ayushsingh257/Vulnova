@@ -1693,6 +1693,30 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
 - **Response**: `200 OK` returning `List[SlowQueryLogDTO]`.
 
+---
+
+### Section X: Rate Limiting & Response Headers Specification (Phase 11.2)
+
+#### Global HTTP Rate Limit Response (`429 Too Many Requests`) (Phase 11.2)
+- **Trigger**: Issued when client IP, user account, or tenant organization exceeds token bucket capacity.
+- **Status Code**: `429 Too Many Requests`.
+- **Response Headers**:
+  - `X-RateLimit-Limit`: Maximum allowed requests in window (e.g. `100`, `1000`, `5000`).
+  - `X-RateLimit-Remaining`: Remaining request count (`0`).
+  - `X-RateLimit-Reset`: Time in seconds until bucket resets.
+  - `Retry-After`: Recommended backoff delay in seconds.
+- **Response Payload**:
+  ```json
+  {
+    "error": {
+      "code": "RATE_LIMIT_EXCEEDED",
+      "message": "Too many requests. Please slow down and try again later.",
+      "request_id": "req-uuid-v4"
+    }
+  }
+  ```
+
+
 
 
 

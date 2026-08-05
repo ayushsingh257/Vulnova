@@ -1686,6 +1686,44 @@ Vulnova provides an enterprise database performance framework (`QueryAnalyzerSer
 5. **Slow Query Threshold Alerting**:
    - `DatabaseQueryMonitor` attaches SQLAlchemy event listeners (`before_cursor_execute`, `after_cursor_execute`) to detect and log queries exceeding the 100ms threshold.
 
+---
+
+## 33. Redis Caching & Distributed Rate Limiting Architecture (Phase 11.2)
+
+Vulnova provides an enterprise Redis caching and distributed rate limiting architecture (`RedisClientManager`, `CacheService`, `MultiLayerCacheManager`, `DistributedRateLimiter`, `RateLimitMiddleware`).
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          FastAPI Incoming HTTP Request                      │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           RateLimitMiddleware                               │
+│           (Identifies IP / User ID, checks Token Bucket in Redis)           │
+└──────────────────┬──────────────────────────────────────┬───────────────────┘
+                   │ Allowed                              │ Rate Exceeded
+                   ▼                                      ▼
+┌──────────────────────────────────────┐     ┌────────────────────────────────┐
+│      Execute Route & Application     │     │ HTTP 429 Too Many Requests     │
+│  (MultiLayerCacheManager: Tenant,    │     │ Headers: X-RateLimit-Limit,    │
+│   User Session, Static Policy Cache) │     │ X-RateLimit-Remaining, Reset   │
+└──────────────────────────────────────┘     └────────────────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Graceful Degradation Resilience**:
+   - `RedisClientManager` handles connection pool failures gracefully (`_is_available` flag). If Redis is offline, caching and rate limiting fall back to in-memory stores without interrupting HTTP application traffic.
+2. **Multi-Layer Cache Hierarchy**:
+   - **Tenant Lookup Cache**: `tenant:{org_id}` (15 min TTL).
+   - **User Session Cache**: `session:{user_id}` (30 min TTL).
+   - **Static Configuration Cache**: `config:{key}` (1 hour TTL).
+3. **Token Bucket Rate Limiting**:
+   - `DistributedRateLimiter` enforces atomic Redis sliding window token buckets per IP, per User, and per Organization (Anonymous: 100 req/min, Authenticated: 1000 req/min, Admin: 5000 req/min).
+4. **Standard Compliance Headers**:
+   - All responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers.
+
+
 
 
 
