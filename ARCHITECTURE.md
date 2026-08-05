@@ -865,5 +865,45 @@ Phase 9.1 establishes an enterprise integration engine enabling bi-directional v
 4. **Auditability & Non-Repudiation**:
    - Dispatches immutable security audit log events (`integration.configuration_updated`, `integration.issue_created`, `integration.issue_synced`) recording actor user ID, provider, external ticket ID, and timestamp.
 
+---
 
+## 🔔 19. Real-Time Notification & Alert Webhook Architecture (Phase 9.2)
 
+Phase 9.2 introduces an enterprise real-time security alert dispatching framework supporting Slack Workspaces and Microsoft Teams Channels:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 Security Event Trigger / Assessment Pipeline                │
+│  (Vulnerability Discovered, Scan Completed, Compliance Dropped, Ticket Sync)│
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ Async Non-Blocking Dispatch
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            NotificationService                              │
+│       (Tenant Rule Evaluation, Event Routing, Audit Event Dispatcher)       │
+└──────────────────┬──────────────────────────────────────┬───────────────────┘
+                   │                                      │
+                   ▼                                      ▼
+┌────────────────────────────────────┐  ┌────────────────────────────────────┐
+│        SlackWebhookProvider        │  │        TeamsWebhookProvider        │
+│   (Slack Block Kit JSON Messages)  │  │  (Microsoft Teams Adaptive Cards)  │
+└──────────────────┬─────────────────┘  └──────────────────┬─────────────────┘
+                   │                                      │
+                   ▼ HTTPS POST                           ▼ HTTPS POST
+┌────────────────────────────────────┐  ┌────────────────────────────────────┐
+│   Slack Incoming Webhook Endpoint  │  │  Teams Office 365 Connector Webhook│
+└────────────────────────────────────┘  └────────────────────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Resilient Asynchronous Delivery**:
+   - Webhook notifications run asynchronously without blocking core vulnerability processing, scan execution, or compliance evaluation.
+   - HTTP errors, timeouts, or 500 status codes from external webhooks are caught and logged without raising unhandled exceptions or breaking security workflows.
+2. **Secret Token Encryption & URL Masking**:
+   - Webhook URLs (which contain secret tokens) are encrypted at rest using AES-256-GCM / Fernet via `SecretEncryptionService`.
+   - Webhook URLs returned in REST API payloads are masked (e.g. `https://hooks.slack.com/services/T00/B00/*****XXXX`), ensuring zero plaintext secret leaks.
+3. **Tenant Isolation & Granular RBAC**:
+   - Channel configuration and alert dispatching enforce `organization_id = current_user.organization_id`.
+   - Permissions: `notifications:read` (VIEWER+), `notifications:create`/`notifications:update` (SECURITY_ANALYST+), `notifications:manage` (ADMIN+).
+4. **Audit Visibility**:
+   - Dispatches audit events (`notification.channel_created`, `notification.channel_updated`, `notification.channel_deleted`, `notification.sent`, `notification.failed`) recording delivery status and HTTP response codes.

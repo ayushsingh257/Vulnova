@@ -80,6 +80,12 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ Controlled State Transition Layer**: Controlled state mappers (`ControlledJiraStatusMapper`, `ControlledGitHubStatusMapper`) safely mapping external ticket state changes (`DONE`/`CLOSED` -> `RESOLVED`, `IN_PROGRESS` -> `IN_REMEDIATION`) into Vulnova finding lifecycle states.
   - **✓ REST Integrations Router & Granular RBAC**: `/api/v1/integrations` endpoints backed by `integrations:read` (VIEWER+), `integrations:create`/`integrations:update` (SECURITY_ANALYST+), and `integrations:manage` (ADMIN+) permissions.
   - **✓ Next.js Integration Control Plane**: Dashboard `/integrations`, provider settings `/integrations/settings`, `IntegrationsService`, `IntegrationSettingsCard`, `CreateIssueModal`, `IntegrationHistoryPanel`, and sidebar navigation integration.
+- **Slack & Microsoft Teams Security Alert Webhooks (Phase 9.2)**: Enterprise security notification framework (`app/application/notifications/`) providing verified capabilities:
+  - **✓ Slack Block Kit & Teams Adaptive Cards**: Format adapters (`SlackWebhookProvider` & `TeamsWebhookProvider`) dispatching richly formatted alert cards with severity color indicators (`#DC2626` for CRITICAL, `#F97316` for HIGH).
+  - **✓ Resilient Asynchronous Alert Dispatch**: Non-blocking `NotificationService` dispatching alerts without disrupting scan execution, vulnerability processing, or compliance workflows.
+  - **✓ Webhook Secret Protection & Tenant Isolation**: AES-256 encrypted webhook URLs (`SecretEncryptionService`), masked URL outputs, and `organization_id` boundary enforcement.
+  - **✓ REST Notifications Router & Audit Logging**: `/api/v1/notifications` endpoints backed by `notifications:read`, `notifications:create`, `notifications:update`, and `notifications:manage` permissions with audit events (`notification.channel_created`, `notification.sent`, `notification.failed`).
+  - **✓ Next.js Notification Center**: Dashboard `/notifications`, workspace `/notifications/settings`, `NotificationChannelCard`, `WebhookConfigurationModal`, `NotificationRuleEditor`, `NotificationHistoryPanel`, `TestNotificationButton`, and sidebar integration.
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).

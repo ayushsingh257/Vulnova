@@ -1361,6 +1361,45 @@ All API errors return a standardized JSON error format:
 
 ---
 
+### Section J: Real-Time Notifications & Security Alert Webhooks Endpoints (Phase 9.2 ✅)
+
+#### `GET /api/v1/notifications/channels` (Phase 9.2)
+- **Summary**: Return configured Slack and Microsoft Teams notification channels for tenant (urls masked).
+- **RBAC Guard**: `notifications:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning List of `NotificationChannelDTO`.
+
+#### `POST /api/v1/notifications/channels` (Phase 9.2)
+- **Summary**: Create and encrypt a new notification webhook channel. Dispatches audit event (`notification.channel_created`).
+- **RBAC Guard**: `notifications:manage` (`Role.ADMIN`+).
+- **Request Body**: `CreateChannelRequest` (`provider`, `name`, `webhook_url`, `event_types`, `min_severity`).
+- **Response**: `201 Created` returning `NotificationChannelDTO`.
+
+#### `PATCH /api/v1/notifications/channels/{channel_id}` (Phase 9.2)
+- **Summary**: Update notification channel settings or encrypted webhook URL. Dispatches audit event (`notification.channel_updated`).
+- **RBAC Guard**: `notifications:manage` (`Role.ADMIN`+).
+- **Path Parameters**: `channel_id` (string).
+- **Request Body**: `UpdateChannelRequest`.
+- **Response**: `200 OK` returning `NotificationChannelDTO`.
+
+#### `DELETE /api/v1/notifications/channels/{channel_id}` (Phase 9.2)
+- **Summary**: Delete a notification webhook channel. Dispatches audit event (`notification.channel_deleted`).
+- **RBAC Guard**: `notifications:manage` (`Role.ADMIN`+).
+- **Path Parameters**: `channel_id` (string).
+- **Response**: `204 No Content`.
+
+#### `GET /api/v1/notifications/rules` (Phase 9.2)
+- **Summary**: Fetch event routing rules and severity filters.
+- **RBAC Guard**: `notifications:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning List of `NotificationRuleDTO`.
+
+#### `POST /api/v1/notifications/test` (Phase 9.2)
+- **Summary**: Dispatch an instant test security alert to verify Slack/Teams webhook connectivity. Dispatches audit event (`notification.sent` | `notification.failed`).
+- **RBAC Guard**: `notifications:create` (`Role.SECURITY_ANALYST`+).
+- **Request Body**: `TestNotificationRequest` (`channel_id`).
+- **Response**: `200 OK` returning `NotificationDeliveryResponse`.
+
+---
+
 ### Section H: Production Operational & Health Telemetry Endpoints (Planned Era 11 📋)
 
 #### `GET /health`

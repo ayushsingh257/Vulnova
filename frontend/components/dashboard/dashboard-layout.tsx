@@ -5,12 +5,12 @@ import {
   ShieldAlert,
   ShieldCheck,
   Link2,
+  Bell,
   Activity,
   Calendar,
   Layers,
   FileText,
   Settings,
-  Bell,
   User,
   Radio,
   Search,
@@ -108,6 +108,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <Link2 className="h-4 w-4" />
               <span>Integrations</span>
+            </a>
+            <a
+              href="/notifications"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <Bell className="h-4 w-4" />
+              <span>Notifications</span>
             </a>
           </div>
 

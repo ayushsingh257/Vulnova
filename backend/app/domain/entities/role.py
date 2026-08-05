@@ -134,6 +134,11 @@ PERMISSION_MAP: Dict[str, Role] = {
     "integrations:create": Role.SECURITY_ANALYST,
     "integrations:update": Role.SECURITY_ANALYST,
     "integrations:manage": Role.ADMIN,
+    # ── Notifications & Alert Webhooks (Phase 9.2) ──
+    "notifications:read": Role.VIEWER,
+    "notifications:create": Role.SECURITY_ANALYST,
+    "notifications:update": Role.SECURITY_ANALYST,
+    "notifications:manage": Role.ADMIN,
     # ── Audit Logs ──
     "audit_logs:read": Role.ADMIN,
 }

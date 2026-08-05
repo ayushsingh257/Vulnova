@@ -20,7 +20,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
-### Added
+- **Era 9 Phase 9.2 (Slack & Microsoft Teams Security Alert Webhooks)**:
+  - Created real-time security alert notification engine (`app/application/notifications/`) supporting Slack Workspaces (`SlackWebhookProvider` Block Kit formatting) and Microsoft Teams Channels (`TeamsWebhookProvider` Adaptive Cards).
+  - Implemented `NotificationService` managing tenant-isolated encrypted webhook configs (`SecretEncryptionService`), event rule evaluation, non-blocking alert dispatching, test notification triggers, and audit event dispatches.
+  - Implemented REST API notifications router (`app/api/v1/routers/notifications.py`) under `/api/v1/notifications`:
+    - `GET /api/v1/notifications/channels`: List configured channels (`notifications:read`).
+    - `POST /api/v1/notifications/channels`: Create webhook channel (`notifications:manage`).
+    - `PATCH /api/v1/notifications/channels/{channel_id}`: Update webhook channel (`notifications:manage`).
+    - `DELETE /api/v1/notifications/channels/{channel_id}`: Delete webhook channel (`notifications:manage`).
+    - `GET /api/v1/notifications/rules`: List event routing rules (`notifications:read`).
+    - `POST /api/v1/notifications/test`: Trigger test alert delivery (`notifications:create`).
+  - Created Next.js Notification Center (`frontend/`): Dashboard `/notifications`, workspace `/notifications/settings`, `NotificationsService`, `NotificationChannelCard`, `WebhookConfigurationModal`, `NotificationRuleEditor`, `NotificationHistoryPanel`, `TestNotificationButton`, and sidebar navigation integration.
 - **Era 9 Phase 9.1 (Jira & GitHub Issues Integration Plugin)**:
   - Created enterprise integration engine (`app/application/integrations/`) supporting Atlassian Jira Cloud (`jira_client.py`, `jira_mapper.py`) and GitHub Issues (`github_client.py`, `github_mapper.py`).
   - Implemented AES-256-GCM / Fernet secret encryption (`SecretEncryptionService`) storing encrypted provider API tokens and PATs with zero plaintext leak and zero new database tables created.

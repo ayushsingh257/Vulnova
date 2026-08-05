@@ -590,5 +590,27 @@ Phase 9.1 enforces strict security controls for external integrations with Atlas
 5. **Immutable Security Audit Trail**:
    - Every integration operation records non-repudiable audit events (`integration.configuration_updated`, `integration.issue_created`, `integration.issue_synced`) capturing actor user ID, tenant ID, provider, issue ID, and timestamp.
 
+---
+
+## 🔔 23. Webhook Security Controls & Notification Governance (Phase 9.2)
+
+Phase 9.2 enforces strict security controls for real-time Slack and Microsoft Teams security alert webhooks:
+
+1. **Webhook Secret Token Protection**:
+   - All Incoming Webhook URLs (which contain sensitive token secrets) are encrypted at rest using AES-256-GCM / Fernet via `SecretEncryptionService`.
+   - Webhook URLs in REST API responses are strictly masked (`https://hooks.slack.com/services/T00/B00/*****XXXX`), eliminating token exposure in frontend client state.
+2. **Resilient & Non-Blocking Alert Dispatching**:
+   - Webhook notification delivery operates asynchronously without blocking core vulnerability processing, scan execution, or compliance evaluation.
+   - HTTP errors, timeouts, or 500 responses from external webhooks are logged cleanly without causing application failure or unhandled exceptions.
+3. **Multi-Tenant Boundary Enforcement**:
+   - Channel configuration management and alert routing strictly enforce tenant isolation (`organization_id = current_user.organization_id`).
+4. **RBAC Permission Enforcement**:
+   - `notifications:read`: `Role.VIEWER` (level 10+) — list configured channels.
+   - `notifications:create`: `Role.SECURITY_ANALYST` (level 20+) — send test notifications.
+   - `notifications:update`: `Role.SECURITY_ANALYST` (level 20+) — update channel settings.
+   - `notifications:manage`: `Role.ADMIN` (level 30+) — create, edit, or delete webhook channels.
+5. **Audit Logging & Delivery Monitoring**:
+   - Dispatches immutable security audit log events (`notification.channel_created`, `notification.channel_updated`, `notification.channel_deleted`, `notification.sent`, `notification.failed`) capturing delivery status, HTTP status codes, provider, and timestamp.
+
 
 

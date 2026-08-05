@@ -830,6 +830,17 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `integration.issue_created`: Records `provider`, `issue_key`, `issue_url`, and `finding_id`.
   - `integration.issue_synced`: Records `provider`, `issue_key`/`issue_number`, `external_status`, `previous_status`, and `updated_status`.
 
+### 8.9 Slack & Microsoft Teams Security Alert Webhooks Schema Strategy (Era 9 Phase 9.2)
+- **Zero Database Table Duplication**: Requires **zero new database tables** and **zero schema migrations**. Channel configurations and alert dispatch logs reuse existing encryption and audit models (`SecretEncryptionService`, `audit_logs`).
+- **Encrypted Webhook Secret Protection**: Incoming Webhook URLs (containing sensitive secret tokens) are encrypted at rest using AES-256-GCM / Fernet (`SecretEncryptionService`).
+- **Secret Masking Guarantee**: Webhook URLs returned in REST API queries are masked (`https://hooks.slack.com/services/T00/B00/*****XXXX`), ensuring secrets are unrecoverable from client-side responses.
+- **Immutable Webhook Audit Trail**:
+  - `notification.channel_created`: Records `channel_id`, `provider` (`slack` | `teams`), `name`, `min_severity`, `actor_user_id`.
+  - `notification.channel_updated`: Records `channel_id`, `provider`, `name`, `actor_user_id`.
+  - `notification.channel_deleted`: Records `channel_id`, `actor_user_id`.
+  - `notification.sent`: Records `channel_id`, `provider`, `event_type`, `status_code`, `status` (`DELIVERED`).
+  - `notification.failed`: Records `channel_id`, `provider`, `event_type`, `status_code`, `status` (`FAILED`), `error_message`.
+
 ---
 
 ## 💾 9. Database Production Reliability & Disaster Recovery Considerations (Planned Era 11)
