@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   ShieldAlert,
   ShieldCheck,
+  Award,
   Link2,
   Bell,
   Activity,
@@ -216,6 +217,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <ShieldAlert className="h-4 w-4 text-teal-400" />
               <span>Automated Security Regression</span>
+            </a>
+            <a
+              href="/validation/certification"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <Award className="h-4 w-4 text-amber-400" />
+              <span>Security Certification & Compliance</span>
             </a>
           </div>
 

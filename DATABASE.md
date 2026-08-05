@@ -923,6 +923,14 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `validation.regression_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
   - `validation.regression_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
 
+### 8.20 Security Control Plane Final Certification Validation Schema Strategy (Era 10 Phase 10.10)
+- **Zero Database Table Duplication**: Introduces **zero new database tables** and **zero schema migrations**. Evaluates security control plane certification assertions dynamically against existing `security_findings`, `api_keys`, `users`, and `audit_logs`.
+- **In-Memory Certification Assertion Engine**: `CertificationValidationRunnerService` evaluates CERTIFICATION1 through CERTIFICATION10 assertions dynamically in memory.
+- **Ephemeral Audit Correlation Token (`suite_id`)**: Each validation run generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log details.
+- **Immutable Security Certification Audit Trail**:
+  - `validation.certification_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
+  - `validation.certification_suite_completed`: Records `suite_id`, `overall_certification_score`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
+
 
 ---
 

@@ -9,6 +9,7 @@ from app.api.v1.routers import (
     assets,
     audit_logs,
     auth,
+    certification_validation,
     cli,
     compliance,
     container_validation,
@@ -79,3 +80,4 @@ api_v1_router.include_router(container_validation.router)
 api_v1_router.include_router(secrets_validation.router)
 api_v1_router.include_router(threat_validation.router)
 api_v1_router.include_router(regression_validation.router)
+api_v1_router.include_router(certification_validation.router)

@@ -1617,6 +1617,26 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning `RegressionValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
 
+---
+
+### Section U: Security Certification Validation Endpoints (Phase 10.10)
+
+#### `POST /api/v1/validation/certification/run` (Phase 10.10)
+- **Summary**: Trigger an automated in-memory Security Control Plane Final Certification assertion suite scan. Dispatches audit events (`validation.certification_suite_started`, `validation.certification_suite_completed`).
+- **RBAC Guard**: `validation:execute` (`Role.SECURITY_ANALYST`+).
+- **Response**: `200 OK` returning `CertificationValidationSuiteResponse` (`suite_id`, `overall_status`, `overall_certification_score`, `category_results`).
+
+#### `GET /api/v1/validation/certification/results` (Phase 10.10)
+- **Summary**: Fetch full security certification category assertion evaluation metrics and results for tenant organization.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `CertificationValidationSuiteResponse`.
+
+#### `GET /api/v1/validation/certification/summary` (Phase 10.10)
+- **Summary**: Fetch high-level enterprise security certification summary metrics and compliance score.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `CertificationValidationSummaryDTO` (`overall_certification_score`, `overall_status`, `passed_categories`, `failed_categories`).
+
+
 
 
 
