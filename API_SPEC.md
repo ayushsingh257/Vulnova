@@ -1560,6 +1560,26 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning `ContainerValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
 
+---
+
+### Section R: Secrets & Cryptographic Management Endpoints (Phase 10.7)
+
+#### `POST /api/v1/validation/secrets/run` (Phase 10.7)
+- **Summary**: Trigger an automated in-memory Secrets & Cryptographic Management assertion suite scan. Dispatches audit events (`validation.secrets_suite_started`, `validation.secrets_suite_completed`).
+- **RBAC Guard**: `validation:execute` (`Role.SECURITY_ANALYST`+).
+- **Response**: `200 OK` returning `SecretsValidationSuiteResponse` (`suite_id`, `overall_status`, `overall_pass_rate`, `category_results`).
+
+#### `GET /api/v1/validation/secrets/results` (Phase 10.7)
+- **Summary**: Fetch full secrets security category assertion evaluation metrics and results for tenant organization.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `SecretsValidationSuiteResponse`.
+
+#### `GET /api/v1/validation/secrets/summary` (Phase 10.7)
+- **Summary**: Fetch high-level secrets security verification health summary metrics.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `SecretsValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
+
+
 
 
 

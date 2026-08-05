@@ -26,6 +26,7 @@ from app.api.v1.routers import (
     scan_schedules,
     scan_stream,
     scan_targets,
+    secrets_validation,
     status,
     trends,
     triage,
@@ -73,3 +74,4 @@ api_v1_router.include_router(infrastructure_validation.router)
 api_v1_router.include_router(pentest_validation.router)
 api_v1_router.include_router(sca_validation.router)
 api_v1_router.include_router(container_validation.router)
+api_v1_router.include_router(secrets_validation.router)

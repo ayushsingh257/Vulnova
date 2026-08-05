@@ -738,6 +738,25 @@ Phase 10.6 introduces automated container security controls verifying base image
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 🛡️ 31. Secrets & Cryptographic Management Controls (Phase 10.7)
+
+Phase 10.7 introduces automated secrets and cryptographic security controls verifying Gitleaks hardcoded secret scanning (with controlled warning status when Gitleaks binary is uninstalled), AES-256-GCM authenticated envelope encryption (`CryptoService`), JWT signing key entropy (min 256-bit entropy), machine-to-machine SHA-256 API key hashing & constant-time `hmac.compare_digest` verification, webhook HMAC-SHA256 signatures (`X-Vulnova-Signature`), TLS 1.2/1.3 in-transit encryption standards, secret key rotation policies & versioning metadata (without inventing fake rotation history), Argon2id/bcrypt password hashing work factors, CI/CD pipeline secret masking, and 90-day secrets governance SLAs across all 10 Secrets categories:
+
+1. **Zero Database Table Duplication**:
+   - In-memory Secrets security assertion engine operating without document archival tables or schema migrations (`Run Secrets Validation -> Execute Cryptographic Assertions -> Record Audit Event -> Return DTO`).
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Runtime `uuid4()` token string (`suite_id`) recorded in audit log events (`validation.secrets_suite_started`, `validation.secrets_suite_completed`).
+3. **Explainable Failure Diagnostics & Secrets Mapping**:
+   - Every Secrets category result returns diagnostic `failure_reason`, target `affected_secret` (e.g. `Database Sensitive Field Encryption (CryptoService AES-256-GCM)`, `JWT Auth Signing Key & Algorithm Enforcement`), and actionable `remediation_guidance`.
+4. **Deep Cryptographic Verification & Controlled Warning Handling**:
+   - Verifies AES-256-GCM envelope encryption, SHA-256 API key digests, HMAC-SHA256 webhook signatures, TLS 1.2/1.3 transport standards, and key rotation policy metadata. Emits controlled `WARNING` status if Gitleaks binary scanner is uninstalled and validates rotation policy without fake historical records.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

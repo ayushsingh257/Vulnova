@@ -1419,6 +1419,52 @@ Vulnova provides an automated container security verification engine (`Container
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 27. Secrets & Cryptographic Management Audit Suite Architecture (Phase 10.7)
+
+Vulnova provides an automated secrets scanning & cryptographic verification engine (`SecretsValidationRunnerService`) that continuously evaluates Gitleaks hardcoded secret scanning (with controlled warning status when Gitleaks binary is uninstalled), AES-256-GCM authenticated envelope encryption (`CryptoService`), JWT signing key entropy (min 256-bit entropy), machine-to-machine SHA-256 API key hashing & constant-time `hmac.compare_digest` verification, webhook HMAC-SHA256 signatures (`X-Vulnova-Signature`), TLS 1.2/1.3 in-transit encryption standards, secret key rotation policies & versioning metadata (without inventing fake rotation history), Argon2id/bcrypt password hashing work factors, CI/CD pipeline secret masking, and 90-day secrets governance SLAs across all 10 Secrets categories (SECRET1 through SECRET10).
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│            Next.js 14 Secrets & Cryptography Workspace                       │
+│       (/validation/secrets, PassRateCard, CategoryGrid, DetailsModal)       │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (Bearer JWT / X-API-Key)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│          FastAPI Secrets Router (/api/v1/validation/secrets/*)             │
+│      (validation:read, validation:execute RBAC Guards & Audit Log Hooks)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 SecretsValidationRunnerService                              │
+│   (Executes Cryptographic Checks SECRET1 - SECRET10 against Platform)       │
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│    CryptoService     │    │ Gitleaks & Auth Engine│    │   AuditLogService    │
+│(AES-256-GCM Envelope)│    │(Secret Scan / Hashes)│    │ (secrets_completed)  │
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication**:
+   - Matches Phase 10.1 through 10.6 & Era 8 design patterns: zero new database tables, zero schema migrations, and zero archival storage overhead.
+   - Operates in memory: `Run Secrets Validation -> Execute Cryptographic Assertions -> Record Audit Event -> Return DTO`.
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Each validation execution generates a runtime `uuid4()` string (`suite_id`) recorded in audit log events (`validation.secrets_suite_started`, `validation.secrets_suite_completed`).
+3. **Explainable Failure Diagnostics & Secrets Mapping**:
+   - Every Secrets category result returns explicit diagnostic feedback: `failure_reason`, target `affected_secret` (e.g. `Database Sensitive Field Encryption (CryptoService AES-256-GCM)`, `JWT Auth Signing Key & Algorithm Enforcement`), and actionable `remediation_guidance`.
+4. **Deep Cryptographic Verification & Controlled Warning Handling**:
+   - Verifies AES-256-GCM envelope encryption, SHA-256 API key digests, HMAC-SHA256 webhook signatures, TLS 1.2/1.3 transport standards, and key rotation policy metadata. Emits controlled `WARNING` status if Gitleaks binary scanner is uninstalled and validates rotation policy without fake historical records.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 
