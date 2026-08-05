@@ -91,8 +91,13 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ CI/CD Pipeline Integration Templates**: Ready-to-use templates for `.github/workflows/vulnova-security-scan.yml`, `.gitlab-ci.yml`, and `Jenkinsfile`.
   - **✓ Build Security Gate Evaluation**: Evaluates build gate thresholds (e.g. `CRITICAL >= 1`) returning standard CI exit codes (`0` = Pass, `1` = Gate Failure, `2` = Error).
   - **✓ REST CLI Router & Audit Logging**: `/api/v1/cli/*` endpoints backed by `cli:read`, `cli:trigger`, and `cli:manage` permissions with audit events (`cli.token_created`, `cli.token_revoked`, `cli.scan_started`, `cli.pipeline_failed`).
-  - **✓ Next.js CI/CD Workspace**: Dashboard `/integrations/ci-cd`, `CLIIntegrationCard`, `TokenManagementPanel`, `PipelineExampleViewer`, and `ScanGateConfiguration`.
-
+- **OWASP Top 10 (2021) Security Validation Suite (Phase 10.1)**: Automated security assertion framework (`app/application/owasp_validation/`) providing verified capabilities:
+  - **✓ In-Memory Verification Engine**: `OWASPValidationRunnerService` evaluating active tenant findings and security controls against all 10 OWASP Top 10 (2021) categories (A01 - A10) with zero database table changes.
+  - **✓ Ephemeral Audit Correlation**: Generates runtime `suite_id` UUIDs for audit log tracking (`validation.owasp_suite_started`, `validation.owasp_suite_completed`) matching Era 8 zero-duplication compliance patterns.
+  - **✓ Explainable Failure Diagnostics**: Every category result returns diagnostic `failure_reason`, target `affected_subsystem` (e.g. `SecretEncryptionService`, `SSRFValidator`, `RBACPolicy`), and actionable `remediation_guidance`.
+  - **✓ Deep SSRF Firewall Validation**: Direct integration with `is_safe_target_url` verifying private IP range blocking (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.1`, AWS IMDS `169.254.169.254`) and DNS rebinding prevention.
+  - **✓ REST Validation Router & RBAC**: `/api/v1/validation/owasp-top-10` endpoints backed by `validation:read` (VIEWER+) and `validation:execute` (SECURITY_ANALYST+) permissions.
+  - **✓ Next.js OWASP Validation Workspace**: Dashboard `/validation/owasp`, `OWASPPassRateCard`, `OWASPCategoryGrid`, `OWASPValidationRunButton`, `OWASPTestDetailsModal`, and sidebar navigation integration.
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).

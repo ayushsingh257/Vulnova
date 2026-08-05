@@ -851,6 +851,14 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `cli.scan_completed`: Records `scan_id`, `gate_passed` (`true`), `exit_code` (`0`), finding counts.
   - `cli.pipeline_failed`: Records `scan_id`, `gate_passed` (`false`), `exit_code` (`1`), `failed_conditions`.
 
+### 8.11 OWASP Top 10 (2021) Security Validation Schema Strategy (Era 10 Phase 10.1)
+- **Zero Database Table Duplication**: Matches Era 8 compliance architecture: introduces **zero new database tables** (no `owasp_validation_runs`, `validation_results`, `security_audit_reports` tables) and **zero schema migrations**.
+- **In-Memory Verification Engine**: Evaluates category assertions (A01 - A10) dynamically against authoritative `security_findings`, `evidence_artifacts`, `assessment_jobs`, `api_keys`, and `AuditLogService`.
+- **Ephemeral Audit Correlation Token (`suite_id`)**: Every validation execution generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log details for cross-system SIEM correlation.
+- **Immutable Validation Audit Trail**:
+  - `validation.owasp_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
+  - `validation.owasp_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
+
 
 ---
 

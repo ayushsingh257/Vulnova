@@ -1446,6 +1446,26 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `cli:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning List of `CLIProjectDTO`.
 
+---
+
+### Section L: OWASP Top 10 (2021) Security Validation Endpoints (Phase 10.1)
+
+#### `POST /api/v1/validation/owasp-top-10/run` (Phase 10.1)
+- **Summary**: Trigger an automated in-memory OWASP Top 10 (2021) security assertion suite scan. Dispatches audit events (`validation.owasp_suite_started`, `validation.owasp_suite_completed`).
+- **RBAC Guard**: `validation:execute` (`Role.SECURITY_ANALYST`+).
+- **Response**: `200 OK` returning `OWASPValidationSuiteResponse` (`suite_id`, `overall_status`, `overall_pass_rate`, `category_results`).
+
+#### `GET /api/v1/validation/owasp-top-10/results` (Phase 10.1)
+- **Summary**: Fetch full category assertion evaluation metrics and results for tenant organization.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `OWASPValidationSuiteResponse`.
+
+#### `GET /api/v1/validation/owasp-top-10/summary` (Phase 10.1)
+- **Summary**: Fetch high-level OWASP verification health summary metrics.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `OWASPVerificationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
+
+
 
 ---
 

@@ -143,6 +143,10 @@ PERMISSION_MAP: Dict[str, Role] = {
     "cli:read": Role.VIEWER,
     "cli:trigger": Role.SECURITY_ANALYST,
     "cli:manage": Role.ADMIN,
+    # ── OWASP Security Validation (Phase 10.1) ──
+    "validation:read": Role.VIEWER,
+    "validation:execute": Role.SECURITY_ANALYST,
+    "validation:manage": Role.ADMIN,
     # ── Audit Logs ──
     "audit_logs:read": Role.ADMIN,
 }

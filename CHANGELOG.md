@@ -20,6 +20,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
+- **Era 10 Phase 10.1 (OWASP Top 10 (2021) Security Validation Suite)**:
+  - Created automated in-memory OWASP Top 10 (2021) Security Validation Engine (`app/application/owasp_validation/`) evaluating tenant application posture and active platform security controls against all 10 OWASP Top 10 (2021) categories (A01 Broken Access Control through A10 SSRF) with zero database table changes.
+  - Implemented `OWASPValidationRunnerService` running 10 category verification algorithms (A01 - A10), evaluating findings, secret encryption (`SecretEncryptionService`), parameterized ORM queries, Security Headers, JWT validation, evidence artifact checksums, audit logging, and SSRF validator rules (`is_safe_target_url` private IP blocking).
+  - Designed ephemeral audit tracking token (`suite_id`) generating runtime `uuid4()` UUIDs recorded in audit log events (`validation.owasp_suite_started`, `validation.owasp_suite_completed`) for cross-system SIEM correlation.
+  - Provided explainable failure diagnostics returning `failure_reason`, target `affected_subsystem` (e.g. `SecretEncryptionService`, `SSRFValidator`, `RBACPolicy`), and actionable `remediation_guidance` for every category result.
+  - Implemented REST API OWASP Validation router (`app/api/v1/routers/owasp_validation.py`) under `/api/v1/validation/owasp-top-10`:
+    - `POST /api/v1/validation/owasp-top-10/run`: Trigger OWASP validation suite scan (`validation:execute`).
+    - `GET /api/v1/validation/owasp-top-10/results`: Fetch validation suite results (`validation:read`).
+    - `GET /api/v1/validation/owasp-top-10/summary`: Fetch health summary (`validation:read`).
+  - Created Next.js OWASP Validation Workspace (`frontend/`): Dashboard `/validation/owasp`, `OWASPValidationService`, `OWASPPassRateCard` (pass rate gauge & health status badge), `OWASPCategoryGrid` (interactive category cards A01 - A10), `OWASPValidationRunButton` (automated suite trigger button), `OWASPTestDetailsModal` (slide-in detail modal with diagnostic failure reason, affected subsystem, and remediation steps), and sidebar integration under "Compliance Frameworks".
+
 - **Era 9 Phase 9.3 (CI/CD Pipeline Scanning CLI Tool)**:
   - Created independent distributable Python CLI tool (`cli/vulnova_cli.py` & `cli/pyproject.toml`) supporting `vulnova auth login`, `vulnova project register`, `vulnova scan start`, `vulnova scan status`, `vulnova findings summary`, `vulnova gate check`, and `vulnova report export`. Zero DB/frontend dependencies, `--json` machine-readable mode, `--quiet` CI runner mode.
   - Created official CI/CD pipeline integration templates: `.github/workflows/vulnova-security-scan.yml` (GitHub Actions), `templates/ci-cd/.gitlab-ci.yml` (GitLab CI), and `templates/ci-cd/Jenkinsfile` (Jenkins).

@@ -1148,3 +1148,49 @@ Vulnova provides an independent distributable Python CLI tool (`vulnova-cli`) an
    - `0`: Security scan & build gate PASSED cleanly.
    - `1`: Security gate FAILED (vulnerabilities exceeded configured thresholds).
    - `2`: Network, authentication, or CLI execution error.
+
+---
+
+## 21. OWASP Top 10 (2021) Security Validation Suite Architecture (Phase 10.1)
+
+Vulnova provides an automated, in-memory Security Validation Engine (`OWASPValidationRunnerService`) that continuously evaluates tenant application posture and active platform security controls against all 10 OWASP Top 10 (2021) categories (A01 Broken Access Control through A10 SSRF).
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 Next.js 14 OWASP Validation Workspace                       │
+│      (/validation/owasp, OWASPPassRateCard, OWASPCategoryGrid, Modal)      │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (Bearer JWT / X-API-Key)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│               FastAPI OWASP Validation Router (/api/v1/validation/*)        │
+│       (validation:read, validation:execute RBAC Guards & Audit Log Hook)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       OWASPValidationRunnerService                          │
+│     (Executes Category Assertion Checks A01 - A10 against Tenant Posture)   │
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│  AssessmentService   │    │FrameworkMapper (OWASP│    │   AuditLogService    │
+│(Findings & Evidence) │    │   Top 10 2021 Rules) │    │(validation.completed)│
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication**:
+   - Matches Era 8 compliance architecture: introduces zero new database tables, zero schema migrations, and zero archival storage overhead.
+   - Operates in memory: `Run -> Evaluate Category Assertions -> Log Audit Event -> Return Response`.
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Each validation run generates a unique runtime `uuid4()` string (`suite_id`) recorded in audit log events (`validation.owasp_suite_started`, `validation.owasp_suite_completed`) for correlation across SIEM systems.
+3. **Explainable Failure Diagnostics**:
+   - Every category result returns explicit diagnostics: `failure_reason`, target `affected_subsystem` (e.g. `SecretEncryptionService`, `SSRFValidator`, `RBACPolicy`), and actionable `remediation_guidance`.
+4. **Deep SSRF Firewall Validation**:
+   - Direct integration with `is_safe_target_url` verifying private IP range blocking (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.1`, AWS IMDS `169.254.169.254`) and DNS rebinding protections.
+5. **Tenant Isolation & Granular RBAC**:
+   - All validation runs enforce `organization_id = current_user.organization_id`.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+

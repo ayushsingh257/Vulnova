@@ -613,6 +613,14 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Build Security Gate Evaluation**: Evaluates build security gate thresholds (`max_critical`, `max_high`, `max_medium`) returning standard CI exit codes (`0` = Pass, `1` = Gate Failure, `2` = Error).
     - **REST API Router (`/api/v1/cli`) & Granular RBAC**: REST endpoints backed by `cli:read` (`Role.VIEWER` level 10+), `cli:trigger` (`Role.SECURITY_ANALYST` level 20+), and `cli:manage` (`Role.ADMIN` level 30+). Dispatches audit events (`cli.token_created`, `cli.token_revoked`, `cli.scan_started`, `cli.scan_completed`, `cli.pipeline_failed`) via `AuditLogService`.
     - **Next.js CI/CD Workspace**: Dashboard `/integrations/ci-cd`, `CLIService`, `CLIIntegrationCard`, `TokenManagementPanel`, `PipelineExampleViewer`, and `ScanGateConfiguration`.
+39. **OWASP Top 10 (2021) Security Validation Suite Architecture (Phase 10.1)**: Automated in-memory security validation framework verifying tenant application posture and active platform security controls against all 10 OWASP Top 10 (2021) categories (A01 - A10):
+    - **Zero Database Table Duplication & In-Memory Execution**: Operates with **zero new database tables** and **zero schema migrations**. `OWASPValidationRunnerService` evaluates category assertions dynamically against authoritative PostgreSQL repositories (`security_findings`, `evidence_artifacts`, `assessment_jobs`, `api_keys`, `AuditLogService`).
+    - **Ephemeral Audit Correlation (`suite_id`)**: Generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log events (`validation.owasp_suite_started`, `validation.owasp_suite_completed`) for cross-system SIEM correlation matching Era 8 compliance design patterns.
+    - **Explainable Failure Diagnostics**: Every category result returns explicit diagnostic feedback: `failure_reason`, target `affected_subsystem` (e.g. `SecretEncryptionService`, `SSRFValidator`, `RBACPolicy`), and actionable `remediation_guidance`.
+    - **Deep SSRF Egress Firewall Verification**: Direct integration with `is_safe_target_url` verifying private IP range blocking (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.1`, AWS IMDS `169.254.169.254`) and DNS rebinding protections.
+    - **REST API Router (`/api/v1/validation/owasp-top-10`) & Granular RBAC**: REST endpoints backed by `validation:read` (`Role.VIEWER` level 10+) and `validation:execute` (`Role.SECURITY_ANALYST` level 20+): `POST /run`, `GET /results`, `GET /summary`.
+    - **Next.js OWASP Validation Workspace**: Dashboard `/validation/owasp`, `OWASPValidationService`, `OWASPPassRateCard` (pass rate gauge & health status badge), `OWASPCategoryGrid` (interactive grid for A01 - A10), `OWASPValidationRunButton` (automated suite trigger button), `OWASPTestDetailsModal` (slide-in detail view), and sidebar navigation integration.
+
 
 
 

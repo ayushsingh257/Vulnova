@@ -630,5 +630,24 @@ Phase 9.3 introduces security controls for CI/CD pipeline automation and CLI exe
 5. **Immutable Audit Trail**:
    - Records audit log events (`cli.token_created`, `cli.token_revoked`, `cli.scan_started`, `cli.scan_completed`, `cli.pipeline_failed`).
 
+---
+
+## 🛡️ 25. Security Control Verification & OWASP Validation Controls (Phase 10.1)
+
+Phase 10.1 introduces automated security controls verifying platform and tenant posture against the **OWASP Top 10 (2021)** standard:
+
+1. **Zero Database Table Duplication**:
+   - In-memory validation engine operating without document archival tables or schema migrations (`Run -> Evaluate Category Assertions -> Record Audit Log -> Return DTO`).
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Each validation execution generates a runtime `uuid4()` token string (`suite_id`) recorded in security audit events (`validation.owasp_suite_started`, `validation.owasp_suite_completed`) for cross-system SIEM event correlation.
+3. **Explainable Failure Diagnostics & Subsystem Mapping**:
+   - Every category result returns diagnostic `failure_reason`, target `affected_subsystem` (e.g. `SecretEncryptionService`, `SSRFValidator`, `RBACPolicy`), and actionable `remediation_guidance`.
+4. **Deep SSRF Egress Firewall Verification**:
+   - Direct integration with `is_safe_target_url` verifying private IP range blocking (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.1`, AWS IMDS `169.254.169.254`) and DNS rebinding protections.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
