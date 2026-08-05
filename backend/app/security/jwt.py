@@ -53,17 +53,7 @@ def create_access_token(
 
 
 def decode_access_token(token: str) -> Dict[str, Any]:
-    """Decode and validate a JWT access token.
-
-    Args:
-        token: Encoded JWT access token string.
-
-    Returns:
-        Decoded claims dictionary if valid.
-
-    Raises:
-        UnauthorizedException: If token is expired or invalid.
-    """
+    """Decode and validate a JWT access token."""
     try:
         payload: Dict[str, Any] = jwt.decode(
             token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
@@ -74,16 +64,43 @@ def decode_access_token(token: str) -> Dict[str, Any]:
     except jwt.ExpiredSignatureError as err:
         raise UnauthorizedException("Access token has expired") from err
     except jwt.PyJWTError as err:
-        raise UnauthorizedException(f"Invalid access token: {str(err)}") from err
+        raise UnauthorizedException("Invalid access token") from err
+
+
+def create_mfa_login_token(
+    user_id: UUID,
+    organization_id: UUID,
+    expires_delta: Optional[timedelta] = None,
+) -> str:
+    """Create a short-lived signed JWT MFA challenge token (valid for 5 minutes)."""
+    now = datetime.now(timezone.utc)
+    expire = now + (expires_delta or timedelta(minutes=5))
+    payload: Dict[str, Any] = {
+        "sub": str(user_id),
+        "user_id": str(user_id),
+        "organization_id": str(organization_id),
+        "token_type": "mfa_challenge",
+        "iat": int(now.timestamp()),
+        "exp": int(expire.timestamp()),
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def decode_mfa_login_token(token: str) -> Dict[str, Any]:
+    """Decode and validate a short-lived MFA challenge token."""
+    try:
+        payload: Dict[str, Any] = jwt.decode(
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        )
+        if payload.get("token_type") != "mfa_challenge":
+            raise UnauthorizedException("Invalid MFA challenge token type")
+        return payload
+    except jwt.ExpiredSignatureError as err:
+        raise UnauthorizedException("MFA challenge token has expired") from err
+    except jwt.PyJWTError as err:
+        raise UnauthorizedException("Invalid MFA challenge token") from err
 
 
 def hash_token(token_str: str) -> str:
-    """Hash a token string (e.g. refresh token) using SHA-256 for secure database storage.
-
-    Args:
-        token_str: The raw token string.
-
-    Returns:
-        SHA-256 hex digest string.
-    """
+    """Generate SHA-256 hex digest of a token string."""
     return hashlib.sha256(token_str.encode("utf-8")).hexdigest()

@@ -159,6 +159,13 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ Comprehensive Control Plane Assertion Matrix**: Evaluates OWASP Web/API engines, infrastructure header hardening, pentest exploit readiness, SCA supply chain lockfile cryptographic pins, container unprivileged execution & capability drops, secret scanning entropy, STRIDE threat mitigations, regression guards, RBAC hierarchy, and enterprise compliance readiness score.
   - **✓ REST Validation Router & RBAC**: `/api/v1/validation/certification` endpoints backed by `validation:read` (VIEWER+) and `validation:execute` (SECURITY_ANALYST+) permissions.
   - **✓ Next.js Security Certification Workspace**: Dashboard `/validation/certification`, `CertificationScoreCard`, `CertificationCategoryGrid`, `CertificationValidationRunButton`, `CertificationDetailsModal`, and sidebar navigation integration.
+- **Multi-Factor Authentication (MFA / TOTP) System (Phase 10.11)**: Enterprise 2FA authentication engine (`app/application/mfa/`) providing verified capabilities:
+  - **✓ RFC 6238 TOTP Engine**: `TOTPService` (`pyotp`) generating standard Base32 secrets, `otpauth://` provisioning URIs, and Base64 PNG QR code rendering (`qrcode`) compatible with Google Authenticator, Microsoft Authenticator, Authy, and 1Password.
+  - **✓ AES-256-GCM Secret Encryption**: Encrypts stored TOTP secrets using `CryptoService` AES-256-GCM envelope encryption before persistence in `users.mfa_secret`. Plaintext secrets are never stored.
+  - **✓ SHA-256 Hashed Backup Recovery Codes**: Generates 10 single-use emergency backup recovery codes ('A1B2-C3D4-E5') hashed with SHA-256 before storage in `users.mfa_backup_codes`.
+  - **✓ Two-Stage Authentication Flow**: Primary password authentication returns an ephemeral signed JWT `mfa_login_token` (5 min expiration) when MFA is enabled, requiring secondary OTP verification via `POST /api/v1/auth/mfa/challenge` before session tokens are issued.
+  - **✓ REST MFA Router**: `/api/v1/auth/mfa` endpoints (`/setup`, `/verify-setup`, `/disable`, `/challenge`, `/recovery-codes/regenerate`, `/status`).
+  - **✓ Next.js MFA Workspace**: Workspace `/security/mfa`, `MFAService`, `QRCodeDisplay`, `OTPVerificationForm`, `RecoveryCodesModal`, `MFAStatusCard`, `MFASetupWizard`, and sidebar navigation integration under Settings.
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).
@@ -416,6 +423,7 @@ python -m pytest -v
   - ✅ Phase 10.8 — Threat Model Review & STRIDE Verification Suite
   - ✅ Phase 10.9 — Automated Security Regression Testing Framework
   - ✅ Phase 10.10 — Security Control Plane Final Certification & Compliance Suite
+  - ✅ Phase 10.11 — Multi-Factor Authentication (MFA / TOTP) System
 - 🟡 **Era 11**: Enterprise Scale, Performance Tuning & Reliability *(PLANNED / NEXT)*
 - ⏳ **Era 12**: Final Security Audit, Production Deployment & Release
 

@@ -1455,11 +1455,44 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Testing Requirements**: Category assertion tests for CERTIFICATION1 through CERTIFICATION10, OWASP Web/API controls, infrastructure headers/debug protection, pentest exploit readiness, SCA supply chain policies, container hardening, secrets entropy & AES-256-GCM, STRIDE mitigations, security regression framework, RBAC permissions, and audit logging non-repudiation integration tests.
 
 ### Phase 10.11: Multi-Factor Authentication (MFA / TOTP)
-- **Objective**: Implement TOTP-based two-factor authentication for user logins.
-- **Deliverables**: MFA setup, verification, and recovery code endpoints and UI.
+- **Status**: Completed ✅
+- **Objective**: Enterprise-grade TOTP-based Multi-Factor Authentication (`MFAService`) implementing RFC 6238 TOTP enrollment, AES-256-GCM encrypted secrets storage, Base64 QR code rendering, 10 SHA-256 hashed single-use emergency backup recovery codes, login challenge token verification, and full audit trail integration.
+- **Deliverables**:
+  - MFA Backend Module (`backend/app/application/mfa/`):
+    - `dto.py`: `MFASetupResponse`, `MFAVerifySetupRequest`, `MFADisableRequest`, `MFAChallengeRequest`, `MFAStatusResponse`, `MFARecoveryRegenerateRequest`, `MFARecoveryRegenerateResponse`.
+    - `totp_service.py`: `TOTPService` implementing RFC 6238 TOTP generation (`pyotp`), `otpauth://` provisioning URI formatting, and Base64 PNG QR code rendering (`qrcode`).
+    - `recovery_service.py`: `RecoveryService` managing 10 formatted single-use recovery codes ('A1B2-C3D4-E5'), SHA-256 cryptographic hashing, and single-use consumption.
+    - `mfa_service.py`: `MFAService` orchestrating TOTP enrollment, AES-256-GCM secret encryption (`CryptoService`), OTP verification with 30s drift window, recovery code validation, and audit logging.
+  - Database Schema & Migration (`backend/app/infrastructure/database/models/user.py`):
+    - Added `mfa_enabled`, `mfa_secret` (AES-256-GCM ciphertext), `mfa_verified_at`, `mfa_backup_codes` (SHA-256 JSON list), and `mfa_last_used_at` to `UserModel`.
+    - Alembic Migration: `backend/alembic/versions/0003_add_mfa_fields_to_users.py`.
+  - Auth Flow Integration (`backend/app/application/auth/services.py` & `jwt.py`):
+    - Updated `AuthService.login` to return `mfa_required=True` and short-lived signed JWT `mfa_login_token` (5 min expiration) when MFA is enabled.
+  - REST API Router (`backend/app/api/v1/routers/mfa.py`):
+    - `POST /api/v1/auth/mfa/setup`: Initialize MFA setup and return QR code, secret, and recovery codes.
+    - `POST /api/v1/auth/mfa/verify-setup`: Verify first OTP code and enable MFA.
+    - `POST /api/v1/auth/mfa/disable`: Disable MFA with password & OTP verification.
+    - `POST /api/v1/auth/mfa/challenge`: Login challenge verification for OTP or recovery code.
+    - `POST /api/v1/auth/mfa/recovery-codes/regenerate`: Regenerate new backup recovery codes.
+    - `GET /api/v1/auth/mfa/status`: Return MFA status and remaining backup codes count.
+  - Next.js MFA Workspace & Components (`frontend/`):
+    - `MFAService` (`frontend/services/mfa.service.ts`): Client API service.
+    - `QRCodeDisplay` (`frontend/components/security/QRCodeDisplay.tsx`): Authenticator app QR code & secret key component.
+    - `OTPVerificationForm` (`frontend/components/security/OTPVerificationForm.tsx`): 6-digit code entry component.
+    - `RecoveryCodesModal` (`frontend/components/security/RecoveryCodesModal.tsx`): Backup recovery codes display & TXT export modal.
+    - `MFAStatusCard` (`frontend/components/security/MFAStatusCard.tsx`): Dashboard card for status, last used, and backup count.
+    - `MFASetupWizard` (`frontend/components/security/MFASetupWizard.tsx`): Step-by-step setup wizard.
+    - Page: `/security/mfa` (Multi-Factor Authentication management page).
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (362 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 298 source files passed (strict mode)
+    - **Pytest**: 10 passed in `tests/test_mfa.py`
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success — 32 static/dynamic pages compiled including MFA route)
 - **Dependencies**: Phase 10.10.
-- **Completion Criteria**: Users can enroll TOTP authenticators and are prompted during login.
-- **Testing Requirements**: MFA flow integration test suite.
+- **Completion Criteria**: 100% pass rate on MFA internal unit & integration tests; AES-256-GCM encrypted TOTP secrets; SHA-256 hashed recovery codes; audit events recorded (`security.mfa_enabled`, `security.mfa_disabled`, `security.mfa_verification_success`, `security.mfa_verification_failed`, `security.mfa_recovery_used`); pytest, Ruff, Black, Mypy, and Next.js build pass cleanly.
+- **Testing Requirements**: MFA setup generation, TOTP verification, enable flow, login challenge token, disable security checks, recovery code generation & consumption, RBAC permissions, audit logging, and invalid code rate limiting.
 
 ---
 

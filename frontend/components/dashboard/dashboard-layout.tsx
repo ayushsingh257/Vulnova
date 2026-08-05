@@ -227,7 +227,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </a>
           </div>
 
-          <div className="mt-auto pt-6 border-t border-zinc-800/80">
+          <div className="mt-auto pt-6 border-t border-zinc-800/80 space-y-1">
+            <a
+              href="/security/mfa"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <KeyRound className="h-4 w-4 text-amber-400" />
+              <span>Multi-Factor Authentication</span>
+            </a>
             <a
               href="/settings"
               className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"

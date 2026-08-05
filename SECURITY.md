@@ -810,6 +810,24 @@ Phase 10.10 introduces the final Security Control Plane certification framework 
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 🛡️ 35. Multi-Factor Authentication Controls (Phase 10.11)
+
+Phase 10.11 introduces enterprise Multi-Factor Authentication (MFA / TOTP) controls:
+
+1. **RFC 6238 TOTP Standard & Authenticator Compatibility**:
+   - Implements time-based one-time passcodes supported by Google Authenticator, Microsoft Authenticator, Authy, and 1Password with a 30s drift window.
+2. **AES-256-GCM Envelope Secret Encryption**:
+   - Encrypts TOTP secrets using `CryptoService` AES-256-GCM before database storage (`users.mfa_secret`). Plaintext keys are never stored.
+3. **SHA-256 Hashed Single-Use Recovery Codes**:
+   - Generates 10 single-use emergency backup recovery codes ('A1B2-C3D4-E5') hashed with SHA-256 before storage. Consumed codes are permanently deleted.
+4. **Two-Stage Authentication Challenge Tokens**:
+   - Primary password verification issues a short-lived signed JWT `mfa_login_token` (5 min expiration) restricting access until secondary OTP verification.
+5. **Non-Repudiation Audit Event Tracking**:
+   - Dispatches audit events (`security.mfa_enabled`, `security.mfa_disabled`, `security.mfa_verification_success`, `security.mfa_verification_failed`, `security.mfa_recovery_used`).
+
+
 
 
 

@@ -1599,6 +1599,50 @@ Vulnova provides a comprehensive security control plane final certification engi
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 31. Multi-Factor Authentication Architecture (Phase 10.11)
+
+Vulnova provides an enterprise Multi-Factor Authentication (MFA / TOTP) engine (`MFAService`) implementing RFC 6238 time-based one-time passcodes, AES-256-GCM encrypted TOTP secrets storage, Base64 QR code rendering, and single-use emergency backup recovery codes.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│             Next.js 14 MFA Workspace & Components                           │
+│        (/security/mfa, QRCodeDisplay, OTPVerificationForm, StatusCard)      │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (/api/v1/auth/mfa/*)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│          FastAPI MFA Router & Authentication Pipeline                       │
+│    (Login Password Check -> MFA Challenge Token -> OTP Verification)        │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           MFAService                                        │
+│ (TOTPService pyotp / CryptoService AES-256-GCM / RecoveryService SHA-256)   │
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│ UserModel (DB)       │    │ JWT Challenge Tokens │    │   AuditLogService    │
+│(mfa_enabled, secret) │    │(mfa_login_token)     │    │(mfa_enabled/success) │
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **AES-256-GCM Secret Encryption**:
+   - Stored TOTP secrets are encrypted using `CryptoService` AES-256-GCM envelope encryption before persistence in `users.mfa_secret`. Plaintext secrets are never stored.
+2. **Cryptographic SHA-256 Recovery Codes**:
+   - Single-use recovery codes ('A1B2-C3D4-E5') are hashed using SHA-256 before JSON storage in `users.mfa_backup_codes`. Once consumed, codes are permanently removed.
+3. **Two-Stage Authentication Challenge**:
+   - When MFA is enabled, primary password verification returns an ephemeral signed JWT `mfa_login_token` (5 min expiration) requiring secondary OTP verification via `POST /api/v1/auth/mfa/challenge`.
+4. **Time Drift Tolerance & Rate Limiting**:
+   - RFC 6238 TOTP verification includes a 30s drift window. Failed attempts trigger `security.mfa_verification_failed` audit logs.
+5. **Complete Security Audit Trail**:
+   - All MFA lifecycle actions emit non-repudiable audit logs (`security.mfa_enabled`, `security.mfa_disabled`, `security.mfa_verification_success`, `security.mfa_verification_failed`, `security.mfa_recovery_used`).
+
+
 
 
 

@@ -43,8 +43,24 @@ class UserModel(Base):
         String(50), default="SECURITY_ANALYST", nullable=False
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    mfa_secret: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    mfa_secret: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    mfa_verified_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    mfa_backup_codes: Mapped[Optional[str]] = mapped_column(String(4096), nullable=True)
+    mfa_last_used_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    @property
+    def is_mfa_enabled(self) -> bool:
+        return self.mfa_enabled
+
+    @is_mfa_enabled.setter
+    def is_mfa_enabled(self, value: bool) -> None:
+        self.mfa_enabled = value
+
     last_login_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

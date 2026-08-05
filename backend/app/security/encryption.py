@@ -60,3 +60,23 @@ class SecretEncryptionService:
         except Exception as e:
             logger.error("secret_decryption.failed", error=str(e))
             raise SecurityException("Failed to decrypt secret.") from e
+
+
+class CryptoService:
+    """Static wrapper service providing AES-256-GCM / Fernet secret encryption & decryption."""
+
+    _instance: Optional[SecretEncryptionService] = None
+
+    @classmethod
+    def _get_service(cls) -> SecretEncryptionService:
+        if cls._instance is None:
+            cls._instance = SecretEncryptionService()
+        return cls._instance
+
+    @classmethod
+    def encrypt(cls, plain_text: str) -> str:
+        return cls._get_service().encrypt_secret(plain_text)
+
+    @classmethod
+    def decrypt(cls, cipher_text: str) -> str:
+        return cls._get_service().decrypt_secret(cipher_text)

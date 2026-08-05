@@ -674,6 +674,13 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Comprehensive Control Plane Assertion Matrix**: Evaluates OWASP Web/API engines, infrastructure header hardening, pentest exploit readiness, SCA supply chain lockfile cryptographic pins, container unprivileged execution & capability drops, secret scanning entropy, STRIDE threat mitigations, regression guards, RBAC hierarchy, and enterprise compliance readiness score.
     - **REST API Router (`/api/v1/validation/certification`) & Granular RBAC**: REST endpoints backed by `validation:read` (`Role.VIEWER` level 10+) and `validation:execute` (`Role.SECURITY_ANALYST` level 20+): `POST /run`, `GET /results`, `GET /summary`.
     - **Next.js Security Certification Workspace**: Dashboard `/validation/certification`, `CertificationValidationService`, `CertificationScoreCard`, `CertificationCategoryGrid`, `CertificationValidationRunButton`, `CertificationDetailsModal`, and sidebar navigation integration.
+49. **Multi-Factor Authentication (MFA / TOTP) System Architecture (Phase 10.11)**: Enterprise TOTP two-factor authentication system (`MFAService`) supporting RFC 6238 time-based passcodes, Base64 QR code rendering, AES-256-GCM secret encryption, SHA-256 hashed single-use recovery codes, two-stage login challenge verification, and audit trail logging:
+    - **RFC 6238 TOTP Engine**: `TOTPService` (`pyotp`) generating standard Base32 secrets, `otpauth://` provisioning URIs, and Base64 PNG QR code rendering (`qrcode`) compatible with Google Authenticator, Microsoft Authenticator, Authy, and 1Password.
+    - **AES-256-GCM Encrypted Storage & SHA-256 Recovery Codes**: Stored TOTP secrets are encrypted using `CryptoService` AES-256-GCM envelope encryption before persistence in `users.mfa_secret`. Emergency recovery codes ('A1B2-C3D4-E5') are hashed using SHA-256 before storage in `users.mfa_backup_codes`.
+    - **Two-Stage Authentication Flow**: Primary password authentication returns an ephemeral signed JWT `mfa_login_token` (5 min expiration) when MFA is enabled, requiring secondary OTP verification via `POST /api/v1/auth/mfa/challenge` before session tokens are issued.
+    - **REST API Router (`/api/v1/auth/mfa`)**: `POST /setup`, `POST /verify-setup`, `POST /disable`, `POST /challenge`, `POST /recovery-codes/regenerate`, `GET /status`.
+    - **Next.js MFA Workspace**: Workspace `/security/mfa`, `MFAService`, `QRCodeDisplay`, `OTPVerificationForm`, `RecoveryCodesModal`, `MFAStatusCard`, `MFASetupWizard`, and sidebar navigation integration under Settings.
+
 
 
 

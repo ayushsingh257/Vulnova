@@ -17,6 +17,7 @@ from app.api.v1.routers import (
     discovery,
     infrastructure_validation,
     integrations,
+    mfa,
     notifications,
     organizations,
     owasp_validation,
@@ -42,6 +43,7 @@ from app.api.v1.routers import (
 api_v1_router = APIRouter()
 api_v1_router.include_router(status.router)
 api_v1_router.include_router(auth.router)
+api_v1_router.include_router(mfa.router)
 api_v1_router.include_router(admin.router)
 api_v1_router.include_router(api_keys.router)
 

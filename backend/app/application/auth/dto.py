@@ -53,4 +53,6 @@ class TokenResponse(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
-    user: UserResponse
+    user: Optional[UserResponse] = None
+    mfa_required: bool = False
+    mfa_login_token: Optional[str] = None

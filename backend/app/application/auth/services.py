@@ -28,7 +28,7 @@ from app.infrastructure.database.repositories.refresh_token_repository import (
     RefreshTokenRepository,
 )
 from app.infrastructure.database.repositories.user_repository import UserRepository
-from app.security.jwt import create_access_token, hash_token
+from app.security.jwt import create_access_token, create_mfa_login_token, hash_token
 from app.security.password import hash_password, verify_password
 
 logger = get_logger("vulnova.auth")
@@ -145,6 +145,22 @@ class AuthService:
                 details={"email": email, "reason": "user_inactive"},
             )
             raise UnauthorizedException("User account is inactive.")
+
+        if user.mfa_enabled:
+            mfa_login_token = create_mfa_login_token(
+                user_id=user.id,
+                organization_id=user.organization_id,
+            )
+            return (
+                TokenResponse(
+                    access_token="",
+                    token_type="bearer",
+                    user=None,
+                    mfa_required=True,
+                    mfa_login_token=mfa_login_token,
+                ),
+                "",
+            )
 
         # Issue Access Token
         access_token = create_access_token(

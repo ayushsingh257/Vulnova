@@ -20,6 +20,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
+- **Era 10 Phase 10.11 (Multi-Factor Authentication - MFA / TOTP)**:
+  - Implemented complete TOTP-based Multi-Factor Authentication module (`app/application/mfa/`):
+    - `dto.py`: DTO definitions for setup, verification, disable, challenge, status, and recovery code regeneration.
+    - `totp_service.py`: `TOTPService` (`pyotp`) generating standard Base32 secrets, `otpauth://` provisioning URIs, and Base64 PNG QR codes (`qrcode`).
+    - `recovery_service.py`: `RecoveryService` managing 10 formatted single-use emergency backup recovery codes ('A1B2-C3D4-E5'), SHA-256 cryptographic hashing, and single-use consumption.
+    - `mfa_service.py`: `MFAService` orchestrating TOTP enrollment, AES-256-GCM secret encryption (`CryptoService`), OTP verification with 30s drift window, recovery code validation, and audit logging.
+  - Database Schema & Migration (`backend/app/infrastructure/database/models/user.py`):
+    - Added `mfa_enabled`, `mfa_secret` (AES-256-GCM ciphertext), `mfa_verified_at`, `mfa_backup_codes` (SHA-256 JSON list), and `mfa_last_used_at` to `UserModel`.
+    - Created Alembic Migration: `backend/alembic/versions/0003_add_mfa_fields_to_users.py`.
+  - Auth Flow Integration (`app/application/auth/services.py` & `app/security/jwt.py`):
+    - Updated `AuthService.login` to issue short-lived signed JWT `mfa_login_token` (5 min expiration) when MFA is enabled, requiring secondary OTP verification before issuing session tokens.
+  - Implemented REST API MFA Router (`app/api/v1/routers/mfa.py`) under `/api/v1/auth/mfa`:
+    - `POST /api/v1/auth/mfa/setup`: Initialize MFA setup and return QR code, secret, and recovery codes.
+    - `POST /api/v1/auth/mfa/verify-setup`: Verify first OTP code and enable MFA.
+    - `POST /api/v1/auth/mfa/disable`: Disable MFA with password & OTP verification.
+    - `POST /api/v1/auth/mfa/challenge`: Login challenge verification for OTP or recovery code.
+    - `POST /api/v1/auth/mfa/recovery-codes/regenerate`: Regenerate new backup recovery codes.
+    - `GET /api/v1/auth/mfa/status`: Fetch MFA status and remaining backup codes count.
+  - Next.js MFA Workspace & Components (`frontend/`):
+    - Created Workspace `/security/mfa`, `MFAService`, `QRCodeDisplay`, `OTPVerificationForm`, `RecoveryCodesModal`, `MFAStatusCard`, `MFASetupWizard`, and sidebar integration under Settings.
+
 - **Era 10 Phase 10.10 (Security Control Plane Final Certification & Compliance Readiness Suite)**:
   - Created automated in-memory Security Control Plane Certification Engine (`app/application/certification_validation/`) evaluating all 10 Security Control Plane categories: CERTIFICATION1 (OWASP Web & API Top 10 Security Control Plane Certification), CERTIFICATION2 (Infrastructure & Configuration Certification), CERTIFICATION3 (Penetration Testing Readiness Certification), CERTIFICATION4 (Dependency & SCA Supply Chain Certification), CERTIFICATION5 (Container Security Certification), CERTIFICATION6 (Secrets & Cryptographic Certification), CERTIFICATION7 (Threat Model & STRIDE Certification), CERTIFICATION8 (Security Regression Certification), CERTIFICATION9 (Governance & Access Control Certification), and CERTIFICATION10 (Enterprise Compliance Readiness Certification) with zero database table changes.
   - Implemented `CertificationValidationRunnerService` running 10 category verification algorithms (CERTIFICATION1 - CERTIFICATION10), checking OWASP Web/API engines, infrastructure header hardening, pentest exploit readiness, SCA supply chain lockfile cryptographic pins, container unprivileged execution & capability drops, secret scanning entropy, STRIDE threat mitigations, regression guards, RBAC hierarchy, and enterprise compliance readiness score.

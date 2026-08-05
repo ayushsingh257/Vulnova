@@ -1636,6 +1636,44 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning `CertificationValidationSummaryDTO` (`overall_certification_score`, `overall_status`, `passed_categories`, `failed_categories`).
 
+---
+
+### Section V: Multi-Factor Authentication (MFA / TOTP) Endpoints (Phase 10.11)
+
+#### `POST /api/v1/auth/mfa/setup` (Phase 10.11)
+- **Summary**: Initialize MFA setup for authenticated user.
+- **Auth**: Bearer JWT.
+- **Response**: `200 OK` returning `MFASetupResponse` (`secret`, `provisioning_uri`, `qr_code_base64`, `recovery_codes`).
+
+#### `POST /api/v1/auth/mfa/verify-setup` (Phase 10.11)
+- **Summary**: Verify first 6-digit OTP code to confirm authenticator app binding and enable MFA.
+- **Auth**: Bearer JWT.
+- **Payload**: `MFAVerifySetupRequest` (`code`).
+- **Response**: `200 OK` returning `{"status": "enabled", "message": "..."}`.
+
+#### `POST /api/v1/auth/mfa/disable` (Phase 10.11)
+- **Summary**: Disable MFA on account. Requires current password and valid OTP.
+- **Auth**: Bearer JWT.
+- **Payload**: `MFADisableRequest` (`current_password`, `code`).
+- **Response**: `200 OK` returning `{"status": "disabled", "message": "..."}`.
+
+#### `POST /api/v1/auth/mfa/challenge` (Phase 10.11)
+- **Summary**: Verify OTP or single-use recovery code during login challenge, issuing session access and refresh tokens.
+- **Payload**: `MFAChallengeRequest` (`mfa_login_token`, `code`).
+- **Response**: `200 OK` returning `TokenResponse` (`access_token`, `user`, `mfa_required=False`).
+
+#### `POST /api/v1/auth/mfa/recovery-codes/regenerate` (Phase 10.11)
+- **Summary**: Regenerate 10 new single-use emergency backup recovery codes.
+- **Auth**: Bearer JWT.
+- **Payload**: `MFARecoveryRegenerateRequest` (`current_password`, `code`).
+- **Response**: `200 OK` returning `MFARecoveryRegenerateResponse` (`recovery_codes`).
+
+#### `GET /api/v1/auth/mfa/status` (Phase 10.11)
+- **Summary**: Get current MFA configuration status, last verified timestamp, and backup codes count.
+- **Auth**: Bearer JWT.
+- **Response**: `200 OK` returning `MFAStatusResponse`.
+
+
 
 
 

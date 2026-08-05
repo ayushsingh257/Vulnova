@@ -921,8 +921,6 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
 - **Ephemeral Audit Correlation Token (`suite_id`)**: Each validation run generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log details.
 - **Immutable Security Regression Audit Trail**:
   - `validation.regression_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
-  - `validation.regression_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
-
 ### 8.20 Security Control Plane Final Certification Validation Schema Strategy (Era 10 Phase 10.10)
 - **Zero Database Table Duplication**: Introduces **zero new database tables** and **zero schema migrations**. Evaluates security control plane certification assertions dynamically against existing `security_findings`, `api_keys`, `users`, and `audit_logs`.
 - **In-Memory Certification Assertion Engine**: `CertificationValidationRunnerService` evaluates CERTIFICATION1 through CERTIFICATION10 assertions dynamically in memory.
@@ -930,6 +928,22 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
 - **Immutable Security Certification Audit Trail**:
   - `validation.certification_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
   - `validation.certification_suite_completed`: Records `suite_id`, `overall_certification_score`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
+
+### 8.21 Multi-Factor Authentication (MFA / TOTP) Schema & Security Storage Strategy (Era 10 Phase 10.11)
+- **User Schema Hardening**:
+  - `mfa_enabled`: `Boolean` default `False` indicating active TOTP enforcement.
+  - `mfa_secret`: Encrypted string (`String(512)`) storing AES-256-GCM encrypted Base32 TOTP secret key.
+  - `mfa_verified_at`: `DateTime(timezone=True)` timestamp of initial OTP setup verification.
+  - `mfa_backup_codes`: Encrypted string (`String(4096)`) storing JSON array of SHA-256 hashed single-use recovery codes.
+  - `mfa_last_used_at`: `DateTime(timezone=True)` timestamp of last successful OTP / recovery code verification.
+- **Zero Plaintext Storage Guarantee**: Plaintext TOTP secret keys and recovery codes are NEVER stored in database tables.
+- **Alembic Migration**: `0003_add_mfa_fields_to_users.py`.
+- **Immutable MFA Security Audit Trail**:
+  - `security.mfa_enabled`: Records `user_id`, `organization_id`, timestamp.
+  - `security.mfa_disabled`: Records `user_id`, `organization_id`, timestamp.
+  - `security.mfa_verification_success`: Records `user_id`, `method` (`totp` | `recovery_code`), timestamp.
+  - `security.mfa_verification_failed`: Records `user_id`, failure reason, timestamp.
+  - `security.mfa_recovery_used`: Records `user_id`, remaining codes count, timestamp.
 
 
 ---
