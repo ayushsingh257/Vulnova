@@ -1,7 +1,6 @@
 """Administrative Aggregator Application Service for Enterprise Control Plane."""
 
 from datetime import datetime, timezone
-from typing import List, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
