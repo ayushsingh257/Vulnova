@@ -495,3 +495,20 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
    - Raw integration API keys (`vn_live_...`) are generated cryptographically and returned ONCE in creation response DTO. Only `key_prefix` and SHA-256 `key_hash` are persisted in database storage.
 5. **Comprehensive Administrative Audit Events**:
    - All administrative mutations dispatches audit events (`organization.updated`, `user.invited`, `user.role_updated`, `user.deactivated`, `api_key.created`, `api_key.revoked`) recording `actor_user_id`, `organization_id`, `resource_id`, `timestamp`, and detailed metadata.
+
+---
+
+## 📊 19. Executive Security Reporting RBAC & PDF Export Controls (Phase 8.1)
+
+1. **Strict Multi-Tenant Query Boundaries**:
+   - All `/api/v1/reports/*` endpoints enforce `organization_id = current_user.organization_id` database query filters. Cross-tenant report generation or PDF export requests return 403 Forbidden / 404 Not Found.
+2. **Canonical Permission Enforcement**:
+   - `reports:create` required for `POST /api/v1/reports/executive` (`Role.ADMIN` level 30+).
+   - `reports:read` required for `GET /api/v1/reports/{id}` and `GET /api/v1/reports/{id}/html` (`Role.VIEWER` level 10+).
+   - `reports:export` required for `GET /api/v1/reports/{id}/pdf` (`Role.SECURITY_ANALYST` level 20+).
+3. **Graceful PDF Fallback & Sandbox Defense**:
+   - PDF compilation via `PDFGeneratorService` isolates HTML rendering inside WeasyPrint with graceful fallback to a compliant binary PDF/1.4 wrapper if system C-libraries are unavailable.
+   - Live HTML previews in Next.js UI render inside sandboxed `<iframe>` elements (`sandbox="allow-same-origin"`) to prevent script execution risks.
+4. **Audit Trail Non-Repudiation**:
+   - Report generation and PDF downloads dispatch immutable audit events (`report.generated`, `report.downloaded`) capturing `actor_user_id`, `organization_id`, `resource_id` (report ID), `timestamp`, `format`, and byte size.
+

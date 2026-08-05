@@ -971,12 +971,29 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 
 ## 📊 Era 8: Reporting, Executive Metrics & Export System
 
-### Phase 8.1: PDF & HTML Executive Security Report Generator
-- **Objective**: Build template engine generating downloadable CISO executive reports, risk summaries, and posture dashboards.
-- **Deliverables**: `backend/app/services/reporting/pdf_generator.py` using Jinja2 & WeasyPrint.
+### ✅ Phase 8.1: PDF & HTML Executive Security Report Generator
+- **Status**: Completed ✅
+- **Objective**: Enterprise-grade CISO executive security report generation engine supporting Jinja2 HTML rendering, print-ready CSS formatting, WeasyPrint PDF binary stream generation with graceful fallback, multi-service metrics aggregation, canonical RBAC permissions (`reports:create`, `reports:read`, `reports:export`), audit event tracking (`report.generated`, `report.downloaded`), and Next.js 14 CISO reporting workspace.
+- **Deliverables**:
+  - Application Reporting Engine (`app/application/reporting/`):
+    - `dto.py`: Report request/metadata/payload DTOs (`CreateExecutiveReportRequest`, `ExecutiveReportMetadataResponse`, `ExecutiveReportDataPayload`, `TopVulnerabilityReportDTO`).
+    - `html_renderer.py`: `HTMLRendererService` rendering executive HTML report template (`templates/executive_report.html`) and A4 print-ready stylesheet (`templates/style.css`).
+    - `pdf_generator.py`: `PDFGeneratorService` rendering HTML to PDF via WeasyPrint with graceful fallback to compliant binary PDF/1.4 container wrapper.
+    - `report_service.py`: `ExecutiveSecurityReportService` aggregating posture scores, time-series risk trends, attack surface coverage, vulnerability severity breakdowns, top findings, and threat advisories with audit logging.
+  - FastAPI REST Router (`app/api/v1/routers/reports.py`): `POST /api/v1/reports/executive` (`reports:create`), `GET /api/v1/reports/{id}` (`reports:read`), `GET /api/v1/reports/{id}/html` (`reports:read`), `GET /api/v1/reports/{id}/pdf` (`reports:export`).
+  - Frontend Service & Next.js CISO Workspace (`frontend/services/reports.service.ts`, `frontend/app/(dashboard)/reports/`): `page.tsx` (reports dashboard grid, time-range controls, generation modal trigger) and `[id]/page.tsx` (detail viewer with metrics summary and embedded HTML preview iframe).
+  - Reusable UI Components (`frontend/components/reports/`): `SecurityMetricsSummary`, `ExecutiveReportCard`, `ReportGenerationModal`, `ReportPreview`, `ReportDownloadActions`.
+  - Comprehensive Test Suite (`tests/test_executive_reporting.py`): 4 unit and integration test cases with 100% pass rate.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (219 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 219 source files passed (strict mode)
+    - **Pytest**: 4 passed in `test_executive_reporting.py` (400+ total tests)
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success — 15 static pages compiled including 2 reporting routes)
 - **Dependencies**: Era 7.
-- **Completion Criteria**: Generates polished PDF executive reports with charts, summary metrics, and top risks.
-- **Testing Requirements**: PDF layout and content generation test.
+- **Completion Criteria**: CISO executive report generation engine, HTML live preview, PDF binary download, REST endpoints, audit logging, and Next.js workspace operational; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
+- **Testing Requirements**: Service payload generation tests, HTML rendering tests, PDF binary compilation tests, REST API endpoint integration tests, Next.js build & type-check verification.
 
 ### Phase 8.2: Developer Technical Remediation Export (Markdown / CSV / JSON)
 - **Objective**: Export raw findings, evidence dumps, and AI remediation patches in machine-readable formats.

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ data.metadata.title }}</title>
+    <style>
+        {{ css_styles|safe }}
+    </style>
+</head>
+<body>
+
+    <!-- Cover Header -->
+    <div class="report-header">
+        <h1 class="brand-title">VULNOVA <span class="brand-badge">ENTERPRISE</span></h1>
+        <h2 class="report-subtitle">{{ data.metadata.title }}</h2>
+        <div class="meta-grid">
+            <div class="meta-row">
+                <div class="meta-cell"><span class="meta-label">Organization:</span> {{ data.metadata.organization_id }}</div>
+                <div class="meta-cell"><span class="meta-label">Generated:</span> {{ data.metadata.generated_at }}</div>
+                <div class="meta-cell"><span class="meta-label">Analysis Window:</span> {{ data.historical_trends.timeframe_days }} Days</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Executive Scorecard Banner -->
+    <div class="score-banner">
+        <div class="score-col-left">
+            <div class="big-score">{{ "%.1f"|format(data.metadata.posture_score) }}</div>
+            <div style="font-size: 8pt; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Composite Risk Score</div>
+            <div>
+                {% if data.metadata.posture_status == 'SECURE' %}
+                    <span class="score-status-tag status-secure">SECURE</span>
+                {% elif data.metadata.posture_status == 'ELEVATED_RISK' %}
+                    <span class="score-status-tag status-elevated">ELEVATED RISK</span>
+                {% else %}
+                    <span class="score-status-tag status-critical">CRITICAL RISK</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="score-col-right">
+            <h3 style="margin-top: 0; font-size: 11pt; color: #f8fafc;">Executive Risk Posture Overview</h3>
+            <p style="font-size: 9pt; color: #cbd5e1; margin-bottom: 0;">
+                Platform posture calculation incorporates vulnerability severity breakdown, EPSS exploitability probability, asset criticality multipliers, and risk velocity trajectory over the past {{ data.historical_trends.timeframe_days }} days.
+            </p>
+        </div>
+    </div>
+
+    <!-- Key Executive Metrics -->
+    <div class="section-title">1. Executive Security Metrics Summary</div>
+    <div class="metric-cards-grid">
+        <div class="metric-card-cell">
+            <div class="metric-val" style="color: #dc2626;">{{ data.metadata.critical_findings }}</div>
+            <div class="metric-lbl">Critical Findings</div>
+        </div>
+        <div class="metric-card-cell">
+            <div class="metric-val" style="color: #ea580c;">{{ data.metadata.high_findings }}</div>
+            <div class="metric-lbl">High Findings</div>
+        </div>
+        <div class="metric-card-cell">
+            <div class="metric-val" style="color: #0284c7;">{{ data.metadata.total_findings }}</div>
+            <div class="metric-lbl">Total Open Findings</div>
+        </div>
+        <div class="metric-card-cell">
+            <div class="metric-val" style="color: #059669;">{{ "%.1f"|format(data.historical_trends.mean_time_to_remediate_hours) }}h</div>
+            <div class="metric-lbl">MTTR (Hours)</div>
+        </div>
+    </div>
+
+    <!-- Historical Trajectory & Velocity -->
+    <div class="section-title">2. Historical Risk Trajectory & Attack Surface Coverage</div>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Metric Category</th>
+                <th>Current Status</th>
+                <th>Trajectory / Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Risk Velocity Trajectory</strong></td>
+                <td>{{ data.historical_trends.risk_velocity }}</td>
+                <td>Evaluated over {{ data.historical_trends.timeframe_days }} days of active scan assessments</td>
+            </tr>
+            <tr>
+                <td><strong>Attack Surface Coverage</strong></td>
+                <td>{{ "%.1f"|format(data.attack_surface_coverage.coverage_percentage) }}% Verified</td>
+                <td>{{ data.attack_surface_coverage.covered_assets_count }} of {{ data.attack_surface_coverage.total_assets_count }} assets actively assessed</td>
+            </tr>
+            <tr>
+                <td><strong>Environment Breakdown</strong></td>
+                <td>{{ data.attack_surface_coverage.environment_breakdown|length }} Environments</td>
+                <td>Production, Staging, and Development targets mapped</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Top Vulnerabilities Section -->
+    <div class="section-title">3. Priority Vulnerability Intelligence Overview</div>
+    <p style="font-size: 9pt; color: #64748b; margin-bottom: 8px;">
+        Top priority security findings requiring immediate engineering triage and remediation patch application.
+    </p>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Severity</th>
+                <th>Vulnerability Title</th>
+                <th>CVE / CWE</th>
+                <th>CVSS Score</th>
+                <th>Target Asset</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if data.top_findings %}
+                {% for item in data.top_findings %}
+                <tr>
+                    <td>
+                        {% if item.severity == 'CRITICAL' %}
+                            <span class="badge badge-critical">CRITICAL</span>
+                        {% elif item.severity == 'HIGH' %}
+                            <span class="badge badge-high">HIGH</span>
+                        {% elif item.severity == 'MEDIUM' %}
+                            <span class="badge badge-medium">MEDIUM</span>
+                        {% else %}
+                            <span class="badge badge-low">{{ item.severity }}</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ item.title }}</strong></td>
+                    <td>{{ item.cve_id or item.cwe_id or 'N/A' }}</td>
+                    <td><strong>{{ "%.1f"|format(item.cvss_score) }}</strong></td>
+                    <td>{{ item.target_name or 'Enterprise Asset' }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #64748b;">No high or critical open findings detected in scope.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- Threat Advisories & SLA Section -->
+    <div class="section-title">4. Executive Threat Advisories & SLA Compliance</div>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Advisory Code</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Details / Recommendations</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if data.threat_advisories %}
+                {% for adv in data.threat_advisories %}
+                <tr>
+                    <td><code>{{ adv.id }}</code></td>
+                    <td><strong>{{ adv.title }}</strong></td>
+                    <td>
+                        {% if adv.severity == 'CRITICAL' %}
+                            <span class="badge badge-critical">CRITICAL</span>
+                        {% elif adv.severity == 'HIGH' %}
+                            <span class="badge badge-high">HIGH</span>
+                        {% else %}
+                            <span class="badge badge-medium">{{ adv.severity }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ adv.recommendation }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #64748b;">No active threat advisories or SLA breaches.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- Appendix & Governance -->
+    <div class="appendix-box">
+        <strong>Report Audit Governance & Data Lineage:</strong><br>
+        Report ID: <code>{{ data.metadata.id }}</code> | Organization ID: <code>{{ data.metadata.organization_id }}</code><br>
+        Data Sources: {{ data.data_sources|join(', ') }} | Generated At: {{ data.metadata.generated_at }} (UTC)<br>
+        <em>This executive security posture report was produced automatically by Vulnova Enterprise Security Operations Platform. Confidential.</em>
+    </div>
+
+</body>
+</html>

@@ -664,3 +664,48 @@ Phase 7.6 introduces the centralized administrative control plane workspace (`/s
 3. **Raw API Key Show-Once Governance**: Machine-to-machine API keys created via `POST /api/v1/admin/api-keys` return raw secret token (`vn_live_...`) ONCE in response DTO. Only `key_prefix` and SHA-256 `key_hash` are stored in database.
 4. **Detailed API Key Audit Logging**: Audit log events for `api_key.created` and `api_key.revoked` record `actor_user_id`, `organization_id`, `resource_id` (api_key_id), `timestamp`, `action`, and scope metadata.
 5. **Canonical Permission Consistency**: Endpoints enforce permissions (`organization:read`, `organization:update`, `users:read`, `users:invite`, `users:update_role`, `users:remove`, `api_keys:read`, `api_keys:create`, `api_keys:revoke`) matching `PERMISSION_MAP` across backend, `SECURITY.md`, and `API_SPEC.md`.
+
+---
+
+## 📊 15. PDF & HTML Executive Security Report Generator Architecture (Phase 8.1)
+
+Phase 8.1 introduces the enterprise executive security report generation engine capable of assembling CISO-level security posture reports, time-series risk velocity analytics, vulnerability breakdowns, and rendering HTML and PDF document exports:
+
+```text
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                   Next.js 14 CISO Executive Reporting Workspace              │
+  │                          (/reports, /reports/[id])                          │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                  ReportsService Frontend API Abstraction                    │
+  │                     (frontend/services/reports.service.ts)                  │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │ REST API (/api/v1/reports/*)
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                     FastAPI Executive Reporting REST Router                 │
+  │                     (app/api/v1/routers/reports.py)                         │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                   ExecutiveSecurityReportService Aggregator                 │
+  │                 (app/application/reporting/report_service.py)               │
+  └──────┬────────────────────┬────────────────────┬────────────────────┬───────┘
+         │                    │                    │                    │
+         ▼                    ▼                    ▼                    ▼
+  ┌──────────────┐    ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+  │  Dashboard   │    │  Executive   │     │HTMLRenderer  │     │ PDFGenerator │
+  │  Analytics   │    │  Analytics   │     │ Service      │     │ Service      │
+  │  Service     │    │  Service     │     │ (Jinja2)     │     │ (WeasyPrint) │
+  └──────────────┘    └──────────────┘     └──────────────┘     └──────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Dual Template & Rendering Engine**: `HTMLRendererService` uses Jinja2 `FileSystemLoader` with `templates/executive_report.html` and print-ready A4 stylesheet (`templates/style.css`). `PDFGeneratorService` converts HTML to PDF binary streams via WeasyPrint with graceful fallback to a compliant binary PDF/1.4 wrapper if system libraries (`libgobject`, `libcairo`) are missing.
+2. **Zero Database Table Duplication**: Aggregates posture metrics, time-series risk trends, attack surface environment coverage, vulnerability severity breakdowns, top findings, and threat advisories from existing `DashboardAnalyticsService`, `ExecutiveAnalyticsService`, and `ThreatAdvisoryService`. Zero new database tables created for report generation.
+3. **Tenant Boundary Isolation & Audit Trail Non-Repudiation**: Enforces strict tenant boundary isolation (`organization_id = current_user.organization_id`). Every report payload generation and PDF download records immutable security audit events (`report.generated`, `report.downloaded`) via `AuditLogService`.
+4. **Canonical RBAC Permissions**: Endpoint handlers enforce canonical permissions (`reports:create`, `reports:read`, `reports:export`) matching `PERMISSION_MAP`.
+

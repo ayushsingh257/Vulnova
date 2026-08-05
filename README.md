@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
 [![Security: OWASP ASVS](https://img.shields.io/badge/Security-OWASP_ASVS_v4.0-crimson.svg)](SECURITY.md)
 [![Architecture: Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20DDD-black.svg)](ARCHITECTURE.md)
-[![Status: Era 7 Complete](https://img.shields.io/badge/Status-Era%207%20Complete-green.svg)](ROADMAP.md)
+[![Status: Era 8 Phase 8.1 Complete](https://img.shields.io/badge/Status-Era%208%20Phase%208.1%20Complete-green.svg)](ROADMAP.md)
 
 [![Build Status](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](.github/workflows/ci.yml)
 
@@ -99,6 +99,12 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ RBAC Visualization**: Interactive role-permission boundary matrix comparing OWNER, ADMIN, SECURITY_ANALYST, and VIEWER roles against resource permissions (`settings/roles/page.tsx`, `RolePermissionMatrix`).
   - **✓ API Key Governance**: Machine-to-machine integration API key generation with raw secret key show-once dialog, active key scope tags, and instant revocation (`settings/api-keys/page.tsx`, `APIKeyManagementPanel`).
   - **✓ Security Posture & MFA Overview**: Authentication security policy overview, session policy tracking, and MFA enrollment state visibility card (`settings/security/page.tsx`, `SecuritySettingsCard`).
+- **PDF & HTML Executive Security Report Generator (Phase 8.1)**: CISO-level executive security report generation engine (`app/application/reporting/`) providing verified capabilities:
+  - **✓ Executive Report Payload Aggregation**: Aggregates posture metrics, time-series risk trends, attack surface coverage, vulnerability severity breakdowns, top findings, and threat advisories via `ExecutiveSecurityReportService`.
+  - **✓ Jinja2 HTML Live Preview**: `HTMLRendererService` rendering executive HTML reports with print-ready A4 CSS (`templates/style.css`, `templates/executive_report.html`) inside sandboxed iframe containers (`frontend/components/reports/ReportPreview.tsx`).
+  - **✓ WeasyPrint PDF Generation & Fallback**: `PDFGeneratorService` compiling PDF binary streams with graceful fallback to compliant binary PDF/1.4 container wrapper if system libraries are missing.
+  - **✓ Audit Event Non-Repudiation**: Dispatches audit log events (`report.generated`, `report.downloaded`) capturing report ID, user ID, organization ID, format, and payload size.
+  - **✓ Next.js 14 CISO Reporting Workspace**: CISO reporting dashboard (`/reports`), report detail view (`/reports/[id]`), report generation modal (`ReportGenerationModal`), security metrics summary cards (`SecurityMetricsSummary`), and PDF export buttons (`ReportDownloadActions`).
 
 
 ---

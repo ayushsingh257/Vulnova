@@ -120,6 +120,7 @@ PERMISSION_MAP: Dict[str, Role] = {
     # ── Reports ──
     "reports:read": Role.VIEWER,
     "reports:generate": Role.SECURITY_ANALYST,
+    "reports:create": Role.ADMIN,
     "reports:export": Role.SECURITY_ANALYST,
     # ── API Keys ──
     "api_keys:read": Role.ADMIN,

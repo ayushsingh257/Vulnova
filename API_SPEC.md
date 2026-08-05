@@ -1245,6 +1245,35 @@ All API errors return a standardized JSON error format:
 - **Summary**: Retrieve security configuration overview and MFA enrollment tracking visibility.
 - **RBAC Guard**: `organization:read` (`Role.ADMIN`+).
 
+---
+
+### Section G: Executive Security Reports & Export REST Endpoints (Phase 8.1)
+
+#### `POST /api/v1/reports/executive`
+- **Summary**: Assembles complete CISO executive security posture report payload including risk scores, historical risk velocity, attack surface coverage, vulnerability severity breakdown, top findings, and threat advisories. Records audit event (`report.generated`).
+- **RBAC Guard**: `reports:create` (`Role.ADMIN`+).
+- **Request Body**:
+  ```json
+  {
+    "title": "Q3 Enterprise Security Posture Report",
+    "timeframe_days": 30,
+    "include_sections": ["summary", "posture", "vulnerabilities", "attack_surface", "advisories"]
+  }
+  ```
+
+#### `GET /api/v1/reports/{id}`
+- **Summary**: Retrieve metadata description, posture score, total finding counts, and supported export formats for a generated report instance.
+- **RBAC Guard**: `reports:read` (`Role.VIEWER`+).
+
+#### `GET /api/v1/reports/{id}/html`
+- **Summary**: Render styled HTML document string using Jinja2 templates and print-ready CSS for interactive browser preview.
+- **RBAC Guard**: `reports:read` (`Role.VIEWER`+).
+
+#### `GET /api/v1/reports/{id}/pdf`
+- **Summary**: Generates and streams binary PDF document file (`application/pdf`) generated via WeasyPrint with graceful fallback. Records audit event (`report.downloaded`).
+- **RBAC Guard**: `reports:export` (`Role.SECURITY_ANALYST`+).
+
+
 
 ---
 

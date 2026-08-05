@@ -11,6 +11,7 @@ from app.api.v1.routers import (
     dashboard,
     discovery,
     organizations,
+    reports,
     scan_schedules,
     scan_stream,
     scan_targets,
@@ -49,3 +50,4 @@ api_v1_router.include_router(
 api_v1_router.include_router(dashboard.router)
 api_v1_router.include_router(trust.router)
 api_v1_router.include_router(workers.router, prefix="/workers", tags=["Workers"])
+api_v1_router.include_router(reports.router)

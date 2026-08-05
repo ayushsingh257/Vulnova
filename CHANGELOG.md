@@ -20,6 +20,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 8 Phase 8.1 (PDF & HTML Executive Security Report Generator)**:
+  - Created CISO executive report generation application module (`app/application/reporting/`):
+    - `dto.py`: Report request/metadata/payload DTOs (`CreateExecutiveReportRequest`, `ExecutiveReportMetadataResponse`, `ExecutiveReportDataPayload`, `TopVulnerabilityReportDTO`).
+    - `html_renderer.py`: `HTMLRendererService` using Jinja2 `FileSystemLoader` with executive report HTML template (`templates/executive_report.html`) and A4 print-ready CSS (`templates/style.css`).
+    - `pdf_generator.py`: `PDFGeneratorService` converting rendered HTML to PDF binary streams via WeasyPrint with graceful fallback to compliant PDF/1.4 binary container if native system libraries (`libgobject`, `libcairo`) are missing.
+    - `report_service.py`: `ExecutiveSecurityReportService` aggregating posture metrics, time-series risk trends, attack surface coverage, vulnerability severity breakdowns, top findings, and threat advisories with audit logging (`report.generated`, `report.downloaded`).
+  - Implemented REST API router (`app/api/v1/routers/reports.py`) under `/api/v1/reports` with canonical permissions (`reports:create`, `reports:read`, `reports:export`):
+    - `POST /api/v1/reports/executive`: Generate complete executive posture report payload.
+    - `GET /api/v1/reports/{id}`: Retrieve report metadata description and available formats.
+    - `GET /api/v1/reports/{id}/html`: Render styled HTML document for interactive browser preview.
+    - `GET /api/v1/reports/{id}/pdf`: Generate and stream binary PDF document.
+  - Implemented frontend API service abstraction `ReportsService` (`frontend/services/reports.service.ts`).
+  - Created Next.js 14 CISO reporting workspace routes (`frontend/app/(dashboard)/reports/`):
+    - `page.tsx`: Executive reports dashboard grid, time-range controls, and generation modal trigger.
+    - `[id]/page.tsx`: Report detail viewer with metrics summary and embedded HTML live preview iframe.
+  - Created 5 reusable React reporting components (`frontend/components/reports/`):
+    - `SecurityMetricsSummary.tsx`: Top-level CISO summary cards (posture score, critical findings, open findings count, MTTR trajectory).
+    - `ExecutiveReportCard.tsx`: Report card displaying title, status, score, finding counts, view link, and PDF download button.
+    - `ReportGenerationModal.tsx`: Modal form for configuring report title and timeframe analysis window (7, 30, 90, 365 days).
+    - `ReportPreview.tsx`: Live preview container rendering styled report HTML inside a sandboxed iframe.
+    - `ReportDownloadActions.tsx`: Action button bar for PDF download and raw data export.
+  - Created backend pytest unit and integration test suite (`tests/test_executive_reporting.py`) with 100% pass rate across service payload generation, HTML rendering, PDF compilation, and REST API endpoints.
 - **Era 7 Phase 7.6 (User, Organization & Role Management UI)**:
   - Created administrative aggregator service `AdminService` (`app/application/admin/admin_service.py`) aggregating organization profile settings, team user management workflows, role-permission matrix visualization data, machine-to-machine API key governance, and security overview metrics with 100% database table and repository reuse across Era 2 models.
   - Built administrative REST API router (`app/api/v1/routers/admin.py`) registered under `/api/v1/admin/` with tenant isolation (`organization_id`) and permissions (`organization:read`, `organization:update`, `users:read`, `users:invite`, `users:update_role`, `users:remove`, `api_keys:read`, `api_keys:create`, `api_keys:revoke`):

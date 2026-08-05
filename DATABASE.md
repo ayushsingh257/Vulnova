@@ -791,4 +791,16 @@ Phase 7.6 requires zero new database tables or schema migrations. `AdminService`
 - `api_keys` (`idx_api_keys_org`, `idx_api_keys_hash`, `idx_api_keys_prefix`) for machine-to-machine integration API key listing, generation, and revocation.
 - `audit_logs` (`idx_audit_logs_org_action`, `idx_audit_logs_actor`) for administrative action logging (`organization.updated`, `user.invited`, `user.role_updated`, `user.deactivated`, `api_key.created`, `api_key.revoked`).
 
+---
+
+## 📊 8. Executive Reporting Engine Table Reuse & Audit Event Logging (Phase 8.1)
+
+Phase 8.1 requires zero new database tables or schema migrations. `ExecutiveSecurityReportService` (`app/application/reporting/report_service.py`) reuses existing database tables and models:
+- `security_findings` (`ix_security_findings_org_sev`, `ix_security_findings_org_risk`) for top open finding extraction.
+- `risk_posture_snapshots` (`idx_risk_snapshots_org_date`) for historical risk trajectory points and MTTR analytics.
+- `audit_logs` (`idx_audit_logs_org_action`, `idx_audit_logs_actor`) for non-repudiable audit logging:
+  - `report.generated`: Records report ID, title, analysis window timeframe, posture score, and total open findings count.
+  - `report.downloaded`: Records report ID, download format (`pdf`, `html`, `json`, `csv`), title, and byte size payload.
+
+
 

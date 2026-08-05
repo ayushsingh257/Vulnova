@@ -1,0 +1,241 @@
+/* Executive Security Report CSS Stylesheet (WeasyPrint & Web Print Compatible) */
+
+@page {
+    size: A4 portrait;
+    margin: 20mm 15mm 20mm 15mm;
+    @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 9pt;
+        color: #64748b;
+    }
+    @bottom-left {
+        content: "CONFIDENTIAL — VULNOVA EXECUTIVE REPORT";
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 8pt;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    background-color: #ffffff;
+    line-height: 1.5;
+    font-size: 10pt;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header & Cover Banner */
+.report-header {
+    border-bottom: 3px solid #0284c7;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+.brand-title {
+    font-size: 22pt;
+    font-weight: 800;
+    color: #0369a1;
+    letter-spacing: -0.5px;
+    margin: 0;
+    display: inline-block;
+}
+
+.brand-badge {
+    background-color: #0284c7;
+    color: #ffffff;
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    vertical-align: middle;
+    margin-left: 8px;
+}
+
+.report-subtitle {
+    font-size: 14pt;
+    font-weight: 600;
+    color: #334155;
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+.meta-grid {
+    display: table;
+    width: 100%;
+    margin-top: 15px;
+    font-size: 9pt;
+    color: #475569;
+}
+
+.meta-row {
+    display: table-row;
+}
+
+.meta-cell {
+    display: table-cell;
+    padding-right: 20px;
+    padding-bottom: 4px;
+}
+
+.meta-label {
+    font-weight: 600;
+    color: #64748b;
+}
+
+/* Posture Banner Scorecard */
+.score-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    display: table;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.score-col-left {
+    display: table-cell;
+    vertical-align: middle;
+    width: 35%;
+    border-right: 1px solid #334155;
+    padding-right: 20px;
+}
+
+.score-col-right {
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 20px;
+}
+
+.big-score {
+    font-size: 36pt;
+    font-weight: 900;
+    line-height: 1;
+    color: #38bdf8;
+}
+
+.score-status-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-top: 6px;
+}
+
+.status-secure { background-color: #059669; color: #ffffff; }
+.status-elevated { background-color: #d97706; color: #ffffff; }
+.status-critical { background-color: #dc2626; color: #ffffff; }
+
+/* Section Titles & Cards */
+.section-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #0f172a;
+    border-left: 4px solid #0284c7;
+    padding-left: 10px;
+    margin-top: 25px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-cards-grid {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    margin-bottom: 20px;
+}
+
+.metric-card-cell {
+    display: table-cell;
+    padding: 10px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    text-align: center;
+    width: 25%;
+}
+
+.metric-card-cell + .metric-card-cell {
+    margin-left: 10px;
+}
+
+.metric-val {
+    font-size: 18pt;
+    font-weight: 800;
+    color: #0284c7;
+}
+
+.metric-lbl {
+    font-size: 8pt;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Tables */
+table.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    font-size: 9pt;
+}
+
+table.report-table th {
+    background-color: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 2px solid #cbd5e1;
+    text-transform: uppercase;
+    font-size: 8pt;
+}
+
+table.report-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+}
+
+table.report-table tr:nth-child(even) td {
+    background-color: #f8fafc;
+}
+
+/* Badges */
+.badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 8pt;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.badge-critical { background-color: #fee2e2; color: #991b1b; }
+.badge-high { background-color: #ffedd5; color: #9a3412; }
+.badge-medium { background-color: #fef9c3; color: #854d0e; }
+.badge-low { background-color: #e0f2fe; color: #075985; }
+.badge-info { background-color: #f1f5f9; color: #475569; }
+
+.page-break {
+    page-break-before: always;
+}
+
+.appendix-box {
+    background-color: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 8pt;
+    color: #64748b;
+    margin-top: 20px;
+}
