@@ -227,61 +227,65 @@ def cmd_report_export(args: argparse.Namespace) -> None:
 
 def main() -> None:
     """Main CLI entrypoint parser."""
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument("--json", action="store_true", help="Output machine-readable JSON format")
+    parent_parser.add_argument("--quiet", action="store_true", help="Suppress non-error human output for CI runners")
+
     parser = argparse.ArgumentParser(
         prog="vulnova",
         description="Vulnova Enterprise CI/CD Pipeline Security Scanning CLI",
+        parents=[parent_parser],
     )
-    parser.add_argument("--json", action="store_true", help="Output machine-readable JSON format")
-    parser.add_argument("--quiet", action="store_true", help="Suppress non-error human output for CI runners")
+    parser.add_argument("--version", action="version", version="vulnova-cli 0.1.0")
 
     subparsers = parser.add_subparsers(dest="command", help="CLI Commands")
 
     # Auth commands
-    p_auth = subparsers.add_parser("auth", help="Authentication commands")
+    p_auth = subparsers.add_parser("auth", help="Authentication commands", parents=[parent_parser])
     sub_auth = p_auth.add_subparsers(dest="subcommand")
-    p_login = sub_auth.add_parser("login", help="Authenticate with Vulnova server")
+    p_login = sub_auth.add_parser("login", help="Authenticate with Vulnova server", parents=[parent_parser])
     p_login.add_argument("--token", required=True, help="Vulnova CLI API Token")
     p_login.add_argument("--server", default="http://localhost:8000", help="Vulnova server base URL")
 
     # Project commands
-    p_proj = subparsers.add_parser("project", help="Project management commands")
+    p_proj = subparsers.add_parser("project", help="Project management commands", parents=[parent_parser])
     sub_proj = p_proj.add_subparsers(dest="subcommand")
-    p_reg = sub_proj.add_parser("register", help="Register a project or repository")
+    p_reg = sub_proj.add_parser("register", help="Register a project or repository", parents=[parent_parser])
     p_reg.add_argument("--name", required=True, help="Project name")
     p_reg.add_argument("--repo", default=None, help="Repository URL")
 
     # Scan commands
-    p_scan = subparsers.add_parser("scan", help="Security scan execution commands")
+    p_scan = subparsers.add_parser("scan", help="Security scan execution commands", parents=[parent_parser])
     sub_scan = p_scan.add_subparsers(dest="subcommand")
-    p_start = sub_scan.add_parser("start", help="Initiate security scan from pipeline")
+    p_start = sub_scan.add_parser("start", help="Initiate security scan from pipeline", parents=[parent_parser])
     p_start.add_argument("--target", required=True, help="Target URL or repository path")
     p_start.add_argument("--profile", default="full_assessment", help="Scan profile ID")
     p_start.add_argument("--project", default=None, help="Project name")
     p_start.add_argument("--branch", default=None, help="Git branch name")
     p_start.add_argument("--commit", default=None, help="Git commit SHA")
 
-    p_status = sub_scan.add_parser("status", help="Check scan status")
+    p_status = sub_scan.add_parser("status", help="Check scan status", parents=[parent_parser])
     p_status.add_argument("--id", required=True, help="Scan Job ID")
 
     # Findings commands
-    p_find = subparsers.add_parser("findings", help="Vulnerability findings commands")
+    p_find = subparsers.add_parser("findings", help="Vulnerability findings commands", parents=[parent_parser])
     sub_find = p_find.add_subparsers(dest="subcommand")
-    p_sum = sub_find.add_parser("summary", help="Fetch severity summary for scan")
+    p_sum = sub_find.add_parser("summary", help="Fetch severity summary for scan", parents=[parent_parser])
     p_sum.add_argument("--id", required=True, help="Scan Job ID")
 
     # Gate commands
-    p_gate = subparsers.add_parser("gate", help="CI/CD Build security gate check")
+    p_gate = subparsers.add_parser("gate", help="CI/CD Build security gate check", parents=[parent_parser])
     sub_gate = p_gate.add_subparsers(dest="subcommand")
-    p_check = sub_gate.add_parser("check", help="Evaluate build security gate thresholds")
+    p_check = sub_gate.add_parser("check", help="Evaluate build security gate thresholds", parents=[parent_parser])
     p_check.add_argument("--id", required=True, help="Scan Job ID")
     p_check.add_argument("--max-critical", type=int, default=0, help="Max allowed CRITICAL findings")
     p_check.add_argument("--max-high", type=int, default=2, help="Max allowed HIGH findings")
     p_check.add_argument("--max-medium", type=int, default=10, help="Max allowed MEDIUM findings")
 
     # Report commands
-    p_rep = subparsers.add_parser("report", help="Report export commands")
+    p_rep = subparsers.add_parser("report", help="Report export commands", parents=[parent_parser])
     sub_rep = p_rep.add_subparsers(dest="subcommand")
-    p_exp = sub_rep.add_parser("export", help="Export pipeline security report")
+    p_exp = sub_rep.add_parser("export", help="Export pipeline security report", parents=[parent_parser])
     p_exp.add_argument("--id", required=True, help="Scan Job ID")
     p_exp.add_argument("--format", default="json", help="Report format (json, pdf, markdown)")
 
