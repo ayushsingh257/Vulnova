@@ -666,6 +666,25 @@ Phase 10.2 introduces automated API security controls verifying REST endpoints a
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 🛡️ 27. Infrastructure Security Control Validation (Phase 10.3)
+
+Phase 10.3 introduces automated infrastructure security controls verifying deployment posture, containers, supply chain lockfiles, CI/CD pipelines, database security, logging, RBAC access controls, network SSRF firewalls, cloud metadata, and operational security readiness across all 10 Infrastructure Security categories:
+
+1. **Zero Database Table Duplication**:
+   - In-memory infrastructure assertion engine operating without document archival tables or schema migrations (`Run -> Execute Infrastructure Assertions -> Record Audit Event -> Return DTO`).
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Runtime `uuid4()` token string (`suite_id`) recorded in audit log events (`validation.infrastructure_suite_started`, `validation.infrastructure_suite_completed`).
+3. **Explainable Failure Diagnostics & Component Mapping**:
+   - Every infrastructure category result returns diagnostic `failure_reason`, target `affected_component` (e.g. `Dockerfile & Docker Compose Runtime`, `Dependency Lockfiles`), and actionable `remediation_guidance`.
+4. **Deep Container, Supply Chain & Cloud Control Verification**:
+   - Verifies non-root container execution (`USER appuser`), supply chain lockfiles (`pyproject.toml`, `package-lock.json`), CI/CD pipeline gate enforcement, database connection encryption, `AuditLogService` & alert webhooks (Slack/Teams), and AWS IMDS cloud metadata blocking.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

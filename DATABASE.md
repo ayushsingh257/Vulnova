@@ -867,6 +867,14 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `validation.api_security_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
   - `validation.api_security_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
 
+### 8.13 Infrastructure Security Validation Schema Strategy (Era 10 Phase 10.3)
+- **Zero Database Table Duplication**: Introduces **zero new database tables** and **zero schema migrations**. Evaluates infrastructure security assertions dynamically against existing `security_findings`, `api_keys`, `users`, and `audit_logs`.
+- **In-Memory Infrastructure Assertion Engine**: `InfrastructureSecurityValidationRunnerService` evaluates INFRA1 through INFRA10 assertions dynamically in memory.
+- **Ephemeral Audit Correlation Token (`suite_id`)**: Each validation run generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log details.
+- **Immutable Infrastructure Security Audit Trail**:
+  - `validation.infrastructure_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
+  - `validation.infrastructure_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
+
 
 ---
 

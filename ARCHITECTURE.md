@@ -1239,4 +1239,50 @@ Vulnova provides an automated API security assertion engine (`APISecurityValidat
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 23. Security Configuration & Infrastructure Validation Suite Architecture (Phase 10.3)
+
+Vulnova provides an automated infrastructure security assertion engine (`InfrastructureSecurityValidationRunnerService`) that continuously evaluates tenant deployment posture, container security, supply chain lockfiles, CI/CD pipelines, database security, logging, RBAC access controls, network SSRF firewalls, cloud metadata, and operational security readiness across all 10 Infrastructure Security categories (INFRA1 through INFRA10).
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│               Next.js 14 Infrastructure Security Workspace                   │
+│   (/validation/infrastructure, PassRateCard, CategoryGrid, DetailsModal)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (Bearer JWT / X-API-Key)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│       FastAPI Infrastructure Validation Router (/api/v1/validation/infrastructure/*)
+│      (validation:read, validation:execute RBAC Guards & Audit Log Hooks)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 InfrastructureSecurityValidationRunnerService               │
+│  (Executes Category Checks INFRA1 - INFRA10 against Infrastructure Controls)│
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│  SSRF & Rate Limiter │    │ Vuln Intelligence &  │    │   AuditLogService    │
+│(is_safe_target_url)  │    │   CI/CD Gate Engine  │    │(infra_suite_completed)│
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication**:
+   - Matches Phase 10.1, Phase 10.2 & Era 8 design patterns: zero new database tables, zero schema migrations, and zero archival storage overhead.
+   - Operates in memory: `Run Validation -> Execute Infrastructure Assertions -> Record Audit Event -> Return DTO`.
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Each validation execution generates a runtime `uuid4()` string (`suite_id`) recorded in audit log events (`validation.infrastructure_suite_started`, `validation.infrastructure_suite_completed`).
+3. **Explainable Failure Diagnostics & Component Mapping**:
+   - Every infrastructure category result returns explicit diagnostic feedback: `failure_reason`, target `affected_component` (e.g. `Dockerfile & Docker Compose Runtime`, `Dependency Lockfiles`), and actionable `remediation_guidance`.
+4. **Deep Container, Supply Chain & Cloud Control Verification**:
+   - Verifies non-root container execution (`USER appuser`), supply chain lockfiles (`pyproject.toml`, `package-lock.json`), CI/CD pipeline gate enforcement, database connection encryption, `AuditLogService` & alert webhooks (Slack/Teams), and AWS IMDS cloud metadata blocking.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 

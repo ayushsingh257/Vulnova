@@ -1484,6 +1484,26 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning `APIValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
 
+---
+
+### Section N: Security Configuration & Infrastructure Validation Endpoints (Phase 10.3)
+
+#### `POST /api/v1/validation/infrastructure/run` (Phase 10.3)
+- **Summary**: Trigger an automated in-memory Infrastructure Security assertion suite scan. Dispatches audit events (`validation.infrastructure_suite_started`, `validation.infrastructure_suite_completed`).
+- **RBAC Guard**: `validation:execute` (`Role.SECURITY_ANALYST`+).
+- **Response**: `200 OK` returning `InfrastructureValidationSuiteResponse` (`suite_id`, `overall_status`, `overall_pass_rate`, `category_results`).
+
+#### `GET /api/v1/validation/infrastructure/results` (Phase 10.3)
+- **Summary**: Fetch full infrastructure category assertion evaluation metrics and results for tenant organization.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `InfrastructureValidationSuiteResponse`.
+
+#### `GET /api/v1/validation/infrastructure/summary` (Phase 10.3)
+- **Summary**: Fetch high-level infrastructure security verification health summary metrics.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `InfrastructureValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
+
+
 
 
 

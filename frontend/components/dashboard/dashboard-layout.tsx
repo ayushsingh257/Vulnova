@@ -165,6 +165,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <Server className="h-4 w-4 text-blue-400" />
               <span>API Security Validation</span>
             </a>
+            <a
+              href="/validation/infrastructure"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              <span>Infrastructure Validation</span>
+            </a>
           </div>
 
           <div className="mt-auto pt-6 border-t border-zinc-800/80">

@@ -13,6 +13,7 @@ from app.api.v1.routers import (
     compliance,
     dashboard,
     discovery,
+    infrastructure_validation,
     integrations,
     notifications,
     organizations,
@@ -65,3 +66,4 @@ api_v1_router.include_router(notifications.router)
 api_v1_router.include_router(cli.router)
 api_v1_router.include_router(owasp_validation.router)
 api_v1_router.include_router(api_security_validation.router)
+api_v1_router.include_router(infrastructure_validation.router)
