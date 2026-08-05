@@ -1579,6 +1579,26 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning `SecretsValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
 
+---
+
+### Section S: Threat Model Review & STRIDE Verification Endpoints (Phase 10.8)
+
+#### `POST /api/v1/validation/threat/run` (Phase 10.8)
+- **Summary**: Trigger an automated in-memory Threat Model Review & STRIDE Verification assertion suite scan. Dispatches audit events (`validation.threat_suite_started`, `validation.threat_suite_completed`).
+- **RBAC Guard**: `validation:execute` (`Role.SECURITY_ANALYST`+).
+- **Response**: `200 OK` returning `ThreatValidationSuiteResponse` (`suite_id`, `overall_status`, `overall_pass_rate`, `category_results`).
+
+#### `GET /api/v1/validation/threat/results` (Phase 10.8)
+- **Summary**: Fetch full STRIDE threat model security category assertion evaluation metrics and results for tenant organization.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `ThreatValidationSuiteResponse`.
+
+#### `GET /api/v1/validation/threat/summary` (Phase 10.8)
+- **Summary**: Fetch high-level threat model security verification health summary metrics.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `ThreatValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
+
+
 
 
 

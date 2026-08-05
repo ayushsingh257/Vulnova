@@ -1464,6 +1464,52 @@ Vulnova provides an automated secrets scanning & cryptographic verification engi
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 28. Threat Model Review & STRIDE Verification Suite Architecture (Phase 10.8)
+
+Vulnova provides an automated threat model verification engine (`ThreatValidationRunnerService`) that continuously evaluates all 6 Microsoft STRIDE threat categories: Spoofing (JWT identity validation, API key SHA-256 hashing & `vn_live_` prefixes), Tampering (Pydantic payload schema sanitization, SQL ORM parameterization, webhook HMAC-SHA256 signatures), Repudiation (mandatory `AuditLogService` event tracking), Information Disclosure (multi-tenant `organization_id` boundary isolation, AES-256-GCM field encryption, production stack trace masking, SSRF egress blocking), Denial of Service (Redis-backed `RateLimiter`, Celery worker concurrency limits), and Elevation of Privilege (RBAC role hierarchy `VIEWER` < `ANALYST` < `ADMIN`, IDOR prevention, container sandbox `cap_drop: [ALL]` & `USER appuser`) across all 10 STRIDE categories (STRIDE1 through STRIDE10).
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│          Next.js 14 Threat Model & STRIDE Security Workspace                │
+│       (/validation/threat, PassRateCard, CategoryGrid, DetailsModal)        │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (Bearer JWT / X-API-Key)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│          FastAPI Threat Router (/api/v1/validation/threat/*)                │
+│      (validation:read, validation:execute RBAC Guards & Audit Log Hooks)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 ThreatValidationRunnerService                               │
+│  (Executes STRIDE Matrix Assertions STRIDE1 - STRIDE10 against Platform)     │
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│ Platform Auth & RBAC │    │ Crypto & Egress Guard│    │   AuditLogService    │
+│ (Tenant Isolation)   │    │(AES-256-GCM / SSRF)  │    │  (threat_completed)  │
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication**:
+   - Matches Phase 10.1 through 10.7 & Era 8 design patterns: zero new database tables, zero schema migrations, and zero archival storage overhead.
+   - Operates in memory: `Run Threat Validation -> Execute STRIDE Assertions -> Record Audit Event -> Return DTO`.
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Each validation execution generates a runtime `uuid4()` string (`suite_id`) recorded in audit log events (`validation.threat_suite_started`, `validation.threat_suite_completed`).
+3. **Explainable Failure Diagnostics & Component Mapping**:
+   - Every STRIDE category result returns explicit diagnostic feedback: `failure_reason`, target `affected_component` (e.g. `User JWT Bearer Authentication & Token Expiration`, `Multi-Tenant Database Queries (organization_id Scope)`), and actionable `remediation_guidance`.
+4. **Deep Architectural STRIDE Verification**:
+   - Verifies identity authentication guards, API key hashing, input sanitization, webhook signatures, audit event tracking, multi-tenant boundaries, field encryption & SSRF egress blocking, Redis rate limiting, RBAC permission hierarchy, and container sandbox capability dropping.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

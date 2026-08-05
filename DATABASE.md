@@ -907,6 +907,14 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `validation.secrets_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
   - `validation.secrets_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
 
+### 8.18 Threat Model Review & STRIDE Validation Schema Strategy (Era 10 Phase 10.8)
+- **Zero Database Table Duplication**: Introduces **zero new database tables** and **zero schema migrations**. Evaluates STRIDE threat model assertions dynamically against existing `security_findings`, `api_keys`, `users`, and `audit_logs`.
+- **In-Memory Threat Assertion Engine**: `ThreatValidationRunnerService` evaluates STRIDE1 through STRIDE10 assertions dynamically in memory.
+- **Ephemeral Audit Correlation Token (`suite_id`)**: Each validation run generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log details.
+- **Immutable Threat Model Security Audit Trail**:
+  - `validation.threat_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
+  - `validation.threat_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
+
 
 ---
 

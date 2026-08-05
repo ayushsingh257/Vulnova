@@ -756,6 +756,25 @@ Phase 10.7 introduces automated secrets and cryptographic security controls veri
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 🛡️ 32. Threat Model Review & STRIDE Verification Controls (Phase 10.8)
+
+Phase 10.8 introduces automated threat model review & STRIDE verification controls evaluating all 6 Microsoft STRIDE threat categories: Spoofing (JWT identity validation, API key SHA-256 hashing & `vn_live_` prefixes), Tampering (Pydantic payload schema sanitization, SQL ORM parameterization, webhook HMAC-SHA256 signatures), Repudiation (mandatory `AuditLogService` event tracking), Information Disclosure (multi-tenant `organization_id` boundary isolation, AES-256-GCM field encryption, production stack trace masking, SSRF egress blocking), Denial of Service (Redis-backed `RateLimiter`, Celery worker concurrency limits), and Elevation of Privilege (RBAC role hierarchy `VIEWER` < `ANALYST` < `ADMIN`, IDOR prevention, container sandbox `cap_drop: [ALL]` & `USER appuser`) across all 10 STRIDE categories:
+
+1. **Zero Database Table Duplication**:
+   - In-memory Threat Model security assertion engine operating without document archival tables or schema migrations (`Run Threat Validation -> Execute STRIDE Assertions -> Record Audit Event -> Return DTO`).
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Runtime `uuid4()` token string (`suite_id`) recorded in audit log events (`validation.threat_suite_started`, `validation.threat_suite_completed`).
+3. **Explainable Failure Diagnostics & Architectural Component Mapping**:
+   - Every STRIDE category result returns diagnostic `failure_reason`, target `affected_component` (e.g. `User JWT Bearer Authentication & Token Expiration`, `Multi-Tenant Database Queries (organization_id Scope)`), and actionable `remediation_guidance`.
+4. **Deep Architectural STRIDE Verification**:
+   - Verifies identity authentication guards, API key hashing, input sanitization, webhook signatures, audit event tracking, multi-tenant boundaries, field encryption & SSRF egress blocking, Redis rate limiting, RBAC permission hierarchy, and container sandbox capability dropping.
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

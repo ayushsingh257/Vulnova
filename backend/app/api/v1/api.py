@@ -28,6 +28,7 @@ from app.api.v1.routers import (
     scan_targets,
     secrets_validation,
     status,
+    threat_validation,
     trends,
     triage,
     trust,
@@ -75,3 +76,4 @@ api_v1_router.include_router(pentest_validation.router)
 api_v1_router.include_router(sca_validation.router)
 api_v1_router.include_router(container_validation.router)
 api_v1_router.include_router(secrets_validation.router)
+api_v1_router.include_router(threat_validation.router)
