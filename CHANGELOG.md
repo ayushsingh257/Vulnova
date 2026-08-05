@@ -20,6 +20,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
+- **Era 9 Phase 9.3 (CI/CD Pipeline Scanning CLI Tool)**:
+  - Created independent distributable Python CLI tool (`cli/vulnova_cli.py` & `cli/pyproject.toml`) supporting `vulnova auth login`, `vulnova project register`, `vulnova scan start`, `vulnova scan status`, `vulnova findings summary`, `vulnova gate check`, and `vulnova report export`. Zero DB/frontend dependencies, `--json` machine-readable mode, `--quiet` CI runner mode.
+  - Created official CI/CD pipeline integration templates: `.github/workflows/vulnova-security-scan.yml` (GitHub Actions), `templates/ci-cd/.gitlab-ci.yml` (GitLab CI), and `templates/ci-cd/Jenkinsfile` (Jenkins).
+  - Implemented `CLIScanningService` managing `vn_cli_` token generation (`APIKeyModel` + `SecretEncryptionService` hashing), scan execution tracking, severity summaries, and build security gate threshold evaluation (`0` = Pass, `1` = Gate Failure, `2` = Error) with audit events (`cli.token_created`, `cli.token_revoked`, `cli.scan_started`, `cli.scan_completed`, `cli.pipeline_failed`).
+  - Implemented REST API CLI router (`backend/app/api/v1/routers/cli.py`) under `/api/v1/cli`:
+    - `POST /api/v1/cli/tokens`: Generate CLI API token (`cli:manage`).
+    - `GET /api/v1/cli/tokens`: List CLI tokens (`cli:read`).
+    - `DELETE /api/v1/cli/tokens/{token_id}`: Revoke CLI token (`cli:manage`).
+    - `POST /api/v1/cli/scans/start`: Trigger scan from pipeline (`cli:trigger`).
+    - `GET /api/v1/cli/scans/{scan_id}/status`: Fetch status (`cli:read`).
+    - `GET /api/v1/cli/findings/summary`: Get severity breakdown (`cli:read`).
+    - `POST /api/v1/cli/gate/evaluate`: Evaluate pipeline security gate (`cli:read`).
+    - `GET /api/v1/cli/projects`: List registered projects (`cli:read`).
+  - Created Next.js CI/CD Workspace (`frontend/`): Dashboard `/integrations/ci-cd`, `CLIService`, `CLIIntegrationCard`, `TokenManagementPanel`, `PipelineExampleViewer`, and `ScanGateConfiguration`.
 - **Era 9 Phase 9.2 (Slack & Microsoft Teams Security Alert Webhooks)**:
   - Created real-time security alert notification engine (`app/application/notifications/`) supporting Slack Workspaces (`SlackWebhookProvider` Block Kit formatting) and Microsoft Teams Channels (`TeamsWebhookProvider` Adaptive Cards).
   - Implemented `NotificationService` managing tenant-isolated encrypted webhook configs (`SecretEncryptionService`), event rule evaluation, non-blocking alert dispatching, test notification triggers, and audit event dispatches.

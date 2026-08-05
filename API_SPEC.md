@@ -1400,6 +1400,55 @@ All API errors return a standardized JSON error format:
 
 ---
 
+### Section K: CI/CD Pipeline Scanning CLI Endpoints (Phase 9.3)
+
+#### `POST /api/v1/cli/tokens` (Phase 9.3)
+- **Summary**: Generate a new secure CLI API token (`vn_cli_...`). Dispatches audit event (`cli.token_created`).
+- **RBAC Guard**: `cli:manage` (`Role.ADMIN`+).
+- **Request Body**: `CLITokenCreateRequest` (`name`, `expires_in_days`).
+- **Response**: `201 Created` returning `CLITokenDTO` (raw_token present only on creation).
+
+#### `GET /api/v1/cli/tokens` (Phase 9.3)
+- **Summary**: List active CLI tokens for tenant organization.
+- **RBAC Guard**: `cli:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning List of `CLITokenDTO` (raw_token masked).
+
+#### `DELETE /api/v1/cli/tokens/{token_id}` (Phase 9.3)
+- **Summary**: Revoke a CLI API token. Dispatches audit event (`cli.token_revoked`).
+- **RBAC Guard**: `cli:manage` (`Role.ADMIN`+).
+- **Response**: `204 No Content`.
+
+#### `POST /api/v1/cli/scans/start` (Phase 9.3)
+- **Summary**: Trigger a security scan job from CI/CD pipeline. Dispatches audit event (`cli.scan_started`).
+- **RBAC Guard**: `cli:trigger` (`Role.SECURITY_ANALYST`+).
+- **Request Body**: `CLIScanStartRequest` (`target_url`, `profile_id`, `project_name`, `branch`, `commit_sha`).
+- **Response**: `201 Created` returning `CLIScanStatusResponse`.
+
+#### `GET /api/v1/cli/scans/{scan_id}/status` (Phase 9.3)
+- **Summary**: Fetch status and progress percentage for CLI polling.
+- **RBAC Guard**: `cli:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `CLIScanStatusResponse`.
+
+#### `GET /api/v1/cli/findings/summary` (Phase 9.3)
+- **Summary**: Fetch severity breakdown metrics for scan.
+- **RBAC Guard**: `cli:read` (`Role.VIEWER`+).
+- **Query Parameters**: `scan_id` (string).
+- **Response**: `200 OK` returning `CLIFindingSummaryDTO`.
+
+#### `POST /api/v1/cli/gate/evaluate` (Phase 9.3)
+- **Summary**: Evaluate CI/CD build security gate against configured thresholds. Dispatches audit event (`cli.scan_completed` | `cli.pipeline_failed`).
+- **RBAC Guard**: `cli:read` (`Role.VIEWER`+).
+- **Request Body**: `CLIPipelineGateRequest` (`scan_id`, `max_critical`, `max_high`, `max_medium`).
+- **Response**: `200 OK` returning `CLIPipelineGateResult` (`gate_passed`, `exit_code`, `summary_text`, `failed_conditions`).
+
+#### `GET /api/v1/cli/projects` (Phase 9.3)
+- **Summary**: List registered projects and repositories for tenant.
+- **RBAC Guard**: `cli:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning List of `CLIProjectDTO`.
+
+
+---
+
 ### Section H: Production Operational & Health Telemetry Endpoints (Planned Era 11 📋)
 
 #### `GET /health`

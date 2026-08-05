@@ -8,6 +8,7 @@ from app.api.v1.routers import (
     assets,
     audit_logs,
     auth,
+    cli,
     compliance,
     dashboard,
     discovery,
@@ -59,3 +60,4 @@ api_v1_router.include_router(report_exports.router)
 api_v1_router.include_router(compliance.router)
 api_v1_router.include_router(integrations.router)
 api_v1_router.include_router(notifications.router)
+api_v1_router.include_router(cli.router)

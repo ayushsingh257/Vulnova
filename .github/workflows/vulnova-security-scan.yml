@@ -1,0 +1,42 @@
+name: Vulnova CI/CD Security Pipeline Scan
+
+on:
+  push:
+    branches: [ main, release/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  vulnova-security-scan:
+    name: Vulnova Pipeline Security Scan & Build Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Vulnova CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install vulnova-cli || pip install ./cli
+
+      - name: Trigger Security Scan & Evaluate Security Gate
+        env:
+          VULNOVA_SERVER_URL: ${{ secrets.VULNOVA_SERVER_URL || 'https://api.vulnova.com' }}
+          VULNOVA_API_TOKEN: ${{ secrets.VULNOVA_API_TOKEN }}
+        run: |
+          echo "Initiating Vulnova Security Pipeline Analysis..."
+          SCAN_JSON=$(vulnova scan start --target "${{ github.repository }}" --project "${{ github.repository }}" --branch "${{ github.ref_name }}" --commit "${{ github.sha }}" --json --quiet)
+          SCAN_ID=$(echo "$SCAN_JSON" | jq -r '.scan_id')
+          echo "Triggered Scan Job ID: $SCAN_ID"
+          
+          # Wait for scan completion
+          sleep 5
+          
+          echo "Evaluating Build Security Gate..."
+          vulnova gate check --id "$SCAN_ID" --max-critical 0 --max-high 2 --max-medium 10

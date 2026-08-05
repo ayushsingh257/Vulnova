@@ -612,5 +612,23 @@ Phase 9.2 enforces strict security controls for real-time Slack and Microsoft Te
 5. **Audit Logging & Delivery Monitoring**:
    - Dispatches immutable security audit log events (`notification.channel_created`, `notification.channel_updated`, `notification.channel_deleted`, `notification.sent`, `notification.failed`) capturing delivery status, HTTP status codes, provider, and timestamp.
 
+---
+
+## 🛠️ 24. Pipeline Security Gates & CLI Token Security (Phase 9.3)
+
+Phase 9.3 introduces security controls for CI/CD pipeline automation and CLI execution:
+
+1. **CLI Token Protection & Hashing**:
+   - CLI API tokens use `vn_cli_` prefix and SHA-256 digests (`APIKeyModel`). Raw tokens are returned once upon creation and unrecoverable from database queries.
+2. **Zero Plaintext Secret Exposure in Logs**:
+   - CLI tool logs never output API tokens, credentials, or sensitive vulnerability evidence snippets.
+3. **Automated Pipeline Security Gates**:
+   - Build security gates enforce policy thresholds (e.g. `CRITICAL >= 1`). Violations cause build failure (`exit code 1`) preventing vulnerable code promotion.
+4. **Tenant Isolation & RBAC Protection**:
+   - CLI endpoints enforce tenant boundaries (`organization_id = current_user.organization_id`).
+   - Permissions: `cli:read` (`Role.VIEWER` level 10+), `cli:trigger` (`Role.SECURITY_ANALYST` level 20+), `cli:manage` (`Role.ADMIN` level 30+).
+5. **Immutable Audit Trail**:
+   - Records audit log events (`cli.token_created`, `cli.token_revoked`, `cli.scan_started`, `cli.scan_completed`, `cli.pipeline_failed`).
+
 
 

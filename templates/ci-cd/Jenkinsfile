@@ -1,0 +1,20 @@
+pipeline {
+    agent any
+
+    environment {
+        VULNOVA_SERVER_URL = 'https://api.vulnova.com'
+        VULNOVA_API_TOKEN  = credentials('vulnova-api-token')
+    }
+
+    stages {
+        stage('Vulnova Security Scan') {
+            steps {
+                sh '''
+                    pip install vulnova-cli
+                    SCAN_ID=$(vulnova scan start --target "${JOB_NAME}" --project "${JOB_NAME}" --branch "${GIT_BRANCH}" --commit "${GIT_COMMIT}" --json --quiet | jq -r '.scan_id')
+                    vulnova gate check --id "$SCAN_ID" --max-critical 0 --max-high 2
+                '''
+            }
+        }
+    }
+}

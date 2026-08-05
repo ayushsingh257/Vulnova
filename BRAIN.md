@@ -607,6 +607,13 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Secret Token Encryption & URL Masking**: Incoming Webhook URLs are encrypted at rest using AES-256-GCM / Fernet (`SecretEncryptionService`) and masked in all API responses (`https://hooks.slack.com/services/T00/B00/*****XXXX`).
     - **REST API Router (`/api/v1/notifications`) & Granular RBAC**: REST endpoints backed by `notifications:read` (`Role.VIEWER` level 10+), `notifications:create` and `notifications:update` (`Role.SECURITY_ANALYST` level 20+), and `notifications:manage` (`Role.ADMIN` level 30+). Dispatches audit log events (`notification.channel_created`, `notification.channel_updated`, `notification.channel_deleted`, `notification.sent`, `notification.failed`) via `AuditLogService`.
     - **Next.js Notification Control Plane**: Notification dashboard (`/notifications`), workspace (`/notifications/settings`), `NotificationsService`, `NotificationChannelCard`, `WebhookConfigurationModal`, `NotificationRuleEditor`, `NotificationHistoryPanel`, `TestNotificationButton`, and sidebar navigation integration.
+38. **CI/CD Pipeline Scanning CLI Tool & Build Security Gate Architecture (Phase 9.3)**: Independent distributable Python CLI tool and CI/CD integration suite for software delivery pipelines:
+    - **Independent Distributable CLI Package (`vulnova-cli`)**: Python CLI package (`cli/vulnova_cli.py`, `pyproject.toml`) providing `vulnova auth login`, `vulnova project register`, `vulnova scan start`, `vulnova scan status`, `vulnova findings summary`, `vulnova gate check`, `vulnova report export`. Features zero DB/frontend dependencies, `--json` machine-readable output mode, and `--quiet` CI runner mode.
+    - **CI/CD Integration Templates**: Ready-to-use templates for `.github/workflows/vulnova-security-scan.yml`, `.gitlab-ci.yml`, and `Jenkinsfile`.
+    - **Build Security Gate Evaluation**: Evaluates build security gate thresholds (`max_critical`, `max_high`, `max_medium`) returning standard CI exit codes (`0` = Pass, `1` = Gate Failure, `2` = Error).
+    - **REST API Router (`/api/v1/cli`) & Granular RBAC**: REST endpoints backed by `cli:read` (`Role.VIEWER` level 10+), `cli:trigger` (`Role.SECURITY_ANALYST` level 20+), and `cli:manage` (`Role.ADMIN` level 30+). Dispatches audit events (`cli.token_created`, `cli.token_revoked`, `cli.scan_started`, `cli.scan_completed`, `cli.pipeline_failed`) via `AuditLogService`.
+    - **Next.js CI/CD Workspace**: Dashboard `/integrations/ci-cd`, `CLIService`, `CLIIntegrationCard`, `TokenManagementPanel`, `PipelineExampleViewer`, and `ScanGateConfiguration`.
+
 
 
 

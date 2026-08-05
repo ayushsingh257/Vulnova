@@ -139,6 +139,10 @@ PERMISSION_MAP: Dict[str, Role] = {
     "notifications:create": Role.SECURITY_ANALYST,
     "notifications:update": Role.SECURITY_ANALYST,
     "notifications:manage": Role.ADMIN,
+    # ── CI/CD Pipeline Scanning CLI (Phase 9.3) ──
+    "cli:read": Role.VIEWER,
+    "cli:trigger": Role.SECURITY_ANALYST,
+    "cli:manage": Role.ADMIN,
     # ── Audit Logs ──
     "audit_logs:read": Role.ADMIN,
 }

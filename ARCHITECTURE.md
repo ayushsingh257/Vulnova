@@ -900,6 +900,201 @@ Phase 9.2 introduces an enterprise real-time security alert dispatching framewor
    - Webhook notifications run asynchronously without blocking core vulnerability processing, scan execution, or compliance evaluation.
    - HTTP errors, timeouts, or 500 status codes from external webhooks are caught and logged without raising unhandled exceptions or breaking security workflows.
 2. **Secret Token Encryption & URL Masking**:
+2. **Zero Database Table Duplication**: Aggregates posture metrics, time-series risk trends, attack surface environment coverage, vulnerability severity breakdowns, top findings, and threat advisories from existing `DashboardAnalyticsService`, `ExecutiveAnalyticsService`, and `ThreatAdvisoryService`. Zero new database tables created for report generation.
+3. **Tenant Boundary Isolation & Audit Trail Non-Repudiation**: Enforces strict tenant boundary isolation (`organization_id = current_user.organization_id`). Every report payload generation and PDF download records immutable security audit events (`report.generated`, `report.downloaded`) via `AuditLogService`.
+4. **Canonical RBAC Permissions**: Endpoint handlers enforce canonical permissions (`reports:create`, `reports:read`, `reports:export`) matching `PERMISSION_MAP`.
+5. **Developer Technical Remediation Export Architecture (Phase 8.2)**:
+   - **Streaming & Memory-Efficient Batch Cursors**: Bulk export handlers (`export_json_stream`, `export_csv_stream`, `export_markdown_stream`) query PostgreSQL using offset/limit batch cursors (`_stream_findings`, batch size 50) and stream output chunks directly into FastAPI `StreamingResponse` objects. This prevents memory bloat and worker OOM crashes when processing large enterprise finding datasets.
+   - **On-Demand Generation & Zero Archival Overhead**: Introduces zero report archival tables, zero export history schemas, and zero object storage dependencies. All exports are dynamically compiled from authoritative PostgreSQL tables (`security_findings`, `evidence_artifacts`, `ai_remediation_plans`, `ai_finding_explanations`, `ai_attack_paths`, `assessment_jobs`).
+   - **Multi-Format Technical Packages**: Formats finding records into machine-readable JSON arrays, spreadsheet-ready CSV tables, and developer ticket-ready Markdown documentation with GitHub/Jira formatted sections. Single vulnerability exports compile intelligence, multi-modal evidence dumps, attack chain graphs, and AI fix recommendations into ticket packages with automated token/credential masking (`sanitize_sensitive_data`).
+   - **RBAC & Immutable Audit Log Integration**: Enforces `reports:export` permission (`Role.SECURITY_ANALYST` level 20+) and dispatches immutable audit log events (`report.exported`, `vulnerability.exported`) tracking format, resource ID, actor ID, finding count, and timestamp via `AuditLogService`.
+
+---
+
+## 📊 17. Compliance Intelligence Layer & Framework Mapping Architecture (Phase 8.3)
+
+Phase 8.3 introduces a zero-duplication compliance intelligence layer that dynamically evaluates tenant security findings against enterprise compliance standards:
+
+```text
+                               ┌──────────────────────────────────────────────┐
+                               │       Next.js 14 Compliance Workspace        │
+                               │  (/compliance, /compliance/[framework], DTOs)│
+                               └──────────────────────┬───────────────────────┘
+                                                      │ GET /api/v1/compliance/*
+                                                      ▼
+                               ┌──────────────────────────────────────────────┐
+                               │           FastAPI Compliance Router          │
+                               │  (compliance:read, compliance:export RBAC)   │
+                               └──────────────────────┬───────────────────────┘
+                                                      │
+                                                      ▼
+                               ┌──────────────────────────────────────────────┐
+                               │          ComplianceMappingService            │
+                               │  (Batch Cursors & Audit Event Dispatcher)    │
+                               └──────────┬────────────────────────┬──────────┘
+                                          │                        │
+                                          ▼                        ▼
+                               ┌──────────────────────┐ ┌─────────────────────┐
+                               │   FrameworkMapper    │ │   AuditLogService   │
+                               │(Active Finding Filter│ │(compliance.viewed,  │
+                               │ & Score Calculation) │ │ compliance.exported)│
+                               └──────────┬───────────┘ └─────────────────────┘
+                                          │
+                                          ▼
+                       ┌──────────────────────────────────────┐
+                       │  Static Framework Mapping Modules    │
+                       │ ┌──────────────────────────────────┐ │
+                       │ │ OWASP Top 10 (OWASP Top 10 2021) │ │
+                       │ ├──────────────────────────────────┤ │
+                       │ │ OWASP ASVS (OWASP ASVS 4.0.3)     │ │
+                       │ ├──────────────────────────────────┤ │
+                       │ │ PCI-DSS (PCI DSS 4.0)            │ │
+                       │ ├──────────────────────────────────┤ │
+                       │ │ ISO 27001 (ISO 27001:2022)        │ │
+                       │ └──────────────────────────────────┘ │
+                       └──────────────────────────────────────┘
+```
+
+### Key Architectural Controls:
+1. **Explicit Version Metadata**: Framework mapping definitions maintain authoritative version strings: `OWASP Top 10 2021`, `OWASP ASVS 4.0.3`, `PCI DSS 4.0`, and `ISO 27001:2022`.
+2. **Zero Database Table Duplication**: Reuses existing `security_findings`, `evidence_artifacts`, and `assessment_jobs` tables. Compliance posture scores and control statuses are evaluated on demand without introducing compliance mapping database tables or document archival storage.
+3. **Active Open Finding Filter**: `FrameworkMapper` strictly filters for active open findings (`OPEN`, `CONFIRMED`, `NEW`, `UNREAD`, `TRIAGED`, `IN_REMEDIATION`). Resolved, verified fixed, and false-positive findings do not impact compliance scores.
+4. **End-to-End Control-to-Evidence Traceability**: Every evaluated control maintains complete traceability: `Framework Control -> Vulnerability Finding -> Evidence Artifact Checksum -> Target Asset -> Remediation Guidance` (`ComplianceFindingMappingDTO`).
+5. **Granular RBAC & Audit Trail**: REST endpoints enforce `compliance:read` (`Role.VIEWER` level 10+) for overview and controls retrieval, and `compliance:export` (`Role.SECURITY_ANALYST` level 20+) for report downloads. Dispatches immutable audit log events (`compliance.viewed`, `compliance.exported`) via `AuditLogService`.
+
+---
+
+## 📈 16. Enterprise Production Reliability & Observability Architecture (Planned Era 11)
+
+Era 11 introduces the production reliability, observability, disaster recovery, and incident response architecture designed for high-availability enterprise SaaS operation:
+
+```text
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                    Vulnova Application Layer & Web Services                 │
+  │            (FastAPI Gateway, Celery Workers, Next.js 14 Frontend)           │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                 Monitoring & Observability Telemetry Layer                  │
+  │  (Prometheus Exporter /metrics, Structlog JSON Formatter, Sentry SDK Hook)  │
+  └──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+             │ Metrics                   │ JSON Logs                 │ Exception Traces
+             ▼                           ▼                           ▼
+  ┌────────────────────┐      ┌────────────────────┐      ┌────────────────────┐
+  │Prometheus TimeSeries│      │ Loki / ELK Central │      │ Sentry Error       │
+  │     Database       │      │   Log Aggregator   │      │ Tracking Platform  │
+  └──────────┬─────────┘      └──────────┬─────────┘      └──────────┬─────────┘
+             │                           │                           │
+             └───────────────────────────┼───────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │             Grafana Unified Operational Dashboards & Alert Rules            │
+  │     (Latency SLAs, Queue Depth, DB Pool Exhaustion, SEV-1 Escalations)     │
+  └─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Multi-Layer Observability & Telemetry**:
+   - Application Layer emits structured JSON logs (`structlog`), Prometheus time-series metrics (`/metrics`), and Sentry exception stack traces without impacting worker thread throughput.
+   - Health probes (`/health`, `/health/liveness`, `/health/readiness`) monitor database connection pool availability, Redis Pub/Sub connectivity, and Celery worker queue health.
+2. **Database Reliability & Recovery Layer**:
+   - **Continuous WAL Archiving**: PostgreSQL Write-Ahead Logs (WAL) streamed continuously to encrypted object storage for Point-in-Time Recovery (PITR) up to any specific second within 30 days.
+   - **Automated Restore Verification**: Daily automated restore dry-runs in an isolated sandbox environment validate snapshot integrity and measure restore speed.
+3. **Infrastructure Failover & Zero-Downtime Rollbacks**:
+   - Health monitors detect node failures and trigger multi-region database failover within Recovery Time Objective (RTO < 1 hour) and Recovery Point Objective (RPO < 5 minutes).
+   - Single-command zero-downtime deployment rollback strategies (`docker compose rollback` / Helm rollback) guarantee instant mitigation if problematic releases pass staging.
+4. **Security Incident Escalation & Response**:
+   - Automated PagerDuty/Slack escalation rules route `SEV-1 Critical` and `SEV-2 High` incidents directly to on-call security engineers.
+   - Forensic audit investigation workflows leverage immutable `AuditLogService` records with actor user ID, client IP, timestamp, and target resource context.
+
+---
+
+## 🔗 18. Enterprise Integration & External Workflow Architecture (Phase 9.1)
+
+Phase 9.1 establishes an enterprise integration engine enabling bi-directional vulnerability synchronization between Vulnova and external issue trackers (Atlassian Jira Cloud and GitHub Issues):
+
+```text
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                 Next.js Integration Workspace & Control Plane               │
+  │                     (/integrations, /integrations/settings)                 │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │ HTTPS / JSON
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                   FastAPI Enterprise Integrations Router                    │
+  │                      (/api/v1/integrations/* endpoints)                     │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                           IntegrationService                                │
+  │    (Credential Encryption, External Issue Dispatcher, Lifecycle Sync)       │
+  └──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+             │                           │                           │
+             ▼                           ▼                           ▼
+  ┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+  │      JiraClient      │    │     GitHubClient     │    │SecretEncryptionService│
+  │ (Atlassian REST API) │    │  (GitHub REST API)   │    │(AES-256-GCM / Fernet)│
+  └──────────┬───────────┘    └──────────┬───────────┘    └──────────────────────┘
+             │                           │
+             ▼                           ▼
+  ┌──────────────────────┐    ┌──────────────────────┐
+  │  Jira Cloud Project  │    │  GitHub Repository   │
+  │   (/rest/api/3/issue)│    │  (/repos/owner/repo) │
+  └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication & Plaintext Secret Protection**:
+   - Provider credentials (API tokens and PATs) are encrypted at rest using AES-256-GCM / Fernet via `SecretEncryptionService`.
+   - Plaintext credentials are **NEVER** stored in database tables, logged in application telemetry, or returned in API responses.
+   - Created issue references are stored directly within existing finding metadata (`evidence_json`). No unnecessary database tables (`integration_configs`, `ticket_history`) are created.
+2. **Controlled State Transition Layer**:
+   - External status updates pass through controlled state transition mappers (`ControlledJiraStatusMapper`, `ControlledGitHubStatusMapper`) before modifying internal Vulnova finding states.
+   - External state changes (`DONE`/`CLOSED` -> `RESOLVED`, `IN_PROGRESS` -> `IN_REMEDIATION`) pass through strict validation rules, preventing external tools from unvalidated direct mutation of internal security posture.
+3. **Tenant Isolation & RBAC Protection**:
+   - Every integration call enforces strict tenant boundaries (`organization_id = current_user.organization_id`).
+   - Granular permissions: `integrations:read` (VIEWER+), `integrations:create`/`integrations:update` (SECURITY_ANALYST+), `integrations:manage` (ADMIN+).
+4. **Auditability & Non-Repudiation**:
+   - Dispatches immutable security audit log events (`integration.configuration_updated`, `integration.issue_created`, `integration.issue_synced`) recording actor user ID, provider, external ticket ID, and timestamp.
+
+---
+
+## 🔔 19. Real-Time Notification & Alert Webhook Architecture (Phase 9.2)
+
+Phase 9.2 introduces an enterprise real-time security alert dispatching framework supporting Slack Workspaces and Microsoft Teams Channels:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 Security Event Trigger / Assessment Pipeline                │
+│  (Vulnerability Discovered, Scan Completed, Compliance Dropped, Ticket Sync)│
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ Async Non-Blocking Dispatch
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            NotificationService                              │
+│       (Tenant Rule Evaluation, Event Routing, Audit Event Dispatcher)       │
+└──────────────────┬──────────────────────────────────────┬───────────────────┘
+                   │                                      │
+                   ▼                                      ▼
+┌────────────────────────────────────┐  ┌────────────────────────────────────┐
+│        SlackWebhookProvider        │  │        TeamsWebhookProvider        │
+│   (Slack Block Kit JSON Messages)  │  │  (Microsoft Teams Adaptive Cards)  │
+└──────────────────┬─────────────────┘  └──────────────────┬─────────────────┘
+                   │                                      │
+                   ▼ HTTPS POST                           ▼ HTTPS POST
+┌────────────────────────────────────┐  ┌────────────────────────────────────┐
+│   Slack Incoming Webhook Endpoint  │  │  Teams Office 365 Connector Webhook│
+└────────────────────────────────────┘  └────────────────────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Resilient Asynchronous Delivery**:
+   - Webhook notifications run asynchronously without blocking core vulnerability processing, scan execution, or compliance evaluation.
+   - HTTP errors, timeouts, or 500 status codes from external webhooks are caught and logged without raising unhandled exceptions or breaking security workflows.
+2. **Secret Token Encryption & URL Masking**:
    - Webhook URLs (which contain secret tokens) are encrypted at rest using AES-256-GCM / Fernet via `SecretEncryptionService`.
    - Webhook URLs returned in REST API payloads are masked (e.g. `https://hooks.slack.com/services/T00/B00/*****XXXX`), ensuring zero plaintext secret leaks.
 3. **Tenant Isolation & Granular RBAC**:
@@ -907,3 +1102,49 @@ Phase 9.2 introduces an enterprise real-time security alert dispatching framewor
    - Permissions: `notifications:read` (VIEWER+), `notifications:create`/`notifications:update` (SECURITY_ANALYST+), `notifications:manage` (ADMIN+).
 4. **Audit Visibility**:
    - Dispatches audit events (`notification.channel_created`, `notification.channel_updated`, `notification.channel_deleted`, `notification.sent`, `notification.failed`) recording delivery status and HTTP response codes.
+
+---
+
+## 20. CI/CD Pipeline Security Scanning & CLI Tool Architecture (Phase 9.3)
+
+Vulnova provides an independent distributable Python CLI tool (`vulnova-cli`) and REST API module (`/api/v1/cli/*`) allowing engineering teams to automate security scans, monitor job progress, query vulnerability severity metrics, and evaluate build security gates directly in CI/CD pipelines.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        Build / Runner Environment                           │
+│       (GitHub Actions, GitLab CI/CD, Jenkins, Developer Workstation)       │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ CLI Executable (`vulnova scan start`, etc.)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      Vulnova Developer CLI (`cli/`)                         │
+│     (Zero DB / Zero Frontend, Token Auth, --json Output, --quiet Mode)      │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (X-API-Key: vn_cli_...)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      FastAPI CLI Router (`/api/v1/cli/*`)                   │
+│        (Tenant Isolation, RBAC Guard, Audit Logging, Gate Verification)     │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                ┌──────────────────────┴──────────────────────┐
+                ▼                                             ▼
+┌──────────────────────────────┐              ┌──────────────────────────────┐
+│      CLIScanningService      │              │       AuditLogService        │
+│ (Scan Trigger & Gate Check)  │              │ (cli.scan_started, failed)   │
+└──────────────────────────────┘              └──────────────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Independent Distributable Architecture**:
+   - `cli/` module has zero dependency on frontend or backend internal code. Uses standard library HTTP clients communicating exclusively over authenticated REST APIs.
+2. **Zero Plaintext Secret Leakage**:
+   - Tokens use `vn_cli_` prefixes + SHA-256 digests (`APIKeyModel`). Raw tokens are shown once upon creation.
+   - CLI logs never print API tokens, secrets, or sensitive vulnerability evidence.
+3. **Machine-Readable Automation Modes**:
+   - `--json`: Formats all CLI responses into structured JSON for build system parsers (`jq`).
+   - `--quiet`: Suppresses human-targeted spinners/formatting for clean build log outputs.
+4. **Standard Build Exit Codes**:
+   - `0`: Security scan & build gate PASSED cleanly.
+   - `1`: Security gate FAILED (vulnerabilities exceeded configured thresholds).
+   - `2`: Network, authentication, or CLI execution error.

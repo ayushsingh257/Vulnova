@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vulnova-cli"
+version = "0.1.0"
+description = "Vulnova Enterprise Security Platform CI/CD Scanning CLI Tool"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Vulnova Team", email = "security@vulnova.com" }
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Security",
+    "Programming Language :: Python :: 3",
+]
+dependencies = []
+
+[project.scripts]
+vulnova = "vulnova_cli:main"

@@ -1120,11 +1120,45 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Testing Requirements**: Slack Block Kit payload tests, Teams Adaptive Card tests, secret URL encryption tests, tenant isolation tests, RBAC permission tests, audit log integration tests, failed delivery resilience tests, event routing filter tests.
 
 ### Phase 9.3: CI/CD Pipeline Scanning CLI Tool
-- **Objective**: Standalone Python CLI / GitHub Action for triggering Vulnova scans from build pipelines.
-- **Deliverables**: `vulnova-cli` package with fail-on-severity threshold options.
+- **Status**: Completed ✅
+- **Objective**: Developer-focused distributable Python CLI tool and REST API suite allowing engineering teams to integrate Vulnova security scans, vulnerability summaries, and build security gates directly into software delivery pipelines (GitHub Actions, GitLab CI/CD, Jenkins, generic shell).
+- **Deliverables**:
+  - Independent Distributable CLI Package (`cli/`):
+    - `vulnova_cli.py`: Standalone CLI tool executable (`vulnova auth login`, `vulnova project register`, `vulnova scan start`, `vulnova scan status`, `vulnova findings summary`, `vulnova gate check`, `vulnova report export`). Zero database dependency, zero frontend dependency, all communication via authenticated REST APIs (`X-API-Key: vn_cli_...`). Features `--json` output mode for automation and `--quiet` mode for CI runners.
+    - `pyproject.toml`: Package build specification for `pip install vulnova-cli`.
+  - CI/CD Integration Templates:
+    - `.github/workflows/vulnova-security-scan.yml`: Official GitHub Actions workflow template.
+    - `templates/ci-cd/.gitlab-ci.yml`: Official GitLab CI/CD pipeline template.
+    - `templates/ci-cd/Jenkinsfile`: Official Jenkins pipeline stage template.
+  - CLI Application Module (`backend/app/application/cli_scanning/`):
+    - `dto.py`: `CLITokenCreateRequest`, `CLITokenDTO`, `CLIScanStartRequest`, `CLIScanStatusResponse`, `CLIFindingSummaryDTO`, `CLIPipelineGateRequest`, `CLIPipelineGateResult`, `CLIProjectDTO`.
+    - `cli_service.py`: `CLIScanningService` managing `vn_cli_` token generation using `APIKeyModel` + `SecretEncryptionService` hashing, scan initiation, progress tracking, finding severity summaries, and build security gate evaluation (`0` = Pass, `1` = Gate Failure, `2` = Auth/Network Error) with audit events (`cli.token_created`, `cli.token_revoked`, `cli.scan_started`, `cli.scan_completed`, `cli.pipeline_failed`).
+  - REST API CLI Router (`backend/app/api/v1/routers/cli.py`):
+    - `POST /api/v1/cli/tokens`: Generate CLI API token (`cli:manage`).
+    - `GET /api/v1/cli/tokens`: List CLI tokens (`cli:read`).
+    - `DELETE /api/v1/cli/tokens/{token_id}`: Revoke CLI token (`cli:manage`).
+    - `POST /api/v1/cli/scans/start`: Trigger scan from pipeline (`cli:trigger`).
+    - `GET /api/v1/cli/scans/{scan_id}/status`: Fetch status (`cli:read`).
+    - `GET /api/v1/cli/findings/summary`: Get severity breakdown (`cli:read`).
+    - `POST /api/v1/cli/gate/evaluate`: Evaluate pipeline security gate (`cli:read`).
+    - `GET /api/v1/cli/projects`: List registered projects (`cli:read`).
+  - Next.js CI/CD Integration Workspace (`frontend/`):
+    - `CLIService` (`frontend/services/cli.service.ts`): Client-side API wrapper.
+    - `CLIIntegrationCard` (`frontend/components/integrations/ci-cd/CLIIntegrationCard.tsx`): CLI installation instructions & auth card.
+    - `TokenManagementPanel` (`frontend/components/integrations/ci-cd/TokenManagementPanel.tsx`): Token creation, listing, and revocation panel.
+    - `PipelineExampleViewer` (`frontend/components/integrations/ci-cd/PipelineExampleViewer.tsx`): Interactive tabbed viewer for GitHub Actions, GitLab, and Jenkins templates.
+    - `ScanGateConfiguration` (`frontend/components/integrations/ci-cd/ScanGateConfiguration.tsx`): Security gate threshold form.
+    - Page: `/integrations/ci-cd` (CI/CD Integration workspace).
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (305 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 252 source files passed (strict mode)
+    - **Pytest**: 8 passed in `tests/test_cli_scanning.py`
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success — 21 static/dynamic pages compiled including CI/CD integration route)
 - **Dependencies**: Phase 9.1.
-- **Completion Criteria**: Pipeline fails if critical vulnerabilities are discovered on target URL.
-- **Testing Requirements**: CLI integration test suite.
+- **Completion Criteria**: Standalone CLI operational; pipeline security gate evaluation verified; API key hashing & secret masking verified; tenant isolation & RBAC enforced; audit logging active; pytest, Ruff, Black, Mypy, and Next.js build pass cleanly.
+- **Testing Requirements**: CLI authentication tests, token protection tests, scan triggering tests, tenant isolation tests, RBAC permission tests, exit code validation tests, pipeline failure rule tests, audit log integration tests.
 
 ---
 

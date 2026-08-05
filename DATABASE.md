@@ -841,6 +841,17 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `notification.sent`: Records `channel_id`, `provider`, `event_type`, `status_code`, `status` (`DELIVERED`).
   - `notification.failed`: Records `channel_id`, `provider`, `event_type`, `status_code`, `status` (`FAILED`), `error_message`.
 
+### 8.10 CI/CD Pipeline Scanning CLI Schema Strategy (Era 9 Phase 9.3)
+- **Zero Schema Duplication**: Leverages existing machine-to-machine API key infrastructure (`api_keys` table with `vn_cli_` prefix and SHA-256 digests), `assessment_jobs`, `security_findings`, and `audit_logs`. Zero new database tables created.
+- **Secure Token Protection**: CLI tokens are hashed via SHA-256 (`key_hash`). Raw tokens are returned once upon creation and unrecoverable from database queries.
+- **Immutable CLI Audit Trail**:
+  - `cli.token_created`: Records `token_id`, `name`, `prefix`, `actor_user_id`.
+  - `cli.token_revoked`: Records `token_id`, `actor_user_id`.
+  - `cli.scan_started`: Records `scan_id`, `project_name`, `branch`, `commit_sha`, `target_url`.
+  - `cli.scan_completed`: Records `scan_id`, `gate_passed` (`true`), `exit_code` (`0`), finding counts.
+  - `cli.pipeline_failed`: Records `scan_id`, `gate_passed` (`false`), `exit_code` (`1`), `failed_conditions`.
+
+
 ---
 
 ## 💾 9. Database Production Reliability & Disaster Recovery Considerations (Planned Era 11)

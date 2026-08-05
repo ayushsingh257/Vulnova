@@ -86,6 +86,13 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ Webhook Secret Protection & Tenant Isolation**: AES-256 encrypted webhook URLs (`SecretEncryptionService`), masked URL outputs, and `organization_id` boundary enforcement.
   - **✓ REST Notifications Router & Audit Logging**: `/api/v1/notifications` endpoints backed by `notifications:read`, `notifications:create`, `notifications:update`, and `notifications:manage` permissions with audit events (`notification.channel_created`, `notification.sent`, `notification.failed`).
   - **✓ Next.js Notification Center**: Dashboard `/notifications`, workspace `/notifications/settings`, `NotificationChannelCard`, `WebhookConfigurationModal`, `NotificationRuleEditor`, `NotificationHistoryPanel`, `TestNotificationButton`, and sidebar integration.
+- **CI/CD Pipeline Scanning CLI Tool (Phase 9.3)**: Enterprise developer CLI and CI/CD automation suite (`cli/` & `app/application/cli_scanning/`) providing verified capabilities:
+  - **✓ Independent Distributable CLI Package (`vulnova-cli`)**: Python CLI tool (`vulnova auth login`, `vulnova project register`, `vulnova scan start`, `vulnova scan status`, `vulnova findings summary`, `vulnova gate check`, `vulnova report export`) with zero DB/frontend dependencies, `--json` machine-readable output mode, and `--quiet` CI mode.
+  - **✓ CI/CD Pipeline Integration Templates**: Ready-to-use templates for `.github/workflows/vulnova-security-scan.yml`, `.gitlab-ci.yml`, and `Jenkinsfile`.
+  - **✓ Build Security Gate Evaluation**: Evaluates build gate thresholds (e.g. `CRITICAL >= 1`) returning standard CI exit codes (`0` = Pass, `1` = Gate Failure, `2` = Error).
+  - **✓ REST CLI Router & Audit Logging**: `/api/v1/cli/*` endpoints backed by `cli:read`, `cli:trigger`, and `cli:manage` permissions with audit events (`cli.token_created`, `cli.token_revoked`, `cli.scan_started`, `cli.pipeline_failed`).
+  - **✓ Next.js CI/CD Workspace**: Dashboard `/integrations/ci-cd`, `CLIIntegrationCard`, `TokenManagementPanel`, `PipelineExampleViewer`, and `ScanGateConfiguration`.
+
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).
