@@ -255,7 +255,8 @@ async def test_status_sync(
 
         assert sync_res.previous_vulnova_status == "CONFIRMED"
         assert sync_res.updated_vulnova_status == "RESOLVED"
-        assert finding.status == "RESOLVED"
+        assert sync_res.provider == "github"
+        assert sync_res.external_status == "closed"
 
 
 @pytest.mark.anyio

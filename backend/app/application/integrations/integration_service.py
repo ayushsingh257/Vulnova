@@ -37,8 +37,10 @@ from app.core.exceptions import (
     ResourceNotFoundException,
 )
 from app.infrastructure.database.models.assessment import SecurityFindingModel
-from app.infrastructure.database.models.organization import OrganizationModel
 from app.infrastructure.database.models.user import UserModel
+from app.infrastructure.database.repositories.finding_triage_repository import (
+    FindingTriageRepository,
+)
 from app.security.encryption import SecretEncryptionService
 
 logger = structlog.get_logger(__name__)
@@ -59,57 +61,19 @@ class IntegrationService:
         self.audit_log_service = audit_log_service
         self.encryption_service = SecretEncryptionService()
         self.intelligence_service = FindingIntelligenceService(session)
+        self.triage_repo = FindingTriageRepository(session)
 
     async def _get_org_config_store(self, organization_id: UUID) -> Dict[str, Any]:
-        """Fetch encrypted tenant integration config from OrganizationModel or fallback store."""
+        """Fetch encrypted tenant integration config from store."""
         org_id_str = str(organization_id)
-        if org_id_str in _ENCRYPTED_INTEGRATIONS_STORE:
-            res_dict: Dict[str, Any] = _ENCRYPTED_INTEGRATIONS_STORE[org_id_str]
-            return res_dict
-
-        try:
-            stmt = select(OrganizationModel).where(
-                OrganizationModel.id == organization_id
-            )
-            res = await self.session.execute(stmt)
-            if hasattr(res, "scalar_one_or_none"):
-                org = res.scalar_one_or_none()
-                if (
-                    isinstance(org, OrganizationModel)
-                    and hasattr(org, "settings_json")
-                    and isinstance(org.settings_json, dict)
-                ):
-                    res_dict = org.settings_json.get("integrations", {})
-                    return res_dict
-        except Exception as e:
-            logger.debug("integration_service.get_config_fallback", reason=str(e))
-
-        return {}
+        return _ENCRYPTED_INTEGRATIONS_STORE.get(org_id_str, {})
 
     async def _save_org_config_store(
         self, organization_id: UUID, config_data: Dict[str, Any]
     ) -> None:
-        """Persist encrypted integration config to OrganizationModel / store."""
+        """Persist encrypted integration config to store."""
         org_id_str = str(organization_id)
         _ENCRYPTED_INTEGRATIONS_STORE[org_id_str] = config_data
-
-        try:
-            stmt = select(OrganizationModel).where(
-                OrganizationModel.id == organization_id
-            )
-            res = await self.session.execute(stmt)
-            if hasattr(res, "scalar_one_or_none"):
-                org = res.scalar_one_or_none()
-                if isinstance(org, OrganizationModel):
-                    current_settings = {}
-                    org_settings = getattr(org, "settings_json", None)
-                    if org_settings and isinstance(org_settings, dict):
-                        current_settings = dict(org_settings)
-                    current_settings["integrations"] = config_data
-                    org.settings_json = current_settings
-                    await self.session.commit()
-        except Exception as e:
-            logger.debug("integration_service.save_config_fallback", reason=str(e))
 
     async def get_integration_status(
         self, user: UserModel
@@ -404,7 +368,12 @@ class IntegrationService:
         ext_status = jira_status_res["status_name"]
 
         # Pass through ControlledJiraStatusMapper state transition layer
-        prev_vulnova_status = str(getattr(finding, "status", "CONFIRMED"))
+        triage_history = await self.triage_repo.get_triage_history(
+            user.organization_id, finding_id
+        )
+        prev_vulnova_status = (
+            triage_history[0].new_status if triage_history else "CONFIRMED"
+        )
         updated_vulnova_status = (
             ControlledJiraStatusMapper.map_jira_status_to_vulnova_state(
                 external_status=ext_status,
@@ -413,7 +382,23 @@ class IntegrationService:
         )
 
         if updated_vulnova_status != prev_vulnova_status:
-            finding.status = updated_vulnova_status
+            await self.triage_repo.record_triage_action(
+                organization_id=user.organization_id,
+                finding_id=finding_id,
+                new_status=updated_vulnova_status,
+                previous_status=prev_vulnova_status,
+                actor_user_id=user.id,
+                comment=f"Status synchronized from external Jira issue '{issue_key}' ({ext_status})",
+            )
+            if (
+                finding
+                and finding.evidence_json
+                and isinstance(finding.evidence_json, dict)
+            ):
+                ev_dict = dict(finding.evidence_json)
+                if "external_jira_issue" in ev_dict:
+                    ev_dict["external_jira_issue"]["status"] = ext_status
+                    finding.evidence_json = ev_dict
             await self.session.commit()
 
         # Record audit event
@@ -467,7 +452,12 @@ class IntegrationService:
         labels = gh_issue_res.get("labels", [])
 
         # Pass through ControlledGitHubStatusMapper state transition layer
-        prev_vulnova_status = str(getattr(finding, "status", "CONFIRMED"))
+        triage_history_gh = await self.triage_repo.get_triage_history(
+            user.organization_id, finding_id
+        )
+        prev_vulnova_status = (
+            triage_history_gh[0].new_status if triage_history_gh else "CONFIRMED"
+        )
         updated_vulnova_status = (
             ControlledGitHubStatusMapper.map_github_status_to_vulnova_state(
                 external_state=ext_state,
@@ -477,7 +467,23 @@ class IntegrationService:
         )
 
         if updated_vulnova_status != prev_vulnova_status:
-            finding.status = updated_vulnova_status
+            await self.triage_repo.record_triage_action(
+                organization_id=user.organization_id,
+                finding_id=finding_id,
+                new_status=updated_vulnova_status,
+                previous_status=prev_vulnova_status,
+                actor_user_id=user.id,
+                comment=f"Status synchronized from external GitHub issue #{issue_number} ({ext_state})",
+            )
+            if (
+                finding
+                and finding.evidence_json
+                and isinstance(finding.evidence_json, dict)
+            ):
+                ev_dict = dict(finding.evidence_json)
+                if "external_github_issue" in ev_dict:
+                    ev_dict["external_github_issue"]["status"] = ext_state
+                    finding.evidence_json = ev_dict
             await self.session.commit()
 
         # Record audit event
