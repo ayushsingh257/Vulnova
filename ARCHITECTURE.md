@@ -1329,6 +1329,52 @@ Vulnova provides an automated penetration test assertion engine (`PenTestValidat
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 25. Dependency Security Audit & SCA Enforcement Suite Architecture (Phase 10.5)
+
+Vulnova provides an automated Software Composition Analysis (SCA) verification engine (`SCAValidationRunnerService`) that continuously evaluates third-party dependencies, lockfile integrity, outdated packages, CI/CD pipeline gates (`pip-audit`, `npm audit`), open-source license compliance, typosquatting, transitive tree depth, version pinning guards, DB drivers, and 30-day CVE remediation SLAs across all 10 SCA categories (SCA1 through SCA10).
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│             Next.js 14 Dependency Security Workspace                         │
+│       (/validation/sca, PassRateCard, CategoryGrid, DetailsModal)           │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (Bearer JWT / X-API-Key)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│             FastAPI SCA Router (/api/v1/validation/sca/*)                   │
+│      (validation:read, validation:execute RBAC Guards & Audit Log Hooks)   │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      SCAValidationRunnerService                             │
+│   (Executes SCA & Supply Chain Checks SCA1 - SCA10 against Manifests)        │
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│VulnerabilityIntelServ│    │   CI/CD Gate Engine  │    │   AuditLogService    │
+│  (CVE Mapping Engine)│    │(pip-audit, npm audit)│    │ (sca_suite_completed)│
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication**:
+   - Matches Phase 10.1, 10.2, 10.3, 10.4 & Era 8 design patterns: zero new database tables, zero schema migrations, and zero archival storage overhead.
+   - Operates in memory: `Run SCA Validation -> Execute SCA Category Assertions -> Record Audit Event -> Return DTO`.
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Each validation execution generates a runtime `uuid4()` string (`suite_id`) recorded in audit log events (`validation.sca_suite_started`, `validation.sca_suite_completed`).
+3. **Explainable Failure Diagnostics & Package Mapping**:
+   - Every SCA category result returns explicit diagnostic feedback: `failure_reason`, target `affected_package` (e.g. `PyPI & NPM Dependencies`, `Dependency Lockfiles`), and actionable `remediation_guidance`.
+4. **Deep Supply Chain & License Verification**:
+   - Verifies lockfile cryptographic hash pins (`pyproject.toml`, `package-lock.json`), CI/CD `pip-audit`/`npm audit` gate rules, open-source license compliance (MIT, Apache, GPL), typosquatting detection, strict version pinning syntax (`==`), and database driver security (asyncpg, psycopg).
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

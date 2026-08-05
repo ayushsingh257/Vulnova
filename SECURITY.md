@@ -702,6 +702,25 @@ Phase 10.4 introduces automated penetration test assertion controls executing ac
    - Enforces `organization_id = current_user.organization_id` across all validation runs.
    - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
 
+---
+
+## 🛡️ 29. Dependency Security & SCA Enforcement Controls (Phase 10.5)
+
+Phase 10.5 introduces automated Software Composition Analysis controls verifying third-party PyPI and NPM dependencies, lockfile integrity, outdated packages, CI/CD pipeline gates (`pip-audit`, `npm audit`), open-source license compliance, typosquatting, transitive tree depth, version pinning guards, DB drivers, and 30-day CVE remediation SLAs across all 10 SCA categories:
+
+1. **Zero Database Table Duplication**:
+   - In-memory Software Composition Analysis assertion engine operating without document archival tables or schema migrations (`Run SCA Validation -> Execute SCA Category Assertions -> Record Audit Event -> Return DTO`).
+2. **Ephemeral Audit Correlation Token (`suite_id`)**:
+   - Runtime `uuid4()` token string (`suite_id`) recorded in audit log events (`validation.sca_suite_started`, `validation.sca_suite_completed`).
+3. **Explainable Failure Diagnostics & Package Mapping**:
+   - Every SCA category result returns diagnostic `failure_reason`, target `affected_package` (e.g. `PyPI & NPM Dependencies`, `Dependency Lockfiles`), and actionable `remediation_guidance`.
+4. **Deep Supply Chain & License Control Verification**:
+   - Verifies lockfile cryptographic hash pins (`pyproject.toml`, `package-lock.json`), CI/CD `pip-audit`/`npm audit` gate rules, open-source license compliance (MIT, Apache, GPL), typosquatting detection, strict version pinning syntax (`==`), and database driver security (asyncpg, psycopg).
+5. **Tenant Isolation & Granular RBAC**:
+   - Enforces `organization_id = current_user.organization_id` across all validation runs.
+   - Permissions: `validation:read` (`Role.VIEWER` level 10+), `validation:execute` (`Role.SECURITY_ANALYST` level 20+), `validation:manage` (`Role.ADMIN` level 30+).
+
+
 
 
 

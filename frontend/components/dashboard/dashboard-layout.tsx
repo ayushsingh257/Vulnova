@@ -15,6 +15,7 @@ import {
   Radio,
   Search,
   Server,
+  PackageCheck,
 } from "lucide-react";
 
 export interface DashboardLayoutProps {
@@ -178,6 +179,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <ShieldAlert className="h-4 w-4 text-red-400" />
               <span>Penetration Testing Validation</span>
+            </a>
+            <a
+              href="/validation/sca"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <PackageCheck className="h-4 w-4 text-blue-400" />
+              <span>Dependency Security Validation</span>
             </a>
           </div>
 

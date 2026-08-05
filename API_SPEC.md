@@ -1522,6 +1522,26 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
 - **Response**: `200 OK` returning `PenTestValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
 
+---
+
+### Section P: Dependency Security Audit & SCA Enforcement Endpoints (Phase 10.5)
+
+#### `POST /api/v1/validation/sca/run` (Phase 10.5)
+- **Summary**: Trigger an automated in-memory Software Composition Analysis assertion suite scan. Dispatches audit events (`validation.sca_suite_started`, `validation.sca_suite_completed`).
+- **RBAC Guard**: `validation:execute` (`Role.SECURITY_ANALYST`+).
+- **Response**: `200 OK` returning `SCAValidationSuiteResponse` (`suite_id`, `overall_status`, `overall_pass_rate`, `category_results`).
+
+#### `GET /api/v1/validation/sca/results` (Phase 10.5)
+- **Summary**: Fetch full dependency security category assertion evaluation metrics and results for tenant organization.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `SCAValidationSuiteResponse`.
+
+#### `GET /api/v1/validation/sca/summary` (Phase 10.5)
+- **Summary**: Fetch high-level dependency security verification health summary metrics.
+- **RBAC Guard**: `validation:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `SCAValidationSummaryDTO` (`overall_pass_rate`, `overall_status`, `passed_categories`, `failed_categories`).
+
+
 
 
 

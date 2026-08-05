@@ -883,6 +883,14 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `validation.pentest_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
   - `validation.pentest_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
 
+### 8.15 Dependency Security Audit & SCA Validation Schema Strategy (Era 10 Phase 10.5)
+- **Zero Database Table Duplication**: Introduces **zero new database tables** and **zero schema migrations**. Evaluates Software Composition Analysis assertions dynamically against existing `security_findings`, `api_keys`, `users`, and `audit_logs`.
+- **In-Memory SCA Assertion Engine**: `SCAValidationRunnerService` evaluates SCA1 through SCA10 assertions dynamically in memory.
+- **Ephemeral Audit Correlation Token (`suite_id`)**: Each validation run generates a runtime `uuid4()` token string (`suite_id`) recorded in audit log details.
+- **Immutable SCA Security Audit Trail**:
+  - `validation.sca_suite_started`: Records `suite_id`, `actor_user_id`, `organization_id`, timestamp.
+  - `validation.sca_suite_completed`: Records `suite_id`, `overall_pass_rate`, `overall_status` (`PASSED` | `DEGRADED` | `CRITICAL`), `passed_categories`, `failed_categories`, `warning_categories`, `actor_user_id`, timestamp.
+
 
 ---
 

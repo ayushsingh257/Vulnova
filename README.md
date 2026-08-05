@@ -119,6 +119,13 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ Deep Exploit Vector Verification**: Verifies JWT signature tampering rejection, multi-tenant IDOR boundaries (`organization_id`), SQL/Command injection protection, AWS IMDS metadata exfiltration blocking (`is_safe_target_url`), rate limit DoS protection (`RateLimiter`), CORS origin whitelisting, production stack trace suppression, and webhook HMAC signature verification.
   - **✓ REST Validation Router & RBAC**: `/api/v1/validation/pentest` endpoints backed by `validation:read` (VIEWER+) and `validation:execute` (SECURITY_ANALYST+) permissions.
   - **✓ Next.js PenTest Workspace**: Dashboard `/validation/pentest`, `PenTestPassRateCard`, `PenTestCategoryGrid`, `PenTestValidationRunButton`, `PenTestDetailsModal`, and sidebar navigation integration.
+- **Dependency Security Audit & SCA Enforcement Suite (Phase 10.5)**: Automated Software Composition Analysis framework (`app/application/sca_validation/`) providing verified capabilities:
+  - **✓ In-Memory SCA Verification Engine**: `SCAValidationRunnerService` evaluating third-party dependencies, lockfile integrity, outdated packages, CI/CD pipeline gates (`pip-audit`, `npm audit`), open-source license compliance, typosquatting, transitive tree depth, version pinning guards, DB drivers, and 30-day CVE remediation SLAs across all 10 SCA categories (SCA1 - SCA10) with zero database table changes.
+  - **✓ Ephemeral Audit Correlation**: Generates runtime `suite_id` UUIDs for audit log tracking (`validation.sca_suite_started`, `validation.sca_suite_completed`).
+  - **✓ Explainable SCA Diagnostics**: Every SCA category result returns diagnostic `failure_reason`, target `affected_package` (e.g. `PyPI & NPM Dependencies`, `Dependency Lockfiles`), and actionable `remediation_guidance`.
+  - **✓ Deep Supply Chain Verification**: Verifies lockfile cryptographic hash pins (`pyproject.toml`, `package-lock.json`), CI/CD `pip-audit`/`npm audit` gate rules, open-source license compliance (MIT, Apache, GPL), typosquatting detection, strict version pinning syntax (`==`), and database driver security (asyncpg, psycopg).
+  - **✓ REST Validation Router & RBAC**: `/api/v1/validation/sca` endpoints backed by `validation:read` (VIEWER+) and `validation:execute` (SECURITY_ANALYST+) permissions.
+  - **✓ Next.js SCA Workspace**: Dashboard `/validation/sca`, `SCAPassRateCard`, `SCACategoryGrid`, `SCAValidationRunButton`, `SCADetailsModal`, and sidebar navigation integration.
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).
