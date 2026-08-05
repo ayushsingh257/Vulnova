@@ -827,6 +827,22 @@ Phase 10.11 introduces enterprise Multi-Factor Authentication (MFA / TOTP) contr
 5. **Non-Repudiation Audit Event Tracking**:
    - Dispatches audit events (`security.mfa_enabled`, `security.mfa_disabled`, `security.mfa_verification_success`, `security.mfa_verification_failed`, `security.mfa_recovery_used`).
 
+---
+
+## 🛡️ 36. Database Security & Performance Controls (Phase 11.1)
+
+Phase 11.1 introduces database performance and connection pool security controls:
+
+1. **Connection Pool Starvation Prevention**:
+   - Production connection pool configuration (`pool_size=20`, `max_overflow=10`, `pool_timeout=30`, `pool_recycle=1800`) preventing resource exhaustion under denial-of-service or query burst scenarios.
+2. **Stale Connection Recovery**:
+   - `pool_pre_ping=True` verifying database connection liveness prior to query execution.
+3. **Composite Indexing & Tenant Isolation Protection**:
+   - Composite indexes (`ix_users_org_role`, `ix_audit_logs_org_created`, etc.) ensuring multi-tenant queries filter efficiently by `organization_id` without full table scans.
+4. **Slow Query Threshold Logging**:
+   - `DatabaseQueryMonitor` capturing and logging queries exceeding 100ms threshold for proactively identifying performance bottlenecks.
+
+
 
 
 

@@ -680,6 +680,13 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Two-Stage Authentication Flow**: Primary password authentication returns an ephemeral signed JWT `mfa_login_token` (5 min expiration) when MFA is enabled, requiring secondary OTP verification via `POST /api/v1/auth/mfa/challenge` before session tokens are issued.
     - **REST API Router (`/api/v1/auth/mfa`)**: `POST /setup`, `POST /verify-setup`, `POST /disable`, `POST /challenge`, `POST /recovery-codes/regenerate`, `GET /status`.
     - **Next.js MFA Workspace**: Workspace `/security/mfa`, `MFAService`, `QRCodeDisplay`, `OTPVerificationForm`, `RecoveryCodesModal`, `MFAStatusCard`, `MFASetupWizard`, and sidebar navigation integration under Settings.
+50. **Database Performance Optimization & Index Tuning Architecture (Phase 11.1)**: Enterprise PostgreSQL query optimization layer (`QueryAnalyzerService`, `DatabaseBenchmarkService`, `DatabaseQueryMonitor`), composite index strategy (`0004_add_performance_indexes.py`), and SQLAlchemy connection pool tuning:
+    - **Production Connection Pooling**: Configured `pool_size=20`, `max_overflow=10`, `pool_timeout=30`, `pool_recycle=1800`, `pool_pre_ping=True` preventing connection starvation under high concurrency.
+    - **Composite Indexing**: Alembic migration `0004_add_performance_indexes.py` adding composite indexes on `users` (`organization_id`, `role`), `users` (`organization_id`, `is_active`), `audit_logs` (`organization_id`, `action`), `audit_logs` (`organization_id`, `created_at`), `refresh_tokens` (`user_id`, `is_revoked`), and `api_keys` (`organization_id`, `is_active`).
+    - **Query Analyzer & Slow Query Monitoring**: `QueryAnalyzerService` analyzing execution patterns and generating index recommendations. `DatabaseQueryMonitor` attaching SQLAlchemy cursor event listeners to capture queries > 100ms.
+    - **Controlled Query Benchmarking**: `DatabaseBenchmarkService` running batch query latency profiling (avg, p95, p99).
+    - **REST API Router & Frontend Workspace**: REST endpoints `/api/v1/database/performance/*` (`/health`, `/benchmark`, `/slow-queries`) and Next.js Workspace `/database/performance` with `DatabasePerformanceCard`, `QueryBenchmarkTable`, and `DatabaseHealthBadge`.
+
 
 
 

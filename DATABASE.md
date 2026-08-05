@@ -945,6 +945,19 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `security.mfa_verification_failed`: Records `user_id`, failure reason, timestamp.
   - `security.mfa_recovery_used`: Records `user_id`, remaining codes count, timestamp.
 
+### 8.22 PostgreSQL Performance Optimization & Composite Index Strategy (Era 11 Phase 11.1)
+- **Composite Indexing Migration (`0004_add_performance_indexes.py`)**:
+  - `ix_users_org_role`: `users` (`organization_id`, `role`) for tenant user role filters.
+  - `ix_users_org_active`: `users` (`organization_id`, `is_active`) for tenant active user queries.
+  - `ix_audit_logs_org_action`: `audit_logs` (`organization_id`, `action`) for tenant SIEM action filtering.
+  - `ix_audit_logs_org_created`: `audit_logs` (`organization_id`, `created_at DESC`) for SIEM history pagination.
+  - `ix_refresh_tokens_user_revoked`: `refresh_tokens` (`user_id`, `is_revoked`) for auth token validation.
+  - `ix_api_keys_org_active`: `api_keys` (`organization_id`, `is_active`) for M2M authorization checks.
+- **SQLAlchemy Async Connection Pooling**:
+  - Configured `pool_size=20`, `max_overflow=10`, `pool_timeout=30`, `pool_recycle=1800`, `pool_pre_ping=True`.
+- **Query Analyzer & Slow Query Listener**:
+  - `QueryAnalyzerService` & `DatabaseQueryMonitor` capturing execution duration metadata for queries > 100ms.
+
 
 ---
 

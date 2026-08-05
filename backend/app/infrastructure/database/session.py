@@ -10,15 +10,22 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.config import settings
 
-# Create SQLAlchemy 2.0 Async Engine
+# Production-Grade SQLAlchemy 2.0 Async Engine with Optimized Connection Pooling
+# Rationale:
+# - pool_size=20: Allocates baseline pool of persistent connections for low-latency request handling.
+# - max_overflow=10: Permits burst capacity during high-concurrency traffic spikes (total max 30).
+# - pool_timeout=30: Enforces a 30s timeout before raising PoolTimeoutException during saturation.
+# - pool_recycle=1800: Recycles connections every 30 mins to prevent stale PostgreSQL socket drops.
+# - pool_pre_ping=True: Executes lightweight test ping before checkout to recover broken connections.
 async_engine: AsyncEngine = create_async_engine(
     settings.database_url,
     echo=False,
     future=True,
-    pool_size=10,
-    max_overflow=20,
+    pool_size=20,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=1800,
     pool_pre_ping=True,
-    pool_recycle=3600,
 )
 
 # Async Session Factory

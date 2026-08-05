@@ -19,6 +19,7 @@ import {
   PackageCheck,
   Boxes,
   KeyRound,
+  Database,
 } from "lucide-react";
 
 export interface DashboardLayoutProps {
@@ -228,6 +229,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           <div className="mt-auto pt-6 border-t border-zinc-800/80 space-y-1">
+            <a
+              href="/database/performance"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <Database className="h-4 w-4 text-cyan-400" />
+              <span>Database Performance</span>
+            </a>
             <a
               href="/security/mfa"
               className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"

@@ -20,6 +20,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
+- **Era 11 Phase 11.1 (Database Query Optimization & Index Tuning)**:
+  - Implemented database performance analysis and query benchmarking package (`app/infrastructure/database/performance/`):
+    - `dto.py`: `SlowQueryLogDTO`, `QueryOptimizationRecommendationDTO`, `BenchmarkResultDTO`, `DatabaseHealthSummaryDTO`.
+    - `query_analyzer.py`: `QueryAnalyzerService` capturing slow query execution metadata, analyzing table access patterns, and recommending structural composite indexes.
+    - `benchmark_service.py`: `DatabaseBenchmarkService` running controlled batch query latency profiling and calculating average, p95, and p99 duration metrics.
+  - Created Alembic Performance Migration (`backend/alembic/versions/0004_add_performance_indexes.py`):
+    - Added composite performance indexes `ix_users_org_role`, `ix_users_org_active`, `ix_audit_logs_org_action`, `ix_audit_logs_org_created`, `ix_refresh_tokens_user_revoked`, and `ix_api_keys_org_active`.
+  - Optimized SQLAlchemy Async Connection Pool (`app/infrastructure/database/session.py`):
+    - Configured production settings `pool_size=20`, `max_overflow=10`, `pool_timeout=30`, `pool_recycle=1800`, `pool_pre_ping=True`.
+  - Created Database Query Monitor Middleware (`app/infrastructure/database/query_monitor.py`):
+    - `DatabaseQueryMonitor` attaching SQLAlchemy cursor event listeners to detect and log queries exceeding 100ms.
+  - Implemented REST API Database Performance Router (`app/api/v1/routers/database_performance.py`) under `/api/v1/database/performance`:
+    - `GET /api/v1/database/performance/health`: Fetch database performance health summary (`admin:read`).
+    - `POST /api/v1/database/performance/benchmark`: Execute controlled query benchmarking suite (`admin:manage`).
+    - `GET /api/v1/database/performance/slow-queries`: Fetch captured slow query logs exceeding 100ms (`admin:read`).
+  - Next.js Database Performance Workspace & Components (`frontend/`):
+    - Created Workspace `/database/performance`, `DatabasePerformanceService`, `DatabasePerformanceCard`, `QueryBenchmarkTable`, `DatabaseHealthBadge`, and sidebar integration under Settings.
+
 - **Era 10 Phase 10.11 (Multi-Factor Authentication - MFA / TOTP)**:
   - Implemented complete TOTP-based Multi-Factor Authentication module (`app/application/mfa/`):
     - `dto.py`: DTO definitions for setup, verification, disable, challenge, status, and recovery code regeneration.

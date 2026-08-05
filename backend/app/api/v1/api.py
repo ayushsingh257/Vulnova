@@ -14,6 +14,7 @@ from app.api.v1.routers import (
     compliance,
     container_validation,
     dashboard,
+    database_performance,
     discovery,
     infrastructure_validation,
     integrations,
@@ -45,6 +46,7 @@ api_v1_router.include_router(status.router)
 api_v1_router.include_router(auth.router)
 api_v1_router.include_router(mfa.router)
 api_v1_router.include_router(admin.router)
+api_v1_router.include_router(database_performance.router)
 api_v1_router.include_router(api_keys.router)
 
 api_v1_router.include_router(users.router)

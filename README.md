@@ -166,6 +166,14 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ Two-Stage Authentication Flow**: Primary password authentication returns an ephemeral signed JWT `mfa_login_token` (5 min expiration) when MFA is enabled, requiring secondary OTP verification via `POST /api/v1/auth/mfa/challenge` before session tokens are issued.
   - **✓ REST MFA Router**: `/api/v1/auth/mfa` endpoints (`/setup`, `/verify-setup`, `/disable`, `/challenge`, `/recovery-codes/regenerate`, `/status`).
   - **✓ Next.js MFA Workspace**: Workspace `/security/mfa`, `MFAService`, `QRCodeDisplay`, `OTPVerificationForm`, `RecoveryCodesModal`, `MFAStatusCard`, `MFASetupWizard`, and sidebar navigation integration under Settings.
+- **Database Performance & Composite Indexing (Phase 11.1)**: Enterprise PostgreSQL query optimization layer (`app/infrastructure/database/performance/`) providing verified capabilities:
+  - **✓ Query Execution Analyzer**: `QueryAnalyzerService` capturing slow query execution metadata, analyzing access patterns, and recommending structural composite indexes.
+  - **✓ Query Latency Benchmarking**: `DatabaseBenchmarkService` running controlled query profiling for core models and calculating average, p95, and p99 duration metrics.
+  - **✓ Production Connection Pooling**: SQLAlchemy `AsyncEngine` configured with `pool_size=20`, `max_overflow=10`, `pool_timeout=30`, `pool_recycle=1800`, and `pool_pre_ping=True`.
+  - **✓ Composite Performance Indexing**: Alembic migration `0004_add_performance_indexes.py` defining composite indexes (`ix_users_org_role`, `ix_users_org_active`, `ix_audit_logs_org_action`, `ix_audit_logs_org_created`, `ix_refresh_tokens_user_revoked`, `ix_api_keys_org_active`).
+  - **✓ Slow Query Event Monitoring**: `DatabaseQueryMonitor` attaching SQLAlchemy cursor event listeners to flag queries exceeding 100ms threshold.
+  - **✓ REST Performance Router**: `/api/v1/database/performance` endpoints (`/health`, `/benchmark`, `/slow-queries`).
+  - **✓ Next.js Database Performance Workspace**: Workspace `/database/performance`, `DatabasePerformanceCard`, `QueryBenchmarkTable`, `DatabaseHealthBadge`, and sidebar navigation integration.
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).
@@ -424,7 +432,8 @@ python -m pytest -v
   - ✅ Phase 10.9 — Automated Security Regression Testing Framework
   - ✅ Phase 10.10 — Security Control Plane Final Certification & Compliance Suite
   - ✅ Phase 10.11 — Multi-Factor Authentication (MFA / TOTP) System
-- 🟡 **Era 11**: Enterprise Scale, Performance Tuning & Reliability *(PLANNED / NEXT)*
+- 🟡 **Era 11**: Enterprise Scale, Performance Tuning & Reliability *(IN PROGRESS)*
+  - ✅ Phase 11.1 — Database Query Optimization & Index Tuning
 - ⏳ **Era 12**: Final Security Audit, Production Deployment & Release
 
 

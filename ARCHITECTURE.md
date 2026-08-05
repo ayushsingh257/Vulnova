@@ -1642,6 +1642,51 @@ Vulnova provides an enterprise Multi-Factor Authentication (MFA / TOTP) engine (
 5. **Complete Security Audit Trail**:
    - All MFA lifecycle actions emit non-repudiable audit logs (`security.mfa_enabled`, `security.mfa_disabled`, `security.mfa_verification_success`, `security.mfa_verification_failed`, `security.mfa_recovery_used`).
 
+---
+
+## 32. Database Performance & Optimization Architecture (Phase 11.1)
+
+Vulnova provides an enterprise database performance framework (`QueryAnalyzerService`, `DatabaseBenchmarkService`, `DatabaseQueryMonitor`) for PostgreSQL latency optimization, connection pool health, and composite index tuning.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 Next.js 14 Database Performance Workspace                   │
+│        (/database/performance, DatabasePerformanceCard, BenchmarkTable)     │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTPS REST (/api/v1/database/performance/*)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 FastAPI Database Performance REST Router                    │
+│            (Health Metrics -> Query Benchmarking -> Slow Query Logs)        │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        Database Performance Layer                           │
+│   (QueryAnalyzerService / DatabaseBenchmarkService / DatabaseQueryMonitor)  │
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│ Composite Indexes    │    │ SQLAlchemy Pool      │    │ Slow Query Monitor   │
+│(ix_users_org_role,   │    │(pool_size=20,        │    │(Threshold: >100ms,   │
+│ ix_audit_logs_created│    │ max_overflow=10)     │    │ cursor events)       │
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Production-Grade Connection Pooling**:
+   - SQLAlchemy `AsyncEngine` configured with `pool_size=20`, `max_overflow=10`, `pool_timeout=30`, `pool_recycle=1800`, and `pool_pre_ping=True` to prevent connection starvation under high concurrency.
+2. **Structural Composite Indexing**:
+   - Alembic migration `0004_add_performance_indexes.py` defines composite indexes (`ix_users_org_role`, `ix_users_org_active`, `ix_audit_logs_org_action`, `ix_audit_logs_org_created`, `ix_refresh_tokens_user_revoked`, `ix_api_keys_org_active`).
+3. **Automated Query Analyzer**:
+   - `QueryAnalyzerService` analyzes execution patterns, captures slow query duration metadata, and outputs table-level index recommendations.
+4. **Controlled Query Benchmarking**:
+   - `DatabaseBenchmarkService` executes batch latency profiling for core queries, outputting average, p95, and p99 latency metrics.
+5. **Slow Query Threshold Alerting**:
+   - `DatabaseQueryMonitor` attaches SQLAlchemy event listeners (`before_cursor_execute`, `after_cursor_execute`) to detect and log queries exceeding the 100ms threshold.
+
+
 
 
 

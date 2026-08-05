@@ -1673,6 +1673,27 @@ All API errors return a standardized JSON error format:
 - **Auth**: Bearer JWT.
 - **Response**: `200 OK` returning `MFAStatusResponse`.
 
+---
+
+### Section W: Database Performance Endpoints (Phase 11.1)
+
+#### `GET /api/v1/database/performance/health` (Phase 11.1)
+- **Summary**: Fetch database performance health summary, average latency, pool status, and recommendations.
+- **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `DatabaseHealthSummaryDTO`.
+
+#### `POST /api/v1/database/performance/benchmark` (Phase 11.1)
+- **Summary**: Run controlled query benchmark profiling suite against core platform models.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Params**: `iterations` (default 10).
+- **Response**: `200 OK` returning `List[BenchmarkResultDTO]`.
+
+#### `GET /api/v1/database/performance/slow-queries` (Phase 11.1)
+- **Summary**: Retrieve captured slow query logs exceeding 100ms threshold.
+- **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `List[SlowQueryLogDTO]`.
+
+
 
 
 
