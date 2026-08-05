@@ -21,6 +21,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 9 Phase 9.1 (Jira & GitHub Issues Integration Plugin)**:
+  - Created enterprise integration engine (`app/application/integrations/`) supporting Atlassian Jira Cloud (`jira_client.py`, `jira_mapper.py`) and GitHub Issues (`github_client.py`, `github_mapper.py`).
+  - Implemented AES-256-GCM / Fernet secret encryption (`SecretEncryptionService`) storing encrypted provider API tokens and PATs with zero plaintext leak and zero new database tables created.
+  - Implemented controlled state transition layer (`ControlledJiraStatusMapper`, `ControlledGitHubStatusMapper`) mapping external ticket lifecycle status changes (`DONE`/`CLOSED` -> `RESOLVED`, `IN_PROGRESS` -> `IN_REMEDIATION`) safely into Vulnova finding states without unvalidated direct mutation.
+  - Created REST API integrations router (`app/api/v1/routers/integrations.py`) under `/api/v1/integrations`:
+    - `GET /api/v1/integrations`: Status overview (`integrations:read` permission).
+    - `POST /api/v1/integrations/jira/config`: Configure Jira credentials (`integrations:manage` permission).
+    - `POST /api/v1/integrations/github/config`: Configure GitHub credentials (`integrations:manage` permission).
+    - `POST /api/v1/integrations/jira/issues/{finding_id}`: Create Jira ticket (`integrations:create` permission).
+    - `POST /api/v1/integrations/github/issues/{finding_id}`: Create GitHub issue (`integrations:create` permission).
+    - `POST /api/v1/integrations/{provider}/{issue_id}/sync`: Sync status (`integrations:update` permission).
+  - Integrated immutable security audit log events (`integration.configuration_updated`, `integration.issue_created`, `integration.issue_synced`).
+  - Created client-side `IntegrationsService` (`frontend/services/integrations.service.ts`), `IntegrationSettingsCard`, `CreateIssueModal`, `IntegrationHistoryPanel`, and Next.js pages `/integrations` & `/integrations/settings`.
 - **Era 8 Phase 8.3 (Compliance Framework Mapping Engine & Compliance Report View)**:
   - Created compliance mapping engine (`app/application/compliance/`) supporting OWASP Top 10 2021 (`owasp_top10.py`), OWASP ASVS 4.0.3 (`asvs_v4.py`), PCI DSS 4.0 (`pci_dss.py`), and ISO 27001:2022 (`iso27001.py`).
   - Evaluated compliance posture dynamically from existing `security_findings` with zero database table changes or document storage dependencies.

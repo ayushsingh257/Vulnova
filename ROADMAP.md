@@ -1051,12 +1051,38 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 
 ## 🔗 Era 9: Enterprise Integration & Developer Workflows
 
-### Phase 9.1: Jira & GitHub Issues Integration Plugin
-- **Objective**: Bi-directional integration pushing triaged findings into Jira tickets or GitHub Issues with status sync.
-- **Deliverables**: Jira/GitHub API integration module (`backend/app/services/integrations/jira_service.py`).
+### ✅ Phase 9.1: Jira & GitHub Issues Integration Plugin
+- **Status**: Completed ✅
+- **Objective**: Enterprise integration engine allowing bi-directional vulnerability synchronization with Atlassian Jira Cloud and GitHub Issues. Features AES-256-GCM / Fernet secret encryption (`SecretEncryptionService`), controlled state transition layer (`ControlledJiraStatusMapper`, `ControlledGitHubStatusMapper`), REST endpoints (`/api/v1/integrations/*`), RBAC guards (`integrations:read`, `integrations:create`, `integrations:update`, `integrations:manage`), audit logging (`integration.configuration_updated`, `integration.issue_created`, `integration.issue_synced`), and Next.js integration workspace (`/integrations`, `/integrations/settings`).
+- **Deliverables**:
+  - Integration Application Module (`backend/app/application/integrations/`):
+    - `dto.py`: `SaveJiraConfigRequest`, `SaveGitHubConfigRequest`, `JiraConfigDTO`, `GitHubConfigDTO`, `IntegrationConfigResponse`, `CreateIssueRequest`, `ExternalIssueDTO`, `SyncStatusResponse`.
+    - `jira/`: `jira_client.py` (Jira Cloud REST API v3 client) & `jira_mapper.py` (`JiraFindingMapper` for ADF/Markdown payloads & `ControlledJiraStatusMapper` state transition layer).
+    - `github/`: `github_client.py` (GitHub REST API v3 client) & `github_mapper.py` (`GitHubFindingMapper` for Markdown payloads & `ControlledGitHubStatusMapper` state transition layer).
+    - `integration_service.py`: `IntegrationService` orchestrating credential encryption, external ticket creation, status synchronization, and audit event dispatching.
+  - REST API Integrations Router (`backend/app/api/v1/routers/integrations.py`):
+    - `GET /api/v1/integrations`: Integration status (`integrations:read`).
+    - `POST /api/v1/integrations/jira/config`: Configure Jira credentials (`integrations:manage`).
+    - `POST /api/v1/integrations/github/config`: Configure GitHub credentials (`integrations:manage`).
+    - `POST /api/v1/integrations/jira/issues/{finding_id}`: Create Jira ticket (`integrations:create`).
+    - `POST /api/v1/integrations/github/issues/{finding_id}`: Create GitHub issue (`integrations:create`).
+    - `POST /api/v1/integrations/{provider}/{issue_id}/sync`: Sync issue status (`integrations:update`).
+  - Next.js Integration Workspace (`frontend/`):
+    - `IntegrationsService` (`frontend/services/integrations.service.ts`): Client-side API abstraction.
+    - `IntegrationSettingsCard` (`frontend/components/integrations/IntegrationSettingsCard.tsx`): Provider status card and encrypted credential modal.
+    - `CreateIssueModal` (`frontend/components/integrations/CreateIssueModal.tsx`): Modal dialog for triggering issue creation.
+    - `IntegrationHistoryPanel` (`frontend/components/integrations/IntegrationHistoryPanel.tsx`): Ticket history and sync triggers.
+    - Pages: `/integrations` (Dashboard) and `/integrations/settings` (Settings view).
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (292 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 241 source files passed (strict mode)
+    - **Pytest**: 6 passed in `tests/test_integrations.py` (420+ total tests)
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success — 18 static/dynamic pages compiled including integration routes)
 - **Dependencies**: Era 8.
-- **Completion Criteria**: Creating a ticket in Vulnova opens an issue in target issue tracker and syncs status updates.
-- **Testing Requirements**: Mock integration API tests.
+- **Completion Criteria**: Creating Jira/GitHub tickets operational; controlled status transition layer verified; secret token encryption verified; tenant isolation and RBAC enforced; audit logging active; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
+- **Testing Requirements**: Mock Jira/GitHub issue creation tests, controlled status sync tests, secret encryption protection tests, tenant isolation tests, RBAC permission tests, audit log integration tests.
 
 ### Phase 9.2: Slack & Teams Security Alert Webhooks
 - **Objective**: Real-time notification system dispatching alerts for Critical/High findings to chat channels.

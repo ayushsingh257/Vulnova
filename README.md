@@ -74,6 +74,12 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ Full Control-to-Evidence Traceability**: Formats complete traceability chain (`Framework Control -> Vulnerability Finding -> Evidence Artifact Checksum -> Target Asset -> Remediation Guidance`).
   - **✓ REST Compliance Router & Audit Trail**: `/api/v1/compliance` endpoints backed by `compliance:read` and `compliance:export` permissions with audit logging (`compliance.viewed`, `compliance.exported`).
   - **✓ Next.js Compliance Workspace**: Dashboard `/compliance`, detail view `/compliance/[framework]`, framework selector tabs (`FrameworkSelector`), posture score card (`ComplianceScoreCard`), controls table (`ComplianceControlTable`), slide-in evidence drawer (`ComplianceEvidenceDrawer`), and JSON report downloader (`ComplianceExportButton`).
+- **Jira & GitHub Issues Integration Plugin (Phase 9.1)**: Enterprise integration layer (`app/application/integrations/`) providing verified capabilities:
+  - **✓ Bi-Directional Ticket Synchronization**: `IntegrationService` creating tickets in Atlassian Jira Cloud (Atlassian Document Format ADF) and GitHub Issues (GitHub-Flavored Markdown) directly from vulnerability findings.
+  - **✓ AES-256 Secret Encryption**: `SecretEncryptionService` encrypting provider API tokens and Personal Access Tokens (PATs) at rest with zero plaintext leaks or database migrations.
+  - **✓ Controlled State Transition Layer**: Controlled state mappers (`ControlledJiraStatusMapper`, `ControlledGitHubStatusMapper`) safely mapping external ticket state changes (`DONE`/`CLOSED` -> `RESOLVED`, `IN_PROGRESS` -> `IN_REMEDIATION`) into Vulnova finding lifecycle states.
+  - **✓ REST Integrations Router & Granular RBAC**: `/api/v1/integrations` endpoints backed by `integrations:read` (VIEWER+), `integrations:create`/`integrations:update` (SECURITY_ANALYST+), and `integrations:manage` (ADMIN+) permissions.
+  - **✓ Next.js Integration Control Plane**: Dashboard `/integrations`, provider settings `/integrations/settings`, `IntegrationsService`, `IntegrationSettingsCard`, `CreateIssueModal`, `IntegrationHistoryPanel`, and sidebar navigation integration.
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).

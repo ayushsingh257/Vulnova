@@ -814,4 +814,56 @@ Era 11 introduces the production reliability, observability, disaster recovery, 
    - Automated PagerDuty/Slack escalation rules route `SEV-1 Critical` and `SEV-2 High` incidents directly to on-call security engineers.
    - Forensic audit investigation workflows leverage immutable `AuditLogService` records with actor user ID, client IP, timestamp, and target resource context.
 
+---
+
+## 🔗 18. Enterprise Integration & External Workflow Architecture (Phase 9.1)
+
+Phase 9.1 establishes an enterprise integration engine enabling bi-directional vulnerability synchronization between Vulnova and external issue trackers (Atlassian Jira Cloud and GitHub Issues):
+
+```text
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                 Next.js Integration Workspace & Control Plane               │
+  │                     (/integrations, /integrations/settings)                 │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │ HTTPS / JSON
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                   FastAPI Enterprise Integrations Router                    │
+  │                      (/api/v1/integrations/* endpoints)                     │
+  └──────────────────────────────────────┬──────────────────────────────────────┘
+                                         │
+                                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │                           IntegrationService                                │
+  │    (Credential Encryption, External Issue Dispatcher, Lifecycle Sync)       │
+  └──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+             │                           │                           │
+             ▼                           ▼                           ▼
+  ┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+  │      JiraClient      │    │     GitHubClient     │    │SecretEncryptionService│
+  │ (Atlassian REST API) │    │  (GitHub REST API)   │    │(AES-256-GCM / Fernet)│
+  └──────────┬───────────┘    └──────────┬───────────┘    └──────────────────────┘
+             │                           │
+             ▼                           ▼
+  ┌──────────────────────┐    ┌──────────────────────┐
+  │  Jira Cloud Project  │    │  GitHub Repository   │
+  │   (/rest/api/3/issue)│    │  (/repos/owner/repo) │
+  └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Zero Database Table Duplication & Plaintext Secret Protection**:
+   - Provider credentials (API tokens and PATs) are encrypted at rest using AES-256-GCM / Fernet via `SecretEncryptionService`.
+   - Plaintext credentials are **NEVER** stored in database tables, logged in application telemetry, or returned in API responses.
+   - Created issue references are stored directly within existing finding metadata (`evidence_json`). No unnecessary database tables (`integration_configs`, `ticket_history`) are created.
+2. **Controlled State Transition Layer**:
+   - External status updates pass through controlled state transition mappers (`ControlledJiraStatusMapper`, `ControlledGitHubStatusMapper`) before modifying internal Vulnova finding states.
+   - External state changes (`DONE`/`CLOSED` -> `RESOLVED`, `IN_PROGRESS` -> `IN_REMEDIATION`) pass through strict validation rules, preventing external tools from unvalidated direct mutation of internal security posture.
+3. **Tenant Isolation & RBAC Protection**:
+   - Every integration call enforces strict tenant boundaries (`organization_id = current_user.organization_id`).
+   - Granular permissions: `integrations:read` (VIEWER+), `integrations:create`/`integrations:update` (SECURITY_ANALYST+), `integrations:manage` (ADMIN+).
+4. **Auditability & Non-Repudiation**:
+   - Dispatches immutable security audit log events (`integration.configuration_updated`, `integration.issue_created`, `integration.issue_synced`) recording actor user ID, provider, external ticket ID, and timestamp.
+
+
 

@@ -1314,6 +1314,53 @@ All API errors return a standardized JSON error format:
 
 ---
 
+### Section I: Enterprise Integrations Router Endpoints (`/api/v1/integrations`) (Phase 9.1 ✅)
+
+#### `GET /api/v1/integrations` (Phase 9.1)
+- **Summary**: Retrieve configuration status for Jira Cloud and GitHub Issues integrations (secrets masked).
+- **RBAC Guard**: `integrations:read` (`Role.VIEWER`+).
+- **Response**: `200 OK` returning `IntegrationConfigResponse` (`jira`: `JiraConfigDTO`, `github`: `GitHubConfigDTO`).
+
+#### `POST /api/v1/integrations/jira/config` (Phase 9.1)
+- **Summary**: Encrypt Jira API token using AES-256-GCM / Fernet and save configuration for tenant. Dispatches audit event (`integration.configuration_updated`).
+- **RBAC Guard**: `integrations:manage` (`Role.ADMIN`+).
+- **Request Body**: `SaveJiraConfigRequest` (`host_url`, `email`, `api_token`, `project_key`, `issue_type`).
+- **Response**: `200 OK` returning `JiraConfigDTO` (api token masked).
+
+#### `POST /api/v1/integrations/github/config` (Phase 9.1)
+- **Summary**: Encrypt GitHub Personal Access Token using AES-256-GCM / Fernet and save configuration for tenant. Dispatches audit event (`integration.configuration_updated`).
+- **RBAC Guard**: `integrations:manage` (`Role.ADMIN`+).
+- **Request Body**: `SaveGitHubConfigRequest` (`repo_owner`, `repo_name`, `personal_access_token`).
+- **Response**: `200 OK` returning `GitHubConfigDTO` (token masked).
+
+#### `POST /api/v1/integrations/jira/issues/{finding_id}` (Phase 9.1)
+- **Summary**: Format finding into Atlassian Document Format (ADF) and create ticket in connected Jira project. Dispatches audit event (`integration.issue_created`).
+- **RBAC Guard**: `integrations:create` (`Role.SECURITY_ANALYST`+).
+- **Path Parameters**: `finding_id` (UUID).
+- **Request Body**: `CreateIssueRequest` (`custom_labels`, `assignee`).
+- **Response**: `201 Created` returning `ExternalIssueDTO` (`issue_id`, `issue_key`, `issue_url`, `provider`, `status`, `created_at`).
+
+#### `POST /api/v1/integrations/github/issues/{finding_id}` (Phase 9.1)
+- **Summary**: Format finding into GitHub-Flavored Markdown and create issue in target GitHub repository. Dispatches audit event (`integration.issue_created`).
+- **RBAC Guard**: `integrations:create` (`Role.SECURITY_ANALYST`+).
+- **Path Parameters**: `finding_id` (UUID).
+- **Request Body**: `CreateIssueRequest` (`custom_labels`, `assignee`).
+- **Response**: `201 Created` returning `ExternalIssueDTO` (`issue_id`, `issue_key`, `issue_url`, `provider`, `status`, `created_at`).
+
+#### `POST /api/v1/integrations/jira/{finding_id}/{issue_key}/sync` (Phase 9.1)
+- **Summary**: Fetch Jira status and map state changes safely through `ControlledJiraStatusMapper` into Vulnova finding state. Dispatches audit event (`integration.issue_synced`).
+- **RBAC Guard**: `integrations:update` (`Role.SECURITY_ANALYST`+).
+- **Path Parameters**: `finding_id` (UUID), `issue_key` (string).
+- **Response**: `200 OK` returning `SyncStatusResponse`.
+
+#### `POST /api/v1/integrations/github/{finding_id}/{issue_number}/sync` (Phase 9.1)
+- **Summary**: Fetch GitHub issue state and map state changes safely through `ControlledGitHubStatusMapper` into Vulnova finding state. Dispatches audit event (`integration.issue_synced`).
+- **RBAC Guard**: `integrations:update` (`Role.SECURITY_ANALYST`+).
+- **Path Parameters**: `finding_id` (UUID), `issue_number` (string).
+- **Response**: `200 OK` returning `SyncStatusResponse`.
+
+---
+
 ### Section H: Production Operational & Health Telemetry Endpoints (Planned Era 11 📋)
 
 #### `GET /health`

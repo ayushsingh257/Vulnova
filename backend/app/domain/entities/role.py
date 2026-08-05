@@ -129,8 +129,10 @@ PERMISSION_MAP: Dict[str, Role] = {
     "api_keys:read": Role.ADMIN,
     "api_keys:create": Role.ADMIN,
     "api_keys:revoke": Role.ADMIN,
-    # ── Integrations & Webhooks ──
-    "integrations:read": Role.ADMIN,
+    # ── Integrations & Webhooks (Phase 9.1) ──
+    "integrations:read": Role.VIEWER,
+    "integrations:create": Role.SECURITY_ANALYST,
+    "integrations:update": Role.SECURITY_ANALYST,
     "integrations:manage": Role.ADMIN,
     # ── Audit Logs ──
     "audit_logs:read": Role.ADMIN,

@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   ShieldAlert,
   ShieldCheck,
+  Link2,
   Activity,
   Calendar,
   Layers,
@@ -100,6 +101,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <Calendar className="h-4 w-4" />
               <span>Scan Schedules</span>
+            </a>
+            <a
+              href="/integrations"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <Link2 className="h-4 w-4" />
+              <span>Integrations</span>
             </a>
           </div>
 

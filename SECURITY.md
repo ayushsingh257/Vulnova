@@ -568,4 +568,27 @@ Era 11 establishes Vulnova's operational security maturity, security monitoring,
    - Customer notification protocol within 72 hours of verified security breach.
    - Evidence preservation runbooks ensuring database snapshots, WAL archives, and container logs are frozen for forensic analysis.
 
+---
+
+## 🔒 22. Integration Security Controls & External API Governance (Phase 9.1)
+
+Phase 9.1 enforces strict security controls for external integrations with Atlassian Jira Cloud and GitHub Issues:
+
+1. **AES-256 Secret Encryption at Rest**:
+   - All external provider credentials (Jira API tokens, GitHub Personal Access Tokens) are encrypted at rest using AES-256-GCM / Fernet via `SecretEncryptionService`.
+   - Plaintext credentials are **NEVER** logged, written to disk, or exposed in REST API payloads (secrets are masked in API responses e.g. `vn_token_********1234`).
+2. **Controlled State Transition Layer**:
+   - External ticket status changes pass through controlled state transition mappers (`ControlledJiraStatusMapper`, `ControlledGitHubStatusMapper`) before updating internal Vulnova finding lifecycle states (`DONE`/`CLOSED` -> `RESOLVED`, `IN_PROGRESS` -> `IN_REMEDIATION`).
+   - Prevents external systems from directly mutating security posture without validation.
+3. **Multi-Tenant Isolation**:
+   - All integration configuration, ticket creation, and status synchronization calls enforce tenant boundaries (`organization_id = current_user.organization_id`). Cross-tenant access is rejected with HTTP 403 Forbidden / 404 Not Found.
+4. **RBAC Permission Enforcement**:
+   - `integrations:read`: `Role.VIEWER` (level 10+) — view integration status (secrets masked).
+   - `integrations:create`: `Role.SECURITY_ANALYST` (level 20+) — create Jira/GitHub tickets.
+   - `integrations:update`: `Role.SECURITY_ANALYST` (level 20+) — sync issue status.
+   - `integrations:manage`: `Role.ADMIN` (level 30+) — save/update provider credentials.
+5. **Immutable Security Audit Trail**:
+   - Every integration operation records non-repudiable audit events (`integration.configuration_updated`, `integration.issue_created`, `integration.issue_synced`) capturing actor user ID, tenant ID, provider, issue ID, and timestamp.
+
+
 

@@ -820,6 +820,16 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
   - `compliance.viewed`: Records `framework_id`, `framework_version`, `compliance_percentage`, `failed_controls_count`, and `actor_user_id`.
   - `compliance.exported`: Records `framework_id`, `framework_version`, `compliance_percentage`, and timestamp.
 
+### 8.8 Enterprise Integration & External Ticket Mapping Schema Strategy (Era 9 Phase 9.1)
+- **Zero Database Table Duplication**: Features **zero new database tables** and **zero schema migrations**. Provider configurations and external ticket references reuse authoritative PostgreSQL models (`OrganizationModel`, `security_findings`, `audit_logs`).
+- **Encrypted Provider Secret Storage**: Jira API tokens and GitHub Personal Access Tokens (PATs) are encrypted at rest using AES-256-GCM / Fernet (`SecretEncryptionService`) and stored securely within `OrganizationModel.settings_json["integrations"]`. Plaintext secrets are never stored or exposed in API queries.
+- **External Ticket Reference Storage**: Created issue references (`issue_id`, `issue_key`, `issue_url`, `status`, `created_at`) are attached to finding metadata (`security_findings.evidence_json["external_jira_issue"]` or `security_findings.evidence_json["external_github_issue"]`).
+- **Controlled Status Sync Architecture**: External status changes (`DONE`/`CLOSED` -> `RESOLVED`) map safely through `ControlledJiraStatusMapper` and `ControlledGitHubStatusMapper` before updating `security_findings.status`.
+- **Immutable Integration Audit Events**:
+  - `integration.configuration_updated`: Records `provider` (`jira` | `github`), `host_url`/`repo_owner`, and `actor_user_id`.
+  - `integration.issue_created`: Records `provider`, `issue_key`, `issue_url`, and `finding_id`.
+  - `integration.issue_synced`: Records `provider`, `issue_key`/`issue_number`, `external_status`, `previous_status`, and `updated_status`.
+
 ---
 
 ## 💾 9. Database Production Reliability & Disaster Recovery Considerations (Planned Era 11)

@@ -20,6 +20,22 @@ class VulnovaException(Exception):
         self.details = details or {}
 
 
+class IntegrationException(VulnovaException):
+    """Exception raised when external integration provider communication or synchronization fails."""
+
+    def __init__(
+        self,
+        message: str = "External integration operation failed",
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            code="INTEGRATION_ERROR",
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            details=details,
+        )
+
+
 class ResourceNotFoundException(VulnovaException):
     """Exception raised when a requested resource is not found."""
 
