@@ -1,15 +1,16 @@
 """Enterprise Redis Connection Manager with Connection Pooling, Health Probing and Graceful Degradation."""
 
-from typing import Optional
+from typing import Any, Optional
 
 import redis.asyncio as aioredis
 import structlog
-from redis.asyncio import Redis
 from redis.exceptions import RedisError
 
 from app.core.config import settings
 
 logger = structlog.get_logger(__name__)
+
+RedisClient = Any
 
 
 class RedisClientManager:
@@ -17,10 +18,10 @@ class RedisClientManager:
 
     def __init__(self, redis_url: Optional[str] = None) -> None:
         self.redis_url = redis_url or settings.redis_url
-        self._redis_client: Optional[Redis] = None
+        self._redis_client: Optional[RedisClient] = None
         self._is_available: bool = True
 
-    async def get_client(self) -> Optional[Redis]:
+    async def get_client(self) -> Optional[RedisClient]:
         """Return active Redis client instance with lazy initialization."""
         if not self._is_available:
             return None
