@@ -46,7 +46,9 @@ def mock_admin_user() -> UserModel:
 
 
 @pytest.mark.anyio
-async def test_executive_report_service_payload_generation(mock_admin_user: UserModel) -> None:
+async def test_executive_report_service_payload_generation(
+    mock_admin_user: UserModel,
+) -> None:
     """Test ExecutiveSecurityReportService.generate_executive_report_payload."""
     mock_session = AsyncMock()
 
@@ -71,23 +73,27 @@ async def test_executive_report_service_payload_generation(mock_admin_user: User
     )
 
     mock_executive_analytics = AsyncMock()
-    mock_executive_analytics.get_historical_risk_trends.return_value = HistoricalRiskTrendResponse(
-        organization_id=str(mock_admin_user.organization_id),
-        timeframe_days=30,
-        current_risk_score=24.5,
-        baseline_risk_score=30.0,
-        risk_velocity="IMPROVING",
-        mean_time_to_remediate_hours=18.5,
-        trend_points=[],
-        cached_at="2026-08-05T00:00:00Z",
+    mock_executive_analytics.get_historical_risk_trends.return_value = (
+        HistoricalRiskTrendResponse(
+            organization_id=str(mock_admin_user.organization_id),
+            timeframe_days=30,
+            current_risk_score=24.5,
+            baseline_risk_score=30.0,
+            risk_velocity="IMPROVING",
+            mean_time_to_remediate_hours=18.5,
+            trend_points=[],
+            cached_at="2026-08-05T00:00:00Z",
+        )
     )
-    mock_executive_analytics.get_attack_surface_coverage.return_value = AttackSurfaceCoverageResponse(
-        organization_id=str(mock_admin_user.organization_id),
-        total_targets_count=10,
-        assessed_targets_count=9,
-        unassessed_targets_count=1,
-        coverage_percentage=90.0,
-        environments_breakdown=[],
+    mock_executive_analytics.get_attack_surface_coverage.return_value = (
+        AttackSurfaceCoverageResponse(
+            organization_id=str(mock_admin_user.organization_id),
+            total_targets_count=10,
+            assessed_targets_count=9,
+            unassessed_targets_count=1,
+            coverage_percentage=90.0,
+            environments_breakdown=[],
+        )
     )
 
     mock_threat_advisories = AsyncMock()
@@ -143,23 +149,27 @@ async def test_html_report_rendering_service(mock_admin_user: UserModel) -> None
     )
 
     mock_executive_analytics = AsyncMock()
-    mock_executive_analytics.get_historical_risk_trends.return_value = HistoricalRiskTrendResponse(
-        organization_id=str(mock_admin_user.organization_id),
-        timeframe_days=30,
-        current_risk_score=24.5,
-        baseline_risk_score=30.0,
-        risk_velocity="IMPROVING",
-        mean_time_to_remediate_hours=18.5,
-        trend_points=[],
-        cached_at="2026-08-05T00:00:00Z",
+    mock_executive_analytics.get_historical_risk_trends.return_value = (
+        HistoricalRiskTrendResponse(
+            organization_id=str(mock_admin_user.organization_id),
+            timeframe_days=30,
+            current_risk_score=24.5,
+            baseline_risk_score=30.0,
+            risk_velocity="IMPROVING",
+            mean_time_to_remediate_hours=18.5,
+            trend_points=[],
+            cached_at="2026-08-05T00:00:00Z",
+        )
     )
-    mock_executive_analytics.get_attack_surface_coverage.return_value = AttackSurfaceCoverageResponse(
-        organization_id=str(mock_admin_user.organization_id),
-        total_targets_count=10,
-        assessed_targets_count=9,
-        unassessed_targets_count=1,
-        coverage_percentage=90.0,
-        environments_breakdown=[],
+    mock_executive_analytics.get_attack_surface_coverage.return_value = (
+        AttackSurfaceCoverageResponse(
+            organization_id=str(mock_admin_user.organization_id),
+            total_targets_count=10,
+            assessed_targets_count=9,
+            unassessed_targets_count=1,
+            coverage_percentage=90.0,
+            environments_breakdown=[],
+        )
     )
 
     mock_threat_advisories = AsyncMock()
@@ -211,23 +221,27 @@ async def test_pdf_report_compilation_service(mock_admin_user: UserModel) -> Non
     )
 
     mock_executive_analytics = AsyncMock()
-    mock_executive_analytics.get_historical_risk_trends.return_value = HistoricalRiskTrendResponse(
-        organization_id=str(mock_admin_user.organization_id),
-        timeframe_days=30,
-        current_risk_score=24.5,
-        baseline_risk_score=30.0,
-        risk_velocity="IMPROVING",
-        mean_time_to_remediate_hours=18.5,
-        trend_points=[],
-        cached_at="2026-08-05T00:00:00Z",
+    mock_executive_analytics.get_historical_risk_trends.return_value = (
+        HistoricalRiskTrendResponse(
+            organization_id=str(mock_admin_user.organization_id),
+            timeframe_days=30,
+            current_risk_score=24.5,
+            baseline_risk_score=30.0,
+            risk_velocity="IMPROVING",
+            mean_time_to_remediate_hours=18.5,
+            trend_points=[],
+            cached_at="2026-08-05T00:00:00Z",
+        )
     )
-    mock_executive_analytics.get_attack_surface_coverage.return_value = AttackSurfaceCoverageResponse(
-        organization_id=str(mock_admin_user.organization_id),
-        total_targets_count=10,
-        assessed_targets_count=9,
-        unassessed_targets_count=1,
-        coverage_percentage=90.0,
-        environments_breakdown=[],
+    mock_executive_analytics.get_attack_surface_coverage.return_value = (
+        AttackSurfaceCoverageResponse(
+            organization_id=str(mock_admin_user.organization_id),
+            total_targets_count=10,
+            assessed_targets_count=9,
+            unassessed_targets_count=1,
+            coverage_percentage=90.0,
+            environments_breakdown=[],
+        )
     )
 
     mock_threat_advisories = AsyncMock()
@@ -314,8 +328,12 @@ async def test_reports_rest_api_endpoints(mock_admin_user: UserModel) -> None:
     )
 
     mock_reporting_service.generate_executive_report_payload.return_value = mock_payload
-    mock_reporting_service.generate_html_report.return_value = "<!DOCTYPE html><html><body>VULNOVA</body></html>"
-    mock_reporting_service.generate_pdf_report.return_value = b"%PDF-1.4 Mock PDF Content"
+    mock_reporting_service.generate_html_report.return_value = (
+        "<!DOCTYPE html><html><body>VULNOVA</body></html>"
+    )
+    mock_reporting_service.generate_pdf_report.return_value = (
+        b"%PDF-1.4 Mock PDF Content"
+    )
     mock_reporting_service.get_report_metadata.return_value = mock_metadata
 
     async def _override_get_reporting_service() -> MagicMock:
@@ -345,7 +363,9 @@ async def test_reports_rest_api_endpoints(mock_admin_user: UserModel) -> None:
             # 2. GET /api/v1/reports/{id}
             meta_res = await client.get(f"/api/v1/reports/{report_id}")
             assert meta_res.status_code == 200
-            assert meta_res.json()["organization_id"] == str(mock_admin_user.organization_id)
+            assert meta_res.json()["organization_id"] == str(
+                mock_admin_user.organization_id
+            )
 
             # 3. GET /api/v1/reports/{id}/html
             html_res = await client.get(f"/api/v1/reports/{report_id}/html")
@@ -361,4 +381,3 @@ async def test_reports_rest_api_endpoints(mock_admin_user: UserModel) -> None:
 
     finally:
         app.dependency_overrides.clear()
-

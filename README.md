@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
 [![Security: OWASP ASVS](https://img.shields.io/badge/Security-OWASP_ASVS_v4.0-crimson.svg)](SECURITY.md)
 [![Architecture: Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20DDD-black.svg)](ARCHITECTURE.md)
-[![Status: Era 8 Phase 8.1 Complete](https://img.shields.io/badge/Status-Era%208%20Phase%208.1%20Complete-green.svg)](ROADMAP.md)
+[![Status: Era 8 Phase 8.2 Complete](https://img.shields.io/badge/Status-Era%208%20Phase%208.2%20Complete-green.svg)](ROADMAP.md)
 
 [![Build Status](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](.github/workflows/ci.yml)
 
@@ -49,6 +49,25 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
 - **OAuth2 & JWT Framework**: Short-lived (15-minute) HS256 JWT access tokens paired with cryptographically secure 64-byte refresh tokens.
 - **Refresh Token Rotation**: Family-based refresh token rotation (`family_id`) with automatic reuse detection that immediately revokes compromised sessions.
 - **HTTP-Only Cookies**: Secure `vulnova_refresh_token` delivery via HTTP-Only, Secure, SameSite=Lax cookies.
+- **Role-Based Access Control (RBAC)**: Canonical permissions mapped to granular roles (`OWNER`, `ADMIN`, `SECURITY_ANALYST`, `VIEWER`) backed by `@require_permission` decorators.
+- **Enterprise Administration Workspace (Phase 7.6)**:
+  - **✓ Organization Governance**: Enterprise profile controls, security defaults, and system metadata visibility (`settings/organization/page.tsx`).
+  - **✓ Team User Lifecycle**: User invitation modals, role elevation/demotion controls with active owner protection (`count_owners_in_org <= 1`), and self-deactivation guards (`settings/users/page.tsx`).
+  - **✓ Role-Permission Matrix**: Interactive visual permissions table displaying granted privileges across all system roles (`settings/roles/page.tsx`).
+  - **✓ API Key Governance**: Machine-to-machine integration API key generation with raw secret key show-once dialog, active key scope tags, and instant revocation (`settings/api-keys/page.tsx`, `APIKeyManagementPanel`).
+  - **✓ Security Posture & MFA Overview**: Authentication security policy overview, session policy tracking, and MFA enrollment state visibility card (`settings/security/page.tsx`, `SecuritySettingsCard`).
+- **PDF & HTML Executive Security Report Generator (Phase 8.1)**: CISO-level executive security report generation engine (`app/application/reporting/`) providing verified capabilities:
+  - **✓ Executive Report Payload Aggregation**: Aggregates posture metrics, time-series risk trends, attack surface coverage, vulnerability severity breakdowns, top findings, and threat advisories via `ExecutiveSecurityReportService`.
+  - **✓ Jinja2 HTML Live Preview**: `HTMLRendererService` rendering executive HTML reports with print-ready A4 CSS (`templates/style.css`, `templates/executive_report.html`) inside sandboxed iframe containers (`frontend/components/reports/ReportPreview.tsx`).
+  - **✓ WeasyPrint PDF Generation & Fallback**: `PDFGeneratorService` compiling PDF binary streams with graceful fallback to compliant binary PDF/1.4 container wrapper if system libraries are missing.
+  - **✓ Audit Event Non-Repudiation**: Dispatches audit log events (`report.generated`, `report.downloaded`) capturing report ID, user ID, organization ID, format, and payload size.
+  - **✓ Next.js 14 CISO Reporting Workspace**: CISO reporting dashboard (`/reports`), report detail view (`/reports/[id]`), report generation modal (`ReportGenerationModal`), security metrics summary cards (`SecurityMetricsSummary`), and PDF export buttons (`ReportDownloadActions`).
+- **Developer Technical Remediation Export System (Phase 8.2)**: Developer-focused technical export engine (`app/application/reporting/developer_export_service.py`) providing verified capabilities:
+  - **✓ Memory-Efficient Streaming Bulk Exports**: Streams JSON arrays, CSV spreadsheets, and Markdown documents in 50-item batch chunks (`StreamingResponse`), preventing worker OOM memory crashes on large datasets.
+  - **✓ Single Vulnerability Technical Export Package**: Formats finding details, proof evidence, attack chain graphs, and AI fix recommendations into ticket-ready Markdown, JSON, or CSV files (`export_single_finding`).
+  - **✓ Sensitive Credential Masking**: `sanitize_sensitive_data` automatically scrubs Bearer tokens, authorization headers, and session cookies from exported proof snippets.
+  - **✓ REST Export Router & RBAC**: `/api/v1/reports/export` router (`reports:export` permission) with `GET /json`, `GET /csv`, `GET /markdown`, `GET /{finding_id}` endpoints.
+  - **✓ Next.js Technical Export UI Panel**: `TechnicalExportPanel` component with format selection tabs, scope controls, one-click file download, and copy-to-clipboard for Markdown ticket descriptions integrated into `/reports/[id]` and `/vulnerabilities/[id]`.
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).

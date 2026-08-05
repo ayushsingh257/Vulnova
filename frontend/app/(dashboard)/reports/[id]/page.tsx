@@ -11,6 +11,7 @@ import {
 import { SecurityMetricsSummary } from "@/components/reports/SecurityMetricsSummary";
 import { ReportPreview } from "@/components/reports/ReportPreview";
 import { ReportDownloadActions } from "@/components/reports/ReportDownloadActions";
+import { TechnicalExportPanel } from "@/components/reports/TechnicalExportPanel";
 
 export default function ReportDetailPage() {
   const params = useParams();
@@ -80,6 +81,9 @@ export default function ReportDetailPage() {
         metadata={payload.metadata}
         mttrHours={payload.historical_trends.mean_time_to_remediate_hours}
       />
+
+      {/* Technical Developer Remediation Export Panel */}
+      <TechnicalExportPanel title="Developer Technical Remediation Export" />
 
       {/* HTML Report Live Preview Container */}
       <ReportPreview htmlContent={htmlContent} loading={false} />

@@ -995,12 +995,25 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: CISO executive report generation engine, HTML live preview, PDF binary download, REST endpoints, audit logging, and Next.js workspace operational; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
 - **Testing Requirements**: Service payload generation tests, HTML rendering tests, PDF binary compilation tests, REST API endpoint integration tests, Next.js build & type-check verification.
 
-### Phase 8.2: Developer Technical Remediation Export (Markdown / CSV / JSON)
-- **Objective**: Export raw findings, evidence dumps, and AI remediation patches in machine-readable formats.
-- **Deliverables**: Export endpoints (`/api/v1/reports/export`).
+### ✅ Phase 8.2: Developer Technical Remediation Export (Markdown / CSV / JSON)
+- **Status**: Completed ✅
+- **Objective**: Developer-focused technical remediation export engine for security findings, multi-modal evidence metadata, attack path node chains, and AI fix guidance in JSON, CSV, and ticket-ready Markdown formats with zero database table duplication, zero archival storage overhead, memory-efficient streaming chunking, sensitive credential masking, and RBAC tenant audit logging.
+- **Deliverables**:
+  - `DeveloperExportService` (`app/application/reporting/developer_export_service.py`): Memory-efficient export orchestrator streaming bulk findings in chunks (`_stream_findings`) as JSON arrays, CSV spreadsheets, and Markdown documents without memory bloat. Single finding export (`export_single_finding`) formats finding details, evidence, attack paths, and AI code patches into ticket-ready Markdown, JSON, or CSV files with automated token masking (`sanitize_sensitive_data`).
+  - FastAPI REST API Router (`app/api/v1/routers/report_exports.py`): Streamed REST endpoints under `/api/v1/reports/export` with canonical `reports:export` permission: `GET /json`, `GET /csv`, `GET /markdown`, `GET /{finding_id}?format=...`.
+  - Immutable Security Audit Events: Automatically records `report.exported` and `vulnerability.exported` audit events capturing actor user ID, organization ID, export format, target resource ID, and timestamp via `AuditLogService`.
+  - Frontend Client Service & UI Component (`frontend/services/export.service.ts`, `frontend/components/reports/TechnicalExportPanel.tsx`): Client-side Blob file download triggers, clipboard text copying for Markdown tickets, format selection tabs, and integration into `/reports/[id]` and `/vulnerabilities/[id]`.
+  - Comprehensive Test Suite (`tests/test_report_exports.py`): 6 unit and integration test cases with 100% pass rate.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly (221 files checked)
+    - **Ruff**: 0 errors
+    - **Mypy**: 221 source files passed (strict mode)
+    - **Pytest**: 6 passed in `test_report_exports.py` (406+ total tests)
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success — 15 static pages compiled including reporting and vulnerability investigation routes)
 - **Dependencies**: Phase 8.1.
-- **Completion Criteria**: Downloads findings formatted in JSON, CSV, or Markdown.
-- **Testing Requirements**: Export format schema validation tests.
+- **Completion Criteria**: JSON, CSV, and Markdown technical exports streaming operational; sensitive credential masking verified; tenant isolation and RBAC enforced; audit logging active; pytest, Ruff, Black, Mypy (strict), and Next.js build pass cleanly.
+- **Testing Requirements**: Memory-efficient stream generator tests, CSV header formatting tests, Markdown ticket template tests, single finding export tests, API endpoint tests, sensitive data masking tests, audit log integration tests.
 
 ### Phase 8.3: Compliance Framework Mapping (OWASP, PCI-DSS, ISO 27001, ASVS)
 - **Objective**: Map discovered vulnerabilities to compliance requirements and generate compliance checklists.

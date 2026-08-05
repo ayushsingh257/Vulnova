@@ -14,6 +14,7 @@ import { CVSSRiskCard } from "@/components/vulnerabilities/cvss-risk-card";
 import { EvidenceViewerDrawer } from "@/components/vulnerabilities/evidence-viewer-drawer";
 import { AttackPathGraph } from "@/components/vulnerabilities/attack-path-graph";
 import { AIRemediationDrawer } from "@/components/vulnerabilities/ai-remediation-drawer";
+import { TechnicalExportPanel } from "@/components/reports/TechnicalExportPanel";
 
 export default function VulnerabilityDetailPage() {
   const params = useParams();
@@ -87,6 +88,12 @@ export default function VulnerabilityDetailPage() {
 
       {/* CVSS & EPSS Scoring Card */}
       <CVSSRiskCard vulnerability={vulnerability} />
+
+      {/* Technical Remediation Export Panel */}
+      <TechnicalExportPanel
+        findingId={findingId}
+        title="Vulnerability Remediation Export Package"
+      />
 
       {/* Investigation Navigation Tabs */}
       <div className="flex border-b border-zinc-800">

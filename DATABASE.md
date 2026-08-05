@@ -802,6 +802,15 @@ Phase 8.1 requires zero new database tables or schema migrations. `ExecutiveSecu
   - `report.generated`: Records report ID, title, analysis window timeframe, posture score, and total open findings count.
   - `report.downloaded`: Records report ID, download format (`pdf`, `html`, `json`, `csv`), title, and byte size payload.
 
+### Developer Technical Remediation Export Table Reuse & Chunking (Phase 8.2)
+Phase 8.2 introduces **zero new database tables** and **zero schema migrations**. `DeveloperExportService` (`app/application/reporting/developer_export_service.py`) reuses existing database tables and models:
+- `security_findings`: Queried using offset/limit batch cursors (`_stream_findings`, batch size 50) on `(organization_id, is_duplicate)` to stream findings into JSON, CSV, and Markdown exports without loading the full dataset into worker memory.
+- `evidence_artifacts`: Proof payload retrieval with automated token/credential masking.
+- `ai_remediation_plans`, `ai_finding_explanations`, `ai_attack_paths`: Reused for single finding remediation package exports.
+- `audit_logs`: Records export audit events:
+  - `report.exported`: Records bulk export details (`format`: `json` | `csv` | `markdown`, `findings_count`, `export_type`: `bulk_findings`).
+  - `vulnerability.exported`: Records single vulnerability export details (`resource_id`: `finding_id`, `format`, `finding_title`, `severity`).
+
 ---
 
 ## 💾 9. Database Production Reliability & Disaster Recovery Considerations (Planned Era 11)

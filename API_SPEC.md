@@ -1273,6 +1273,27 @@ All API errors return a standardized JSON error format:
 - **Summary**: Generates and streams binary PDF document file (`application/pdf`) generated via WeasyPrint with graceful fallback. Records audit event (`report.downloaded`).
 - **RBAC Guard**: `reports:export` (`Role.SECURITY_ANALYST`+).
 
+#### `GET /api/v1/reports/export/json` (Phase 8.2)
+- **Summary**: Stream bulk organizational security findings formatted as a machine-readable JSON array using memory-efficient batch chunking. Records audit event (`report.exported`).
+- **RBAC Guard**: `reports:export` (`Role.SECURITY_ANALYST`+).
+- **Response**: `application/json` streamed response (`Content-Disposition: attachment; filename="Vulnova_Export_Findings_...json"`).
+
+#### `GET /api/v1/reports/export/csv` (Phase 8.2)
+- **Summary**: Stream bulk organizational security findings formatted as a spreadsheet-ready CSV file using memory-efficient batch chunking. Records audit event (`report.exported`).
+- **RBAC Guard**: `reports:export` (`Role.SECURITY_ANALYST`+).
+- **Response**: `text/csv` streamed response (`Content-Disposition: attachment; filename="Vulnova_Export_Findings_...csv"`).
+
+#### `GET /api/v1/reports/export/markdown` (Phase 8.2)
+- **Summary**: Stream bulk organizational security findings formatted as a ticket-ready Markdown document using memory-efficient batch chunking. Records audit event (`report.exported`).
+- **RBAC Guard**: `reports:export` (`Role.SECURITY_ANALYST`+).
+- **Response**: `text/markdown` streamed response (`Content-Disposition: attachment; filename="Vulnova_Export_Findings_...md"`).
+
+#### `GET /api/v1/reports/export/{finding_id}` (Phase 8.2)
+- **Summary**: Export single vulnerability technical remediation package compiling intelligence, multi-modal evidence dumps, attack chain graphs, and AI fix recommendations into JSON, CSV, or Markdown. Automatically redacts sensitive tokens and Bearer credentials (`sanitize_sensitive_data`). Records audit event (`vulnerability.exported`).
+- **RBAC Guard**: `reports:export` (`Role.SECURITY_ANALYST`+).
+- **Query Parameters**: `format` (`json` | `csv` | `markdown`, default: `markdown`).
+- **Response**: Downloadable file with matching media type and filename (`Vulnova_Finding_{finding_id[:8]}.{ext}`).
+
 ---
 
 ### Section H: Production Operational & Health Telemetry Endpoints (Planned Era 11 📋)

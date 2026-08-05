@@ -21,6 +21,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
 ### Added
+- **Era 8 Phase 8.2 (Developer Technical Remediation Export - Markdown / CSV / JSON)**:
+  - Created developer-focused technical export service (`app/application/reporting/developer_export_service.py`) supporting memory-efficient batch chunking (`_stream_findings`) and streaming generators for JSON, CSV, and Markdown formats without loading entire finding datasets into memory.
+  - Implemented `export_single_finding` compiling detailed vulnerability intelligence, multi-modal evidence artifacts, attack path node chains, and AI remediation guidance into ticket-ready Markdown, JSON, or CSV formats.
+  - Implemented automatic credential masking (`sanitize_sensitive_data`) redacting Bearer tokens, authorization headers, and session cookies from exported proof snippets.
+  - Created REST API export router (`app/api/v1/routers/report_exports.py`) under `/api/v1/reports/export` (`reports:export` permission):
+    - `GET /api/v1/reports/export/json`: Memory-efficient JSON streaming array endpoint.
+    - `GET /api/v1/reports/export/csv`: Memory-efficient CSV spreadsheet streaming endpoint.
+    - `GET /api/v1/reports/export/markdown`: Memory-efficient Markdown streaming document endpoint.
+    - `GET /api/v1/reports/export/{finding_id}`: Single vulnerability technical export package (`?format=json|csv|markdown`).
+  - Integrated immutable security audit log events (`report.exported`, `vulnerability.exported`) tracking format, finding count, resource ID, and actor user ID.
+  - Implemented client-side export service `ExportService` (`frontend/services/export.service.ts`) with browser Blob file downloading and clipboard text copying.
+  - Created interactive `TechnicalExportPanel` component (`frontend/components/reports/TechnicalExportPanel.tsx`) integrated into `/reports/[id]` and `/vulnerabilities/[id]`.
 - **Enterprise Production Reliability Roadmap Expansion**: Expanded master roadmap (ROADMAP.md Era 11), system architecture (ARCHITECTURE.md Section 16), database reliability (DATABASE.md Section 9), security operations (SECURITY.md Section 20), API specifications (API_SPEC.md Section H), README.md, and BRAIN.md (Entry 33) to incorporate the 4 core pillars of enterprise SaaS production reliability: Observability & Monitoring, Backup Strategy & PITR, Disaster Recovery & Failover, and Security Incident Response.
 - **Era 8 Phase 8.1 (PDF & HTML Executive Security Report Generator)**:
   - Created CISO executive report generation application module (`app/application/reporting/`):

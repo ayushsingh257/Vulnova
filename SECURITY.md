@@ -512,6 +512,12 @@ We welcome security researchers and developers to inspect Vulnova's codebase and
 4. **Audit Trail Non-Repudiation**:
    - Report generation and PDF downloads dispatch immutable audit events (`report.generated`, `report.downloaded`) capturing `actor_user_id`, `organization_id`, `resource_id` (report ID), `timestamp`, `format`, and byte size.
 
+5. **Developer Technical Remediation Export Security Controls (Phase 8.2)**:
+   - **Sensitive Data & Credential Masking**: `sanitize_sensitive_data` automatically scrubs Authorization Bearer tokens, basic auth credentials, and session cookie headers from exported proof evidence snippets prior to document serialization.
+   - **Streaming Memory Exhaustion Defense**: Bulk export endpoints (`/api/v1/reports/export/json`, `/csv`, `/markdown`) use batch cursors (`_stream_findings`, batch size 50) and stream output as chunked `StreamingResponse` objects, mitigating Denial-of-Service OOM worker crashes on large tenant datasets.
+   - **Export RBAC & Tenant Boundaries**: Requires `reports:export` permission (`Role.SECURITY_ANALYST` level 20+) and restricts exported findings strictly to `organization_id = current_user.organization_id`.
+   - **Export Audit Event Generation**: Dispatches `report.exported` and `vulnerability.exported` audit events recording `actor_user_id`, `organization_id`, export format, finding counts, and timestamps.
+
 ---
 
 ## 🚨 20. Security Operations Maturity, Incident Response & Breach Readiness (Planned Era 11)
