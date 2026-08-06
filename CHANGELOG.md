@@ -20,6 +20,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
+- **Era 11 Phase 11.4 (Database Backup Strategy & Point-in-Time Recovery - PITR)**:
+  - Implemented Database Backup Infrastructure Package (`app/infrastructure/database/backup/`):
+    - `dto.py`: `BackupStatusDTO`, `BackupMetadataDTO`, `BackupVerificationDTO`.
+    - `encryption.py`: `BackupEncryptionUtility` delivering AES-256 Fernet payload encryption, decryption, and SHA-256 checksum tracking derived from `settings.jwt_secret`.
+    - `backup_service.py`: `DatabaseBackupService` managing automated base database exports, encryption, metadata tracking, and 30-day retention purging (`_apply_retention_policy()`).
+    - `restore_verification_service.py`: `RestoreVerificationService` conducting automated dry-run restore validation in temporary sandboxes, verifying SHA-256 checksums, DDL schema integrity, and table row counts.
+  - Configured PostgreSQL WAL Archiving (`deployment/postgres/postgresql.conf`):
+    - Enabled `archive_mode = on`, `archive_command`, `archive_timeout = 60`, `wal_level = replica`, and `max_wal_senders` for continuous transaction streaming.
+  - Created REST API Database Backup Router (`app/api/v1/routers/database_backup.py`):
+    - `GET /api/v1/database/backups`: Retrieve retained backup history and metadata (`admin:read`).
+    - `POST /api/v1/database/backups/create`: Trigger immediate base backup with AES-256 encryption (`admin:manage`).
+    - `POST /api/v1/database/backups/verify`: Execute dry-run restore verification (`admin:manage`).
+    - `GET /api/v1/database/backups/status`: Retrieve backup service operational health summary (`admin:read`).
+  - Added RBAC Permissions (`app/domain.entities.role`):
+    - Registered `admin:read` (ADMIN) and `admin:manage` (ADMIN) permission mapping entries.
+  - Created PITR Operational Manual (`docs/database/PITR.md`):
+    - Complete guide covering Point-in-Time Recovery procedures, base backup restoration, and WAL log replay workflows.
+  - Unit & Integration Test Suite (`tests/test_database_backup.py`):
+    - Verified AES-256 encryption round-trip, backup creation/listing, dry-run restore verification, and REST API router endpoints.
+
 - **Era 11 Phase 11.3 (Centralized Observability, Telemetry & Distributed Monitoring)**:
   - Implemented Centralized Observability Package (`app/infrastructure/observability/`):
     - `logging_service.py`: `StructuredLoggingService` formatting JSON log entries with `X-Request-ID`, `X-Correlation-ID`, `user_id`, and `organization_id` context, incorporating sensitive data masking (`mask_sensitive_data()`) for passwords, tokens, and secrets.

@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
 [![Security: OWASP ASVS](https://img.shields.io/badge/Security-OWASP_ASVS_v4.0-crimson.svg)](SECURITY.md)
 [![Architecture: Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20DDD-black.svg)](ARCHITECTURE.md)
-[![Status: Era 10 Complete](https://img.shields.io/badge/Status-Era%2010%20Validation%20Suite%20Complete-green.svg)](ROADMAP.md)
+[![Status: Era 11 Phase 11.4 Complete](https://img.shields.io/badge/Status-Era%2011%20Phase%2011.4%20Database%20Backup%20%26%20PITR%20Complete-brightgreen.svg)](ROADMAP.md)
 
 [![Build Status](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](.github/workflows/ci.yml)
 

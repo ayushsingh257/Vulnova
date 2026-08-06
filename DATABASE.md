@@ -968,14 +968,19 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
 - **Graceful Fallback**:
   - Redis connection drops seamlessly degrade to local in-memory fallback without raising database connection errors or crashing endpoints.
 
-### 8.24 Database Telemetry & Pool Connection Monitoring (Era 11 Phase 11.3)
-- **Prometheus Database Pool Metrics**:
-  - `vulnova_db_pool_active_connections`: Gauge tracking active connections allocated in SQLAlchemy pool.
-  - `vulnova_db_slow_queries_total`: Counter tracking database execution queries exceeding 100ms.
-- **Grafana Database Dashboard Integration**:
-  - Dashboard `database_performance.json` visualizes real-time pool connection saturation and slow query spikes.
-- **Distributed Database Query Tracing**:
-  - OpenTelemetry database span helper (`trace_db_query`) recording query statement type, target table, and duration.
+### 8.25 Database Backup Strategy & Point-in-Time Recovery (PITR) (Era 11 Phase 11.4)
+- **Automated Base Backup Engine**:
+  - `DatabaseBackupService` creating base exports stored as encrypted archives (`var/backups/bkp_YYYYMMDD_HHMMSS.enc`).
+- **AES-256 Encryption & Checksums**:
+  - `BackupEncryptionUtility` deriving 32-byte Fernet keys from `settings.jwt_secret` (`hashlib.sha256`), providing AES-256 payload encryption and SHA-256 checksum generation.
+- **30-Day Automated Retention Policy**:
+  - `_apply_retention_policy()` purging backup archives older than `RETENTION_DAYS = 30` automatically.
+- **PostgreSQL WAL Archiving Configuration**:
+  - `deployment/postgres/postgresql.conf` setting `archive_mode = on`, `archive_command`, `archive_timeout = 60`, `wal_level = replica`, and `max_wal_senders`.
+- **Dry-Run Restore Verification Service**:
+  - `RestoreVerificationService` conducting dry-run restore validation (decryption, SHA-256 checksum verification, DDL schema integrity checks, and table row count validation).
+- **REST Management Router**:
+  - `GET /api/v1/database/backups` (history & metadata, `admin:read`), `POST /api/v1/database/backups/create` (trigger manual backup, `admin:manage`), `POST /api/v1/database/backups/verify` (trigger restore verification, `admin:manage`), and `GET /api/v1/database/backups/status` (operational health summary, `admin:read`).
 
 
 ---

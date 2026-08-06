@@ -699,6 +699,13 @@ The following discovery engine architecture decisions were finalized during Phas
     - **OpenTelemetry Distributed Tracing**: `TracingService` providing OpenTelemetry span context wrappers (`trace_db_query`, `trace_redis_op`) compatible with OTLP / Jaeger collectors.
     - **Kubernetes Health Probes**: System router (`/api/v1/system/*`) exposing `/health` (summary), `/readiness` (503 if DB offline), and `/liveness` (200 OK process ping).
     - **Docker Monitoring Stack**: Integrated Prometheus (`prom/prometheus:v2.50.0`) and Grafana (`grafana/grafana:10.3.0`) services with pre-configured dashboards (`api_performance.json`, `database_performance.json`, `security_audit.json`).
+53. **Database Backup Strategy & Point-in-Time Recovery (PITR) Architecture (Phase 11.4)**: Enterprise PostgreSQL backup, encryption, retention, and restore verification infrastructure:
+    - **Automated Base Backup Engine**: `DatabaseBackupService` creating automated/manual PostgreSQL base exports stored as encrypted archives (`var/backups/bkp_YYYYMMDD_HHMMSS.enc`).
+    - **AES-256 Storage Encryption & Checksums**: `BackupEncryptionUtility` deriving 32-byte Fernet keys from `settings.jwt_secret` (`hashlib.sha256`), delivering AES-256 payload encryption, decryption, and SHA-256 checksum tracking.
+    - **30-Day Retention Policy**: Automated retention cleanup (`_apply_retention_policy()`) purging backup archives older than 30 days after each backup execution.
+    - **PostgreSQL WAL Archiving for PITR**: `deployment/postgres/postgresql.conf` tuning `archive_mode = on`, `archive_command`, `archive_timeout = 60`, `wal_level = replica`, and `max_wal_senders` for continuous transaction streaming.
+    - **Dry-Run Restore Verification Service**: `RestoreVerificationService` performing dry-run restore validation in temporary sandboxes, verifying SHA-256 checksums, DDL schema integrity, and table row counts.
+    - **REST Management Router**: REST router (`/api/v1/database/backups`) offering endpoints for listing backup history (`GET /`), triggering manual base backups (`POST /create`), executing dry-run restore verification (`POST /verify`), and retrieving backup health status (`GET /status`) guarded by `admin:read` and `admin:manage` permissions.
 
 
 

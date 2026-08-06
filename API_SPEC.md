@@ -1777,6 +1777,30 @@ All API errors return a standardized JSON error format:
 
 ---
 
+### Section Z: Database Backup & Point-in-Time Recovery (PITR) Endpoints (Phase 11.4 ✅)
+
+#### `GET /api/v1/database/backups` (Phase 11.4)
+- **Summary**: Retrieve list of retained PostgreSQL base backups, AES-256 encryption status, total storage consumption, and retention policy parameters.
+- **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `BackupMetadataDTO` (`backups`, `retention_days`, `total_backups_count`, `total_size_bytes`, `last_backup_at`).
+
+#### `POST /api/v1/database/backups/create` (Phase 11.4)
+- **Summary**: Execute an immediate base database export with AES-256 Fernet payload encryption and SHA-256 checksum generation, enforcing 30-day retention purging.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Response**: `201 Created` returning `BackupStatusDTO` (`backup_id`, `timestamp`, `size_bytes`, `checksum`, `status`, `storage_location`, `is_encrypted`).
+
+#### `POST /api/v1/database/backups/verify` (Phase 11.4)
+- **Summary**: Execute automated dry-run restore verification by decrypting a target backup archive and verifying DDL schema and table row count integrity.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Query Params**: `backup_id` (optional string, targets latest backup if omitted).
+- **Response**: `200 OK` returning `BackupVerificationDTO` (`backup_id`, `verified_at`, `integrity_passed`, `schema_valid`, `row_counts`, `details`).
+
+#### `GET /api/v1/database/backups/status` (Phase 11.4)
+- **Summary**: Retrieve high-level operational health status of database backup automation, encryption status, and retention configuration.
+- **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning JSON status object (`status`, `total_backups`, `total_size_bytes`, `retention_days`, `last_backup_at`, `wal_archiving`, `encryption`).
+
+
 ## ⚡ 4. WebSocket Streaming Protocol
 
 

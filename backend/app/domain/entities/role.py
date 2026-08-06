@@ -149,6 +149,9 @@ PERMISSION_MAP: Dict[str, Role] = {
     "validation:manage": Role.ADMIN,
     # ── Audit Logs ──
     "audit_logs:read": Role.ADMIN,
+    # ── Database Backup & PITR (Phase 11.4) ──
+    "admin:read": Role.ADMIN,
+    "admin:manage": Role.ADMIN,
 }
 
 ALL_PERMISSIONS: FrozenSet[str] = frozenset(PERMISSION_MAP.keys())

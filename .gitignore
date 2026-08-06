@@ -52,6 +52,9 @@ Thumbs.db
 *.swp
 *.swo
 
-# Temporary files
+# Temporary & runtime backup files
 tmp/
 scratch/
+var/
+backend/var/
+*.enc

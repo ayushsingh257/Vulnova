@@ -867,12 +867,25 @@ Phase 11.3 introduces centralized security audit logging and Prometheus security
    - `mask_sensitive_data()` sanitizes passwords, JWT tokens, API keys, TOTP secrets, and Bearer authorization headers before JSON log serialization.
 2. **Prometheus Security Event Metrics**:
    - `vulnova_auth_failures_total`: Tracks failed password or MFA verification attempts.
-   - `vulnova_rate_limit_violations_total`: Tracks HTTP 429 rate limit exceeded events.
-   - `vulnova_suspicious_activities_total`: Tracks suspicious payload and security policy violation events.
-3. **Correlation ID & Security Audit Trail**:
-   - Injects `X-Request-ID` and `X-Correlation-ID` headers to trace security incidents across microservices and background job workers.
-4. **Grafana Security Audit Dashboard**:
-   - Dashboard `security_audit.json` visualizes real-time security events, auth failure spikes, and rate limit violations.
+---
+
+## 🔒 39. Encrypted Database Backup & PITR Security Controls (Phase 11.4)
+
+Phase 11.4 establishes end-to-end backup data protection, storage encryption, and restoration validation controls:
+
+1. **AES-256 Fernet Storage Encryption**:
+   - Backup dumps are encrypted using AES-256 Fernet derived from `settings.jwt_secret` (`BackupEncryptionUtility`). Raw unencrypted dump files are deleted immediately after encryption.
+2. **SHA-256 Integrity Verification Checksums**:
+   - SHA-256 checksums are generated and recorded for every backup archive, enabling integrity checks before decryption and restore.
+3. **Automated 30-Day Retention Cleanup**:
+   - Expired backups beyond the 30-day retention window are automatically purged from storage to enforce data minimization.
+4. **Point-in-Time Recovery (PITR) WAL Protection**:
+   - PostgreSQL Write-Ahead Log (WAL) archiving (`archive_mode = on`, `wal_level = replica`) ensures encrypted continuous transaction logs for recovery without data exposure.
+5. **Dry-Run Restore Validation**:
+   - Automated restore verification runs in isolated temporary sandboxes with strict schema and row count integrity checks.
+6. **Strict RBAC Authorization**:
+   - Access to backup history (`GET /api/v1/database/backups`) requires `admin:read` permission; triggering base backups or dry-run restores requires `admin:manage` permission.
+
 
 
 

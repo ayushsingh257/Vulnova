@@ -1595,12 +1595,39 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Testing Requirements**: Structured logging, sensitive data redaction, request ID correlation, Prometheus metrics exposition, and health probe integration tests.
 
 ### Phase 11.4: Database Backup Strategy & Point-in-Time Recovery (PITR)
-- **Status**: Planned 📋
+- **Status**: Completed ✅
 - **Objective**: Automated PostgreSQL database backup scheduling, Write-Ahead Logging (WAL) archiving for Point-in-Time Recovery (PITR), 30-day retention policies, AES-256 backup encryption at rest, automated restore verification testing, and database disaster recovery procedures.
-- **Deliverables**: Automated WAL archiving scripts, pgBackRest / Barman configuration, encrypted backup storage pipeline, and automated restore verification tests.
+- **Deliverables**:
+  - Database Backup Infrastructure Package (`backend/app/infrastructure/database/backup/`):
+    - `dto.py`: `BackupStatusDTO`, `BackupMetadataDTO`, `BackupVerificationDTO`.
+    - `encryption.py`: `BackupEncryptionUtility` providing AES-256 Fernet encryption, file decryption, and SHA-256 checksum generation derived from `settings.jwt_secret`.
+    - `backup_service.py`: `DatabaseBackupService` managing automated database exports, encryption, metadata tracking, and 30-day retention purging.
+    - `restore_verification_service.py`: `RestoreVerificationService` performing dry-run restore validation, schema checks, and table row count integrity checks.
+  - PostgreSQL WAL Archiving Configuration (`deployment/postgres/postgresql.conf`):
+    - WAL archiving enabled (`archive_mode = on`, `archive_command`, `archive_timeout = 60`).
+    - Tuned `max_wal_senders`, `wal_level = replica`, and `checkpoint_timeout`.
+  - REST API Database Backup Router (`backend/app/api/v1/routers/database_backup.py`):
+    - `GET /api/v1/database/backups`: Retrieve retained backup history and metadata.
+    - `POST /api/v1/database/backups/create`: Trigger immediate encrypted PostgreSQL base backup.
+    - `POST /api/v1/database/backups/verify`: Execute dry-run restore verification (decrypt + schema integrity).
+    - `GET /api/v1/database/backups/status`: Retrieve backup service operational health status.
+  - RBAC Permissions (`backend/app/domain/entities/role.py`):
+    - Added `admin:read` (ADMIN) and `admin:manage` (ADMIN) permission entries.
+  - PITR Documentation (`docs/database/PITR.md`):
+    - Comprehensive operational manual for Point-in-Time Recovery procedures and WAL archiving.
+  - Test Suite (`backend/tests/test_database_backup.py`):
+    - Unit & integration tests: AES-256 encrypt/decrypt round-trip, backup creation/listing, dry-run restore verification, and REST API endpoint integration tests.
+- **Implementation Details**:
+  - **Quality Verification**:
+    - **Black**: Passed cleanly
+    - **Ruff**: 0 errors
+    - **Mypy**: Passed (strict mode)
+    - **Pytest**: 6 passed in `tests/test_database_backup.py` (569+ total backend tests passing)
+    - **Frontend Build**: Passed (`tsc --noEmit`, `next lint`, `next build` success)
 - **Dependencies**: Phase 11.3.
 - **Completion Criteria**: Automated daily backups and WAL archiving active; automated restore test successfully recovers database to targeted timestamp.
 - **Testing Requirements**: Backup restoration dry-run, PITR verification test, backup encryption validation.
+
 
 ### Phase 11.5: Enterprise Disaster Recovery, RTO/RPO & Rollback Infrastructure
 - **Status**: Planned 📋

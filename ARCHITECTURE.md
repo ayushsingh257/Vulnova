@@ -1763,8 +1763,56 @@ Vulnova provides an enterprise observability architecture (`StructuredLoggingSer
    - `GET /metrics` exposes real-time HTTP throughput, query latency, database pool connections, Redis availability, and security audit counters.
 4. **Grafana Dashboards**:
    - Provisioned dashboards for API Performance (`api_performance.json`), Database Metrics (`database_performance.json`), and Security Audit (`security_audit.json`).
-5. **Kubernetes Health Probes**:
-   - `/api/v1/system/health` (summary), `/api/v1/system/readiness` (503 if DB offline), `/api/v1/system/liveness` (200 OK process ping).
+---
+
+## 💾 35. PostgreSQL Database Backup Strategy & Point-in-Time Recovery (PITR) Architecture (Phase 11.4)
+
+Phase 11.4 establishes enterprise-grade database resilience, automated base backup creation, AES-256 Fernet payload encryption, SHA-256 checksum tracking, 30-day retention cleanup, Write-Ahead Logging (WAL) archiving for Point-in-Time Recovery (PITR), dry-run restore verification, and REST management router (`/api/v1/database/backups`):
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    FastAPI Database Backup REST Router                      │
+│                        (/api/v1/database/backups)                           │
+│           (GET list, POST create, POST verify, GET status)                  │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       DatabaseBackupService Core Engine                     │
+│                (Applies 30-day retention & metadata tracking)               │
+└───────────────────┬─────────────────────────────────────┬───────────────────┘
+                    │ 1. Generate Dump                    │ 2. Encrypt Dump
+                    ▼                                     ▼
+┌───────────────────────────────────────┐   ┌─────────────────────────────────┐
+│     PostgreSQL Base Dump (.sql)       │   │    BackupEncryptionUtility      │
+│  (pg_dump / simulated schema dump)    │───►│  (AES-256 Fernet + SHA-256)    │
+└───────────────────────────────────────┘   └────────────────┬────────────────┘
+                                                             │
+                                                             ▼ Writes encrypted backup
+                                            ┌─────────────────────────────────┐
+                                            │ Encrypted Storage Archive (.enc)│
+                                            │ (var/backups/bkp_YYYYMMDD.enc)  │
+                                            └────────────────┬────────────────┘
+                                                             │
+                                                             ▼ 3. Verify Restore
+                                            ┌─────────────────────────────────┐
+                                            │   RestoreVerificationService    │
+                                            │(Decrypts & checks DDL + rows)   │
+                                            └─────────────────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **AES-256 Encrypted Backup Storage**:
+   - `BackupEncryptionUtility` derives a 32-byte Fernet key from `settings.jwt_secret` (`hashlib.sha256`), encrypting database dump files before writing to disk (`var/backups/*.enc`). Unencrypted temporary files are deleted immediately.
+2. **Automated 30-Day Retention Policy**:
+   - `_apply_retention_policy()` purges backup files older than `RETENTION_DAYS = 30` automatically after every backup execution.
+3. **Point-in-Time Recovery (PITR) & WAL Archiving**:
+   - `deployment/postgres/postgresql.conf` configures `archive_mode = on`, `archive_command`, `archive_timeout = 60`, `wal_level = replica`, and `max_wal_senders` for continuous WAL streaming.
+4. **Dry-Run Restore Verification**:
+   - `RestoreVerificationService` performs dry-run restore validation by decrypting target backup archives in isolated temporary directories, verifying SHA-256 checksums, checking DDL schema integrity, and validating row counts.
+5. **Role-Based REST API Management**:
+   - `/api/v1/database/backups` endpoints are protected with `admin:read` (read-only history/status) and `admin:manage` (trigger backup/restore verification) RBAC permissions.
+
 
 
 
