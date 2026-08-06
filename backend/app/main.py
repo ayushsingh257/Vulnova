@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from app.api.v1.api import api_v1_router
+from app.api.v1.routers.system_health import router as system_health_router
 from app.core.config import settings
 from app.core.exceptions import VulnovaException
 from app.core.logging import get_logger
@@ -14,6 +15,7 @@ from app.infrastructure.database.session import check_database_connection
 from app.security.middleware.rate_limit import RateLimitMiddleware
 from app.security.middleware.request_id import RequestIDMiddleware
 from app.security.middleware.request_logging import RequestLoggingMiddleware
+from app.security.middleware.request_tracing import RequestTracingMiddleware
 from app.security.middleware.security_headers import SecurityHeadersMiddleware
 
 logger = get_logger("vulnova.main")
@@ -28,8 +30,9 @@ app = FastAPI(
 )
 
 # 1. Security & Traceability Middleware Stack
-# Order matters: RequestID first (outermost), then rate limiting, then logging, then security headers
+# Order matters: RequestID first (outermost), then RequestTracing, rate limiting, logging, security headers
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(RequestTracingMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
@@ -41,7 +44,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Register API v1 Router Aggregator
+# 2. Register API v1 Router Aggregator and Top-Level Metrics/Health Router
+app.include_router(system_health_router)
 app.include_router(api_v1_router, prefix=settings.api_v1_prefix)
 
 

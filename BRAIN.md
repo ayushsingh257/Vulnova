@@ -692,6 +692,14 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Distributed Token Bucket Rate Limiting**: `DistributedRateLimiter` implementing atomic Redis sliding window token buckets per IP, per User, and per Organization (100 req/min anonymous, 1000 req/min user, 5000 req/min admin).
     - **API Gateway Rate Limit Middleware**: `RateLimitMiddleware` rejecting rate-exceeded requests with HTTP 429 Too Many Requests and injecting `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers.
     - **Locust Load Test Suite**: `testing/load/locustfile.py` load test scenario targeting 2000+ requests/sec system throughput verification.
+52. **Centralized Observability, Telemetry & Distributed Monitoring Architecture (Phase 11.3)**: Enterprise observability stack (`StructuredLoggingService`, `MetricsCollector`, `TracingService`, `RequestTracingMiddleware`, `SystemHealthRouter`) integrated with Prometheus and Grafana:
+    - **Structured JSON Logging & Sensitive Data Redaction**: `StructuredLoggingService` emitting JSON log events enriched with `X-Request-ID`, `X-Correlation-ID`, `user_id`, and `organization_id` while automatically redacting sensitive credentials via `mask_sensitive_data()`.
+    - **Request Tracing Middleware**: `RequestTracingMiddleware` generating/propagating tracing context and setting response headers `X-Request-ID` and `X-Correlation-ID`.
+    - **Prometheus Metrics Collector**: `MetricsCollector` tracking real-time HTTP throughput, query latency, database pool connections, Redis availability, and security event counters exposed at `GET /metrics`.
+    - **OpenTelemetry Distributed Tracing**: `TracingService` providing OpenTelemetry span context wrappers (`trace_db_query`, `trace_redis_op`) compatible with OTLP / Jaeger collectors.
+    - **Kubernetes Health Probes**: System router (`/api/v1/system/*`) exposing `/health` (summary), `/readiness` (503 if DB offline), and `/liveness` (200 OK process ping).
+    - **Docker Monitoring Stack**: Integrated Prometheus (`prom/prometheus:v2.50.0`) and Grafana (`grafana/grafana:10.3.0`) services with pre-configured dashboards (`api_performance.json`, `database_performance.json`, `security_audit.json`).
+
 
 
 

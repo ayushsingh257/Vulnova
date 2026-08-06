@@ -1723,6 +1723,50 @@ Vulnova provides an enterprise Redis caching and distributed rate limiting archi
 4. **Standard Compliance Headers**:
    - All responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers.
 
+---
+
+## 34. Centralized Observability, Telemetry & Distributed Monitoring Architecture (Phase 11.3)
+
+Vulnova provides an enterprise observability architecture (`StructuredLoggingService`, `MetricsCollector`, `TracingService`, `RequestTracingMiddleware`, `SystemHealthRouter`) integrated with Prometheus and Grafana.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          FastAPI Incoming HTTP Request                      │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          RequestTracingMiddleware                           │
+│        (Generates X-Request-ID, X-Correlation-ID, starts OTel span)         │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+            ┌──────────────────────────┼──────────────────────────┐
+            ▼                          ▼                          ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│ Prometheus Metrics   │    │ JSON Structured Logs │    │ Health & Readiness   │
+│ GET /metrics         │    │(Sanitized passwords) │    │ GET /api/v1/system/* │
+└──────────┬───────────┘    └──────────────────────┘    └──────────────────────┘
+           │ Scraped by 15s interval
+           ▼
+┌──────────────────────┐    ┌──────────────────────┐
+│ Prometheus Server    │───►│ Grafana Dashboards   │
+│ (port 9090)          │    │ (port 3001)          │
+└──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Context-Enriched Tracing**:
+   - Every request is tagged with an immutable `X-Request-ID` and `X-Correlation-ID` propagated across log events, metrics counters, and OpenTelemetry distributed spans.
+2. **Sensitive Data Redaction**:
+   - `mask_sensitive_data()` automatically sanitizes passwords, JWTs, API tokens, TOTP secrets, and authorization headers prior to log serialization.
+3. **Prometheus Exposition**:
+   - `GET /metrics` exposes real-time HTTP throughput, query latency, database pool connections, Redis availability, and security audit counters.
+4. **Grafana Dashboards**:
+   - Provisioned dashboards for API Performance (`api_performance.json`), Database Metrics (`database_performance.json`), and Security Audit (`security_audit.json`).
+5. **Kubernetes Health Probes**:
+   - `/api/v1/system/health` (summary), `/api/v1/system/readiness` (503 if DB offline), `/api/v1/system/liveness` (200 OK process ping).
+
+
 
 
 

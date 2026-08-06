@@ -20,6 +20,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
+- **Era 11 Phase 11.3 (Centralized Observability, Telemetry & Distributed Monitoring)**:
+  - Implemented Centralized Observability Package (`app/infrastructure/observability/`):
+    - `logging_service.py`: `StructuredLoggingService` formatting JSON log entries with `X-Request-ID`, `X-Correlation-ID`, `user_id`, and `organization_id` context, incorporating sensitive data masking (`mask_sensitive_data()`) for passwords, tokens, and secrets.
+    - `tracing_service.py`: `TracingService` managing OpenTelemetry span contexts (`trace_db_query`, `trace_redis_op`) with Jaeger / OTLP exporter readiness.
+    - `metrics/metrics_service.py`: `MetricsCollector` tracking real-time HTTP throughput, query latency, database pool connections, Redis liveness, and security audit counters exposed via `generate_prometheus_text()`.
+  - Created Request Tracing Middleware (`app/security/middleware/request_tracing.py`):
+    - `RequestTracingMiddleware` generating/propagating tracing context and setting response headers `X-Request-ID` and `X-Correlation-ID`.
+  - Implemented System Health & Observability Router (`app/api/v1/routers/system_health.py`):
+    - `GET /metrics`: Standard Prometheus Exposition Text endpoint (`text/plain; version=0.0.4`).
+    - `GET /api/v1/system/health`: Detailed operational health summary across database, Redis, and metrics.
+    - `GET /api/v1/system/readiness`: Kubernetes readiness probe (`200 OK` or `503 Service Unavailable`).
+    - `GET /api/v1/system/liveness`: Kubernetes liveness probe (`200 OK` process ping).
+  - Integrated Docker Monitoring Services (`docker-compose.yml`, `deployment/`):
+    - Prometheus service (`prom/prometheus:v2.50.0`) scraping backend `/metrics` every 15s.
+    - Grafana service (`grafana/grafana:10.3.0`) with pre-configured dashboards (`api_performance.json`, `database_performance.json`, `security_audit.json`).
+
 - **Era 11 Phase 11.1 (Database Query Optimization & Index Tuning)**:
   - Implemented database performance analysis and query benchmarking package (`app/infrastructure/database/performance/`):
     - `dto.py`: `SlowQueryLogDTO`, `QueryOptimizationRecommendationDTO`, `BenchmarkResultDTO`, `DatabaseHealthSummaryDTO`.

@@ -1,0 +1,33 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": 2,
+  "title": "Vulnova Database & Cache Dashboard",
+  "uid": "vulnova-db-performance",
+  "panels": [
+    {
+      "title": "SQLAlchemy Active Pool Connections",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "vulnova_db_pool_active_connections", "legendFormat": "Active Connections" }
+      ]
+    },
+    {
+      "title": "Database Slow Queries (>100ms)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
+      "targets": [
+        { "expr": "vulnova_db_slow_queries_total", "legendFormat": "Slow Queries" }
+      ]
+    },
+    {
+      "title": "Redis Cache Hit vs Miss Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 0 },
+      "targets": [
+        { "expr": "vulnova_redis_cache_requests_total", "legendFormat": "{{status}}" }
+      ]
+    }
+  ]
+}

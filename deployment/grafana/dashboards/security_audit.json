@@ -1,0 +1,33 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": 3,
+  "title": "Vulnova Security Audit & Rate Limit Dashboard",
+  "uid": "vulnova-security-audit",
+  "panels": [
+    {
+      "title": "Failed Authentication Attempts",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "vulnova_auth_failures_total", "legendFormat": "Auth Failures" }
+      ]
+    },
+    {
+      "title": "Rate Limit Violations (HTTP 429)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
+      "targets": [
+        { "expr": "vulnova_rate_limit_violations_total", "legendFormat": "Rate Limit Events" }
+      ]
+    },
+    {
+      "title": "Suspicious Security Events",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 0 },
+      "targets": [
+        { "expr": "vulnova_suspicious_activities_total", "legendFormat": "Suspicious Events" }
+      ]
+    }
+  ]
+}

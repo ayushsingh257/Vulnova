@@ -857,6 +857,24 @@ Phase 11.2 introduces enterprise distributed rate limiting and caching security 
 4. **Sensitive Data Caching Exclusion Policy**:
    - Cryptographic keys, raw API tokens, user passwords, and TOTP secrets are strictly excluded from Redis caching.
 
+---
+
+## 🛡️ 38. Security Audit Telemetry & Observability Controls (Phase 11.3)
+
+Phase 11.3 introduces centralized security audit logging and Prometheus security counters:
+
+1. **Automated Sensitive Data Masking**:
+   - `mask_sensitive_data()` sanitizes passwords, JWT tokens, API keys, TOTP secrets, and Bearer authorization headers before JSON log serialization.
+2. **Prometheus Security Event Metrics**:
+   - `vulnova_auth_failures_total`: Tracks failed password or MFA verification attempts.
+   - `vulnova_rate_limit_violations_total`: Tracks HTTP 429 rate limit exceeded events.
+   - `vulnova_suspicious_activities_total`: Tracks suspicious payload and security policy violation events.
+3. **Correlation ID & Security Audit Trail**:
+   - Injects `X-Request-ID` and `X-Correlation-ID` headers to trace security incidents across microservices and background job workers.
+4. **Grafana Security Audit Dashboard**:
+   - Dashboard `security_audit.json` visualizes real-time security events, auth failure spikes, and rate limit violations.
+
+
 
 
 

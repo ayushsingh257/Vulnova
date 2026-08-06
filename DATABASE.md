@@ -968,6 +968,15 @@ Phase 8.3 introduces **zero new database tables** and **zero schema migrations**
 - **Graceful Fallback**:
   - Redis connection drops seamlessly degrade to local in-memory fallback without raising database connection errors or crashing endpoints.
 
+### 8.24 Database Telemetry & Pool Connection Monitoring (Era 11 Phase 11.3)
+- **Prometheus Database Pool Metrics**:
+  - `vulnova_db_pool_active_connections`: Gauge tracking active connections allocated in SQLAlchemy pool.
+  - `vulnova_db_slow_queries_total`: Counter tracking database execution queries exceeding 100ms.
+- **Grafana Database Dashboard Integration**:
+  - Dashboard `database_performance.json` visualizes real-time pool connection saturation and slow query spikes.
+- **Distributed Database Query Tracing**:
+  - OpenTelemetry database span helper (`trace_db_query`) recording query statement type, target table, and duration.
+
 
 ---
 

@@ -32,6 +32,7 @@ from app.api.v1.routers import (
     scan_targets,
     secrets_validation,
     status,
+    system_health,
     threat_validation,
     trends,
     triage,
@@ -43,6 +44,7 @@ from app.api.v1.routers import (
 
 api_v1_router = APIRouter()
 api_v1_router.include_router(status.router)
+api_v1_router.include_router(system_health.router)
 api_v1_router.include_router(auth.router)
 api_v1_router.include_router(mfa.router)
 api_v1_router.include_router(admin.router)

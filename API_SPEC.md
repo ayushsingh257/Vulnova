@@ -1716,6 +1716,28 @@ All API errors return a standardized JSON error format:
   }
   ```
 
+---
+
+### Section Y: Centralized Observability & System Probes Endpoints (Phase 11.3)
+
+#### `GET /metrics` (Phase 11.3)
+- **Summary**: Expose application, database, cache, and security audit metrics formatted in standard Prometheus exposition text format.
+- **Content-Type**: `text/plain; version=0.0.4`.
+- **Response**: `200 OK` returning Prometheus metric text block.
+
+#### `GET /api/v1/system/health` (Phase 11.3)
+- **Summary**: Retrieve comprehensive operational health status summary across database, Redis, and background services.
+- **Response**: `200 OK` returning `status`, `version`, `timestamp`, `uptime_seconds`, and `dependencies`.
+
+#### `GET /api/v1/system/readiness` (Phase 11.3)
+- **Summary**: Kubernetes readiness probe evaluating database connectivity.
+- **Response**: `200 OK` when ready; `503 Service Unavailable` when database is unready.
+
+#### `GET /api/v1/system/liveness` (Phase 11.3)
+- **Summary**: Kubernetes liveness probe checking process vitality.
+- **Response**: `200 OK` returning `{"status": "ALIVE", "ping": "pong"}`.
+
+
 
 
 

@@ -85,6 +85,46 @@ services:
       timeout: 5s
       retries: 3
 
+  prometheus:
+    image: prom/prometheus:v2.50.0
+    container_name: vulnova-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deployment/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - vulnova_net
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana:10.3.0
+    container_name: vulnova-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=vulnova_secure_grafana_password
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./deployment/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./deployment/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana_data:/var/lib/grafana
+    networks:
+      - vulnova_net
+    depends_on:
+      prometheus:
+        condition: service_healthy
+
 networks:
   vulnova_net:
     driver: bridge
@@ -95,3 +135,8 @@ volumes:
     name: vulnova_postgres_data
   redis_data:
     name: vulnova_redis_data
+  prometheus_data:
+    name: vulnova_prometheus_data
+  grafana_data:
+    name: vulnova_grafana_data
+
