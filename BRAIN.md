@@ -713,6 +713,15 @@ The following discovery engine architecture decisions were finalized during Phas
     - **DR API Router**: 7 REST endpoints (`/api/v1/disaster-recovery/*`) for DR status monitoring, recovery workflow execution, failover control, deployment rollback, and event history retrieval — all protected by `admin:read`/`admin:manage` RBAC permissions.
     - **Operational DR Runbook**: `docs/operations/DISASTER_RECOVERY.md` with disaster classification matrix (DR-SEV-1 through DR-SEV-5), recovery lifecycle procedures, PITR/WAL restoration workflows, Redis recovery, service dependency recovery order, and post-recovery validation checklist.
     - **Automated Bash Scripts**: `deployment/scripts/disaster-recovery/` containing `failover.sh` (database failover), `service_recovery.sh` (dependency-ordered recovery), and `rollback_deployment.sh` (deployment rollback with health validation).
+55. **Security Incident Response & Audit Escalation Lifecycle Architecture (Phase 11.6)**: Enterprise incident management, multi-channel escalation, forensic audit correlation, and Post-Incident Review (PIR) governance:
+    - **Operational Runbook**: `docs/operations/INCIDENT_RESPONSE.md` defining 4-tier severity matrix (`SEV-1` through `SEV-4`), 7-phase incident lifecycle, escalation timelines, evidence preservation chain of custody, GDPR 72-hour breach notification readiness, and PIR template.
+    - **Database Models & Migration**: PostgreSQL tables `incidents`, `incident_timelines`, `escalation_events`, and `post_incident_reviews` managed via Alembic migration `0005_create_incident_response_tables.py`.
+    - **IncidentResponseService**: Complete lifecycle orchestration, state transitions (`DETECTED` $\rightarrow$ `CLOSED`), automated timeline milestones, and MTTA/MTTC/MTTR response duration calculation with SLA tracking.
+    - **IncidentEscalationService & Providers**: Multi-channel notification engine dispatching alerts to PagerDuty (Events API v2), Slack (Block Kit alert cards), and Email with exponential backoff retries and delivery tracking.
+    - **ForensicInvestigationService**: Deep querying and correlation of immutable `AuditLogModel` records into threat anomaly clusters, generating tamper-evident evidence packages with SHA-256 cryptographic digests.
+    - **PostIncidentReviewService**: Blameless root cause analysis (5 Whys), impact assessments, remediation action items tracking, and structured Markdown report generation.
+    - **REST API Router**: 8 endpoints under `/api/v1/incidents/*` guarded by `admin:manage` and `security:manage` RBAC permissions.
+
 
 
 

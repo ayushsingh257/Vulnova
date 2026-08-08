@@ -1841,10 +1841,70 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
 - **Response**: `200 OK` returning `List[RollbackStatusDTO]`.
 
+---
+
+### Section AB: Security Incident Response & Audit Escalation Endpoints (Phase 11.6 ✅)
+
+#### `GET /api/v1/incidents` (Phase 11.6)
+- **Summary**: Retrieve paginated list of security incidents for the authenticated organization.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Query Params**: `severity` (string, optional: `SEV-1`, `SEV-2`, `SEV-3`, `SEV-4`), `status` (string, optional: `DETECTED`, `TRIAGED`, `CONTAINED`, `INVESTIGATING`, `ERADICATED`, `RECOVERED`, `CLOSED`), `limit` (int, default: 50), `offset` (int, default: 0).
+- **Response**: `200 OK` returning `IncidentListResponseDTO` (`incidents`, `total`, `limit`, `offset`).
+
+#### `POST /api/v1/incidents` (Phase 11.6)
+- **Summary**: Declare and classify a new security incident, trigger initial timeline recording, and log audit event.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Request Body**: `CreateIncidentRequestDTO` (`title`, `description`, `severity`, `lead_investigator_id`, `affected_services`, `indicators_of_compromise`, `details`).
+- **Response**: `201 Created` returning `IncidentResponseDTO`.
+
+#### `GET /api/v1/incidents/status/summary` (Phase 11.6)
+- **Summary**: Retrieve high-level operational posture, severity counts, MTTC, and MTTR response times.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `IncidentStatusDTO` (`total_active_incidents`, `sev1_critical_count`, `sev2_high_count`, `sev3_medium_count`, `sev4_low_count`, `contained_count`, `mean_time_to_contain_minutes`, `mean_time_to_resolve_minutes`, `status`).
+
+#### `GET /api/v1/incidents/{id}` (Phase 11.6)
+- **Summary**: Fetch comprehensive incident details, chronological timelines, escalations, PIR, and duration metrics.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `IncidentResponseDTO`.
+
+#### `PATCH /api/v1/incidents/{id}` (Phase 11.6)
+- **Summary**: Transition incident lifecycle state and record state changes in timeline and audit logs.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Request Body**: `UpdateIncidentStateRequestDTO` (`status`, `note`, `lead_investigator_id`, `affected_services`, `indicators_of_compromise`, `details`).
+- **Response**: `200 OK` returning `IncidentResponseDTO`.
+
+#### `POST /api/v1/incidents/{id}/escalate` (Phase 11.6)
+- **Summary**: Trigger multi-channel alert escalation workflow across PagerDuty, Slack, and Email.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Request Body**: `TriggerEscalationRequestDTO` (`channels`, `reason`, `details`).
+- **Response**: `200 OK` returning `EscalationEventDTO` (`id`, `incident_id`, `severity`, `channels`, `status`, `notification_status`, `triggered_by`, `triggered_at`, `details`).
+
+#### `GET /api/v1/incidents/{id}/timeline` (Phase 11.6)
+- **Summary**: Retrieve chronological timeline milestones and linked audit logs for an incident.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `List[IncidentTimelineDTO]`.
+
+#### `POST /api/v1/incidents/{id}/pir` (Phase 11.6)
+- **Summary**: Create or update Post-Incident Review (PIR) with root cause, impact, timeline, lessons learned, and action items.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Request Body**: `CreatePIRRequestDTO` (`summary`, `root_cause`, `impact_assessment`, `timeline_summary`, `lessons_learned`, `action_items`).
+- **Response**: `201 Created` returning `PostIncidentReviewDTO`.
+
+#### `GET /api/v1/incidents/{id}/pir` (Phase 11.6)
+- **Summary**: Fetch Post-Incident Review analysis for a security incident.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `PostIncidentReviewDTO`.
+
+#### `GET /api/v1/incidents/{id}/forensics` (Phase 11.6)
+- **Summary**: Retrieve correlated audit event clusters and SHA-256 evidence integrity package for forensic analysis.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `ForensicInvestigationResultDTO` (`incident_id`, `organization_id`, `investigation_timestamp`, `total_events_analyzed`, `correlated_clusters`, `suspicious_ips`, `affected_actors`, `forensic_integrity_sha256`, `summary`).
+
+---
 
 ## ⚡ 4. WebSocket Streaming Protocol
 
-
 ### Connection: `GET /api/v1/ws/scans/{scan_id}`
 Clients connect to receive live streaming updates during scan execution.
+
 

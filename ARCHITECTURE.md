@@ -1853,6 +1853,65 @@ Vulnova implements an enterprise disaster recovery infrastructure with documente
 3. **Dependency-Ordered Recovery**: Service restoration follows strict sequential order (PostgreSQL → Redis → Backend → Celery → Frontend) to prevent cascading failures.
 4. **RBAC-Protected Operations**: All DR endpoints require `admin:read` (status/history) or `admin:manage` (execute recovery/failover/rollback) permissions.
 
+---
+
+## 37. Security Incident Response & Audit Escalation Lifecycle (Phase 11.6)
+
+### Architecture Overview
+
+Vulnova's Security Incident Response & Audit Escalation subsystem (`app/infrastructure/incident_response/`) delivers enterprise-grade security incident management, automated multi-channel alert escalations, forensic audit trail correlation, tamper-evident evidence preservation, and Post-Incident Review (PIR) governance.
+
+### Component Architecture
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                    FastAPI Incident Router (/api/v1/incidents/*)                        │
+│            (admin:manage, security:manage RBAC Guards & Audit Log Integration)          │
+└────────────────────────────────────────────┬────────────────────────────────────────────┘
+                                             │
+      ┌──────────────────────┬───────────────┴───────────────┬──────────────────────┐
+      │                      │                               │                      │
+      ▼                      ▼                               ▼                      ▼
+┌──────────────┐     ┌──────────────┐                ┌──────────────┐       ┌──────────────┐
+│ Incident     │     │ Escalation   │                │ Forensic     │       │ Post-Incident│
+│ Service      │     │ Service      │                │ Service      │       │ Review (PIR) │
+│ (Lifecycle & │     │ (Multi-Chan  │                │ (Audit Trail │       │ Service      │
+│  MTTA/MTTR)  │     │  Dispatch)   │                │  Correlation)│       │ (Root Cause) │
+└──────┬───────┘     └──────┬───────┘                └──────┬───────┘       └──────┬───────┘
+       │                    │                               │                      │
+       │             ┌──────┴──────┐                        │                      │
+       │             │ Providers   │                        │                      │
+       │             ├─────────────┤                        │                      │
+       │             │ PagerDuty   │                        │                      │
+       │             │ Slack       │                        │                      │
+       │             │ Email       │                        │                      │
+       │             └─────────────┘                        │                      │
+       ▼                                                    ▼                      ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│              PostgreSQL Schema (incidents, incident_timelines, escalation_events,       │
+│                                 post_incident_reviews)                                  │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Core Architecture Capabilities
+
+1. **Structured 7-Phase Incident Lifecycle**:
+   - Manages state progression across `DETECTION` $\rightarrow$ `TRIAGE` $\rightarrow$ `CONTAINMENT` $\rightarrow$ `INVESTIGATION` $\rightarrow$ `ERADICATION` $\rightarrow$ `RECOVERY` $\rightarrow$ `POST_INCIDENT_REVIEW`.
+   - Calculates granular operational metrics: Mean Time to Acknowledge (MTTA), Mean Time to Contain (MTTC), and Mean Time to Resolve (MTTR) with automated SLA compliance evaluation.
+
+2. **Multi-Channel Alert Escalation Engine**:
+   - `IncidentEscalationService` evaluates severity matrix rules (`SEV-1` through `SEV-4`) and coordinates notifications across pluggable providers (`PagerDutyEscalationProvider`, `SlackEscalationProvider`, `EmailEscalationProvider`).
+   - Resilient dispatch with exponential backoff retries, delivery tracking (`DELIVERED`, `PARTIAL`, `FAILED`), and audit event logging.
+
+3. **Forensic Audit Correlation & Integrity Digest**:
+   - `ForensicInvestigationService` executes deep queries against immutable `AuditLogModel` records, correlating authentication anomalies, privilege escalation attempts, token revocations, and data exfiltration patterns into threat clusters.
+   - Generates tamper-evident forensic packages with SHA-256 cryptographic checksums for forensic chain of custody and legal defensibility.
+
+4. **Post-Incident Review (PIR) Governance**:
+   - `PostIncidentReviewService` captures 5-Whys root cause analysis, impact assessments, chronological event summaries, and tracks remediation action items with ownership and due dates.
+   - Generates structured Markdown and data exports for executive governance and compliance reporting.
+
+
 
 
 

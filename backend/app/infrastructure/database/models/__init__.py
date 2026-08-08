@@ -45,6 +45,12 @@ from app.infrastructure.database.models.asset_graph import (
     AssetRelationshipModel,
 )
 from app.infrastructure.database.models.audit_log import AuditLogModel
+from app.infrastructure.database.models.incident import (
+    EscalationEventModel,
+    IncidentModel,
+    IncidentTimelineModel,
+    PostIncidentReviewModel,
+)
 from app.infrastructure.database.models.organization import OrganizationModel
 from app.infrastructure.database.models.refresh_token import RefreshTokenModel
 from app.infrastructure.database.models.risk_snapshot import RiskPostureSnapshotModel
@@ -73,6 +79,10 @@ __all__ = [
     "RefreshTokenModel",
     "APIKeyModel",
     "AuditLogModel",
+    "IncidentModel",
+    "IncidentTimelineModel",
+    "EscalationEventModel",
+    "PostIncidentReviewModel",
     "AssetNodeModel",
     "AssetRelationshipModel",
     "AssessmentJobModel",

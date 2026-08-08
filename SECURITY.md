@@ -904,6 +904,31 @@ Phase 11.5 extends operational security with disaster recovery, failover automat
 5. **Recovery Lifecycle Containment**:
    - The 5-phase recovery lifecycle includes explicit containment (Phase 2) to isolate failed components before executing recovery, preventing cascading security failures.
 
+---
+
+## 🚨 41. Security Incident Response & Audit Escalation Controls (Phase 11.6)
+
+Phase 11.6 establishes enterprise security incident response, alert escalation workflows, forensic investigation governance, and post-incident review standards:
+
+1. **Severity Classification & Target Metrics Enforcement**:
+   - Classifies incidents into 4 severity tiers (`SEV-1 Critical`, `SEV-2 High`, `SEV-3 Medium`, `SEV-4 Low`) with automated target MTTA (`< 5 min` for SEV-1, `< 15 min` for SEV-2), MTTC (`< 30 min` for SEV-1), and MTTR (`< 4 hours` for SEV-1).
+
+2. **Multi-Channel Alert Escalation Controls**:
+   - `IncidentEscalationService` manages alert dispatching across PagerDuty Events API v2, Slack Block Kit webhooks, and secure Email distribution lists with exponential backoff retries and delivery tracking.
+   - Escalation events are recorded in `escalation_events` table and audited.
+
+3. **Forensic Audit Trail Analysis & SHA-256 Chain of Custody**:
+   - `ForensicInvestigationService` queries immutable `AuditLogModel` records, correlating authentication anomalies, privilege escalation attempts, token revocations, and data exfiltration patterns into threat clusters.
+   - Generates tamper-evident forensic packages with SHA-256 cryptographic digests preserving legal chain of custody.
+
+4. **Post-Incident Review (PIR) Governance**:
+   - Captures 5-Whys root cause analysis, impact assessments, timeline syntheses, and actionable remediation tracking with assigned owners and SLAs.
+
+5. **Granular RBAC Authorization & Multi-Tenant Boundary**:
+   - Viewing incidents and status requires `admin:manage` or `incidents:read`; creating, state transitions, escalations, and PIR creation require `admin:manage` / `security:manage`.
+   - All incident operations enforce strict `organization_id = current_user.organization_id` boundary checks.
+
+
 
 
 

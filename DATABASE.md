@@ -1010,3 +1010,80 @@ Era 11 specifies the database production reliability strategy for PostgreSQL 16:
 - **Dependency-Ordered Recovery**: Database recovery follows strict sequential order (PostgreSQL → Redis → Backend → Celery → Frontend) to prevent cascading connection exhaustion.
 - **Deployment Rollback Protection**: `RollbackService` provides single-command deployment rollback with container image swap and health check validation, protecting against bad releases impacting database connectivity.
 - **DR Audit Trail**: All disaster recovery operations are recorded via structured logging (`structlog`) for post-incident forensic analysis.
+
+---
+
+## 10. Security Incident Management Schema (Era 11 Phase 11.6)
+
+The Security Incident Management subsystem introduces 4 dedicated PostgreSQL tables (`0005_create_incident_response_tables.py`) with strict tenant isolation, immutable timelines, multi-channel escalation tracking, and Post-Incident Review (PIR) governance.
+
+### Database Table Schemas
+
+```sql
+-- 1. Security Incidents Master Table
+CREATE TABLE incidents (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    severity VARCHAR(50) NOT NULL DEFAULT 'SEV-3', -- 'SEV-1', 'SEV-2', 'SEV-3', 'SEV-4'
+    status VARCHAR(50) NOT NULL DEFAULT 'DETECTED', -- 'DETECTED', 'TRIAGED', 'CONTAINED', 'INVESTIGATING', 'ERADICATED', 'RECOVERED', 'CLOSED'
+    lead_investigator_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    affected_services JSONB NOT NULL DEFAULT '[]'::jsonb,
+    indicators_of_compromise JSONB NOT NULL DEFAULT '[]'::jsonb,
+    details JSONB NOT NULL DEFAULT '{}'::jsonb,
+    detected_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    contained_at TIMESTAMP WITH TIME ZONE,
+    resolved_at TIMESTAMP WITH TIME ZONE,
+    closed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX ix_incidents_org_severity ON incidents(organization_id, severity);
+CREATE INDEX ix_incidents_org_status ON incidents(organization_id, status);
+
+-- 2. Incident Timelines Table
+CREATE TABLE incident_timelines (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    incident_id UUID NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
+    actor_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    phase VARCHAR(50) NOT NULL, -- 'DETECTION', 'TRIAGE', 'CONTAINMENT', 'INVESTIGATION', 'ERADICATION', 'RECOVERY', 'POST_INCIDENT_REVIEW'
+    action VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    audit_log_id UUID REFERENCES audit_logs(id) ON DELETE SET NULL,
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX ix_incident_timelines_incident ON incident_timelines(incident_id);
+CREATE INDEX ix_incident_timelines_timestamp ON incident_timelines(timestamp);
+
+-- 3. Escalation Events Table
+CREATE TABLE escalation_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    incident_id UUID NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
+    triggered_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    severity VARCHAR(50) NOT NULL,
+    channels JSONB NOT NULL DEFAULT '[]'::jsonb, -- ['pagerduty', 'slack', 'email']
+    notification_status JSONB NOT NULL DEFAULT '{}'::jsonb,
+    status VARCHAR(50) NOT NULL DEFAULT 'DELIVERED', -- 'DELIVERED', 'PARTIAL', 'FAILED'
+    triggered_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    details JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+CREATE INDEX ix_escalation_events_incident ON escalation_events(incident_id);
+
+-- 4. Post-Incident Reviews (PIR) Table
+CREATE TABLE post_incident_reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    incident_id UUID NOT NULL UNIQUE REFERENCES incidents(id) ON DELETE CASCADE,
+    author_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    summary TEXT NOT NULL,
+    root_cause TEXT NOT NULL,
+    impact_assessment TEXT NOT NULL,
+    timeline_summary TEXT NOT NULL,
+    lessons_learned JSONB NOT NULL DEFAULT '[]'::jsonb,
+    action_items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX ix_pir_incident ON post_incident_reviews(incident_id);
+```
+

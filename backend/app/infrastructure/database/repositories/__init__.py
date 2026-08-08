@@ -19,6 +19,9 @@ from app.infrastructure.database.repositories.ai_remediation_repository import (
 from app.infrastructure.database.repositories.api_key_repository import (
     APIKeyRepository,
 )
+from app.infrastructure.database.repositories.incident_repository import (
+    IncidentRepository,
+)
 from app.infrastructure.database.repositories.organization_repository import (
     OrganizationRepository,
 )
@@ -39,6 +42,7 @@ __all__ = [
     "UserRepository",
     "RefreshTokenRepository",
     "APIKeyRepository",
+    "IncidentRepository",
     "AIAnalysisRepository",
     "AIAttackPathRepository",
     "AIRemediationRepository",

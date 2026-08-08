@@ -152,6 +152,13 @@ PERMISSION_MAP: Dict[str, Role] = {
     # ── Database Backup & PITR (Phase 11.4) ──
     "admin:read": Role.ADMIN,
     "admin:manage": Role.ADMIN,
+    # ── Security Incident Response & Audit Escalation (Phase 11.6) ──
+    "security:manage": Role.ADMIN,
+    "incidents:read": Role.VIEWER,
+    "incidents:create": Role.SECURITY_ANALYST,
+    "incidents:manage": Role.ADMIN,
+    "incidents:escalate": Role.SECURITY_ANALYST,
+    "incidents:pir": Role.SECURITY_ANALYST,
 }
 
 ALL_PERMISSIONS: FrozenSet[str] = frozenset(PERMISSION_MAP.keys())

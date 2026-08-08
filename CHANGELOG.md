@@ -20,6 +20,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
+- **Era 11 Phase 11.6 (Security Incident Response & Audit Escalation Lifecycle)**:
+  - Created Security Incident Response Runbook (`docs/operations/INCIDENT_RESPONSE.md`):
+    - Defined 4-tier severity matrix (`SEV-1 Critical` to `SEV-4 Low`) with MTTA (< 5 min), MTTC (< 30 min), and MTTR (< 4 hours) SLA targets.
+    - Documented 7-phase incident lifecycle (Detection $\rightarrow$ Triage $\rightarrow$ Containment $\rightarrow$ Investigation $\rightarrow$ Eradication $\rightarrow$ Recovery $\rightarrow$ Post-Incident Review).
+    - Established incident ownership model (Incident Commander, Technical Lead, Communications Lead, Scribe).
+    - Documented evidence preservation protocols, forensic audit log analysis, GDPR 72-hour breach notification readiness, and PIR template.
+  - Implemented Database Schema & Migration:
+    - Added tables `incidents`, `incident_timelines`, `escalation_events`, and `post_incident_reviews` via Alembic migration `0005_create_incident_response_tables.py`.
+    - Defined models `IncidentModel`, `IncidentTimelineModel`, `EscalationEventModel`, and `PostIncidentReviewModel` with PostgreSQL `JSONB` and UUID primary keys.
+  - Implemented Security Incident Response Package (`app/infrastructure/incident_response/`):
+    - `dto.py`: Defined DTOs for `IncidentSeverityDTO`, `IncidentStatusDTO`, `IncidentTimelineDTO`, `EscalationEventDTO`, `PostIncidentReviewDTO`, and `ForensicInvestigationResultDTO`.
+    - `incident_service.py`: `IncidentResponseService` orchestrating incident creation, state progression, automated timeline milestones, and MTTA/MTTC/MTTR duration calculations.
+    - `escalation_service.py`: `IncidentEscalationService` evaluating severity matrix rules and dispatching multi-channel notifications.
+    - `forensics_service.py`: `ForensicInvestigationService` correlating `AuditLogModel` records into threat anomaly clusters with SHA-256 evidence integrity digests.
+    - `post_incident_service.py`: `PostIncidentReviewService` managing 5-Whys root cause analysis, impact assessments, remediation action items, and Markdown report compilation.
+  - Created Notification Providers (`app/infrastructure/incident_response/escalation/`):
+    - `pagerduty.py`: `PagerDutyEscalationProvider` integrating with PagerDuty Events API v2.
+    - `slack.py`: `SlackEscalationProvider` generating Block Kit alert cards with severity colors (`#DC2626`, `#F97316`).
+    - `email.py`: `EmailEscalationProvider` delivering structured alerts to security distribution lists with retry logic.
+  - Implemented REST API Incident Router (`app/api/v1/routers/incidents.py`):
+    - `GET /api/v1/incidents`: List incidents with severity/status filtering (`admin:manage`).
+    - `POST /api/v1/incidents`: Create and classify security incident (`admin:manage`).
+    - `GET /api/v1/incidents/status/summary`: Retrieve incident posture and duration metrics (`admin:manage`).
+    - `GET /api/v1/incidents/{id}`: Retrieve incident metadata, timeline, escalations, and PIR (`admin:manage`).
+    - `PATCH /api/v1/incidents/{id}`: Update incident lifecycle state (`admin:manage`).
+    - `POST /api/v1/incidents/{id}/escalate`: Trigger multi-channel alert escalation (`admin:manage`).
+    - `GET /api/v1/incidents/{id}/timeline`: Retrieve chronological timeline events (`admin:manage`).
+    - `POST /api/v1/incidents/{id}/pir`: Create or update Post-Incident Review (`admin:manage`).
+    - `GET /api/v1/incidents/{id}/pir`: Retrieve Post-Incident Review (`admin:manage`).
+    - `GET /api/v1/incidents/{id}/forensics`: Retrieve correlated forensic package (`admin:manage`).
+  - Implemented Comprehensive Test Suite (`backend/tests/test_incident_response.py`):
+    - Added 23 unit and integration tests verifying creation, state transitions, duration calculations, multi-channel escalation, forensic SHA-256 integrity, and PIR reports.
+
 - **Era 11 Phase 11.5 (Enterprise Disaster Recovery, RTO/RPO & Rollback Infrastructure)**:
   - Created Disaster Recovery Runbook (`docs/operations/DISASTER_RECOVERY.md`):
     - Documented disaster classification matrix (DR-SEV-1 through DR-SEV-5).

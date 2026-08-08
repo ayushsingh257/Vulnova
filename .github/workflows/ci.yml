@@ -55,6 +55,26 @@ jobs:
           test -f deployment/scripts/disaster-recovery/rollback_deployment.sh
           echo "All DR infrastructure artifacts present."
 
+      - name: Verify Incident Response Infrastructure
+        run: |
+          echo "Verifying Incident Response infrastructure files..."
+          test -f docs/operations/INCIDENT_RESPONSE.md
+          test -f backend/app/infrastructure/database/models/incident.py
+          test -f backend/app/infrastructure/database/repositories/incident_repository.py
+          test -f backend/app/infrastructure/incident_response/__init__.py
+          test -f backend/app/infrastructure/incident_response/dto.py
+          test -f backend/app/infrastructure/incident_response/incident_service.py
+          test -f backend/app/infrastructure/incident_response/escalation_service.py
+          test -f backend/app/infrastructure/incident_response/forensics_service.py
+          test -f backend/app/infrastructure/incident_response/post_incident_service.py
+          test -f backend/app/infrastructure/incident_response/escalation/__init__.py
+          test -f backend/app/infrastructure/incident_response/escalation/base.py
+          test -f backend/app/infrastructure/incident_response/escalation/pagerduty.py
+          test -f backend/app/infrastructure/incident_response/escalation/slack.py
+          test -f backend/app/infrastructure/incident_response/escalation/email.py
+          test -f backend/app/api/v1/routers/incidents.py
+          echo "All Incident Response infrastructure artifacts present."
+
   docker-validation:
     name: Docker Infrastructure Syntax Verification
     runs-on: ubuntu-latest
