@@ -1004,6 +1004,9 @@ Era 11 specifies the database production reliability strategy for PostgreSQL 16:
 ### 4. Restore Verification & Automated Testing
 - **Automated Restore Testing**: Daily automated sandbox restore job that downloads the latest backup, performs PITR recovery to an isolated test database, runs integrity verification queries (`SELECT count(*) FROM security_findings`), and reports restore duration metrics.
 
-
-
-
+### 8.26 Enterprise Disaster Recovery & Database Failover Strategy (Era 11 Phase 11.5)
+- **RTO/RPO Target Validation**: `RecoveryService` tracks RTO (< 1 hour) and RPO (< 5 minutes) targets during every recovery execution, recording actual achievement metrics.
+- **PostgreSQL Failover Automation**: `FailoverService` manages automated primary-to-secondary PostgreSQL failover promotion with DNS endpoint swap and post-promotion health validation.
+- **Dependency-Ordered Recovery**: Database recovery follows strict sequential order (PostgreSQL → Redis → Backend → Celery → Frontend) to prevent cascading connection exhaustion.
+- **Deployment Rollback Protection**: `RollbackService` provides single-command deployment rollback with container image swap and health check validation, protecting against bad releases impacting database connectivity.
+- **DR Audit Trail**: All disaster recovery operations are recorded via structured logging (`structlog`) for post-incident forensic analysis.

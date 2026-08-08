@@ -20,6 +20,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
+- **Era 11 Phase 11.5 (Enterprise Disaster Recovery, RTO/RPO & Rollback Infrastructure)**:
+  - Created Disaster Recovery Runbook (`docs/operations/DISASTER_RECOVERY.md`):
+    - Documented disaster classification matrix (DR-SEV-1 through DR-SEV-5).
+    - Defined 5-phase recovery lifecycle (Detection, Containment, Recovery Execution, Validation, Service Restoration).
+    - Established strict RTO (< 1 hour) and RPO (< 5 minutes) targets.
+    - Documented PostgreSQL PITR recovery, WAL restoration, Redis recovery, dependency-ordered restart sequence, and post-recovery validation checklist.
+  - Implemented Disaster Recovery Service Package (`app/infrastructure/disaster_recovery/`):
+    - `dto.py`: Defined DTOs for `DisasterRecoveryStatusDTO`, `RecoveryExecutionDTO`, `FailoverEventDTO`, and `RollbackStatusDTO`.
+    - `recovery_service.py`: `RecoveryService` managing 5-phase recovery execution, RTO/RPO target calculation, and recovery history tracking.
+    - `failover_service.py`: `FailoverService` automating PostgreSQL primary-to-secondary replica promotion with DNS endpoint swap and post-failover health check.
+    - `rollback_service.py`: `RollbackService` orchestrating single-command container image rollback and health check validation.
+  - Implemented REST API Disaster Recovery Router (`app/api/v1/routers/disaster_recovery.py`):
+    - `GET /api/v1/disaster-recovery/status`: Get overall DR readiness, RTO/RPO target definitions, and cluster health (`admin:read`).
+    - `POST /api/v1/disaster-recovery/recover`: Execute recovery simulation or disaster workflow (`admin:manage`).
+    - `GET /api/v1/disaster-recovery/recovery-history`: Retrieve past recovery execution events (`admin:read`).
+    - `POST /api/v1/disaster-recovery/failover`: Trigger primary-to-secondary database failover (`admin:manage`).
+    - `GET /api/v1/disaster-recovery/failover-history`: Retrieve past failover events (`admin:read`).
+    - `POST /api/v1/disaster-recovery/rollback`: Execute deployment version rollback (`admin:manage`).
+    - `GET /api/v1/disaster-recovery/rollback-history`: Retrieve deployment rollback history (`admin:read`).
+  - Created Automated Disaster Recovery Scripts (`deployment/scripts/disaster-recovery/`):
+    - `failover.sh`: Bash script automating primary database failure detection, application container shutdown, secondary replica promotion, service restart, and readiness probing.
+    - `service_recovery.sh`: Bash script restarting services in strict dependency order (PostgreSQL → Redis → Backend → Celery → Frontend).
+    - `rollback_deployment.sh`: Bash script rolling back container image versions with retry-based readiness verification.
+  - Implemented Comprehensive Test Suite (`backend/tests/test_disaster_recovery.py`):
+    - Added 18 test cases across `RecoveryService`, `FailoverService`, and `RollbackService` with `@pytest.mark.anyio` ensuring full asynchronous lifecycle coverage.
+  - Updated CI Pipeline (`.github/workflows/ci.yml`):
+    - Added verification steps for all DR documentation, services, routers, and scripts.
+
 - **Era 11 Phase 11.4 (Database Backup Strategy & Point-in-Time Recovery - PITR)**:
   - Implemented Database Backup Infrastructure Package (`app/infrastructure/database/backup/`):
     - `dto.py`: `BackupStatusDTO`, `BackupMetadataDTO`, `BackupVerificationDTO`.

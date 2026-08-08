@@ -1630,9 +1630,35 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 
 
 ### Phase 11.5: Enterprise Disaster Recovery, RTO/RPO & Rollback Infrastructure
-- **Status**: Planned 📋
+- **Status**: Completed ✅
 - **Objective**: Establish production disaster recovery protocols defining Recovery Time Objective (RTO < 1 hour) and Recovery Point Objective (RPO < 5 minutes), automated service recovery procedures, multi-region database failover workflows, single-command zero-downtime deployment rollback strategies, and annual DR fire-drill procedures.
-- **Deliverables**: Disaster recovery runbook (`docs/operations/DISASTER_RECOVERY.md`), failover automation scripts, and automated deployment rollback hooks.
+- **Deliverables**:
+  - Disaster Recovery Runbook (`docs/operations/DISASTER_RECOVERY.md`):
+    - Disaster classification matrix (DR-SEV-1 through DR-SEV-5).
+    - 5-phase recovery lifecycle (Detection → Containment → Recovery → Validation → Restoration).
+    - PITR/WAL recovery workflow, Redis recovery, service dependency recovery order.
+    - Post-recovery validation checklist.
+  - Disaster Recovery Service Package (`backend/app/infrastructure/disaster_recovery/`):
+    - `dto.py`: `DisasterRecoveryStatusDTO`, `RecoveryExecutionDTO`, `FailoverEventDTO`, `RollbackStatusDTO`.
+    - `recovery_service.py`: `RecoveryService` orchestrating 5-phase recovery lifecycle with RTO/RPO tracking.
+    - `failover_service.py`: `FailoverService` managing primary-to-secondary PostgreSQL failover promotion with DNS swap.
+    - `rollback_service.py`: `RollbackService` executing deployment rollback with container image swap and health validation.
+  - DR API Router (`backend/app/api/v1/routers/disaster_recovery.py`):
+    - `GET /api/v1/disaster-recovery/status`: DR readiness & RTO/RPO targets (`admin:read`).
+    - `POST /api/v1/disaster-recovery/recover`: Execute recovery workflow (`admin:manage`).
+    - `GET /api/v1/disaster-recovery/recovery-history`: Recovery execution history (`admin:read`).
+    - `POST /api/v1/disaster-recovery/failover`: Trigger failover promotion (`admin:manage`).
+    - `GET /api/v1/disaster-recovery/failover-history`: Failover event history (`admin:read`).
+    - `POST /api/v1/disaster-recovery/rollback`: Execute deployment rollback (`admin:manage`).
+    - `GET /api/v1/disaster-recovery/rollback-history`: Rollback execution history (`admin:read`).
+  - Automated DR Scripts (`deployment/scripts/disaster-recovery/`):
+    - `failover.sh`: Primary-to-secondary database failover automation.
+    - `service_recovery.sh`: Dependency-ordered service recovery automation.
+    - `rollback_deployment.sh`: Single-command deployment rollback with health validation.
+  - Test Suite (`backend/tests/test_disaster_recovery.py`):
+    - 9 tests (18 parametric variants — asyncio + trio): RecoveryService (5), FailoverService (2), RollbackService (2). All pass.
+  - CI/CD Integration (`.github/workflows/ci.yml`):
+    - DR infrastructure file verification step in repository-integrity job.
 - **Dependencies**: Phase 11.4.
 - **Completion Criteria**: DR runbook documented; simulated regional failover and deployment rollback execute within RTO/RPO bounds.
 - **Testing Requirements**: Failover simulation test, deployment rollback execution check.

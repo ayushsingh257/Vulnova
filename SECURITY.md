@@ -886,9 +886,23 @@ Phase 11.4 establishes end-to-end backup data protection, storage encryption, an
 6. **Strict RBAC Authorization**:
    - Access to backup history (`GET /api/v1/database/backups`) requires `admin:read` permission; triggering base backups or dry-run restores requires `admin:manage` permission.
 
+---
 
+## 🛡️ 40. Enterprise Disaster Recovery & Rollback Security Controls (Phase 11.5)
 
+Phase 11.5 extends operational security with disaster recovery, failover automation, and deployment rollback controls:
 
+1. **RBAC-Protected DR Operations**:
+   - All DR status/history endpoints (`GET /api/v1/disaster-recovery/status`, `/recovery-history`, `/failover-history`, `/rollback-history`) require `admin:read` permission.
+   - All DR execution endpoints (`POST /api/v1/disaster-recovery/recover`, `/failover`, `/rollback`) require `admin:manage` permission.
+2. **Structured Audit Logging**:
+   - Every DR operation (recovery execution, failover trigger, rollback) is recorded via `structlog` with `user_id`, `recovery_id`/`event_id`/`rollback_id`, timestamps, and outcome status.
+3. **Failover Security Isolation**:
+   - Database failover procedures halt application services before promoting secondary replicas, preventing split-brain data corruption.
+4. **Rollback Health Validation**:
+   - All deployment rollbacks include mandatory post-rollback health check validation before restoring traffic, preventing incomplete rollbacks.
+5. **Recovery Lifecycle Containment**:
+   - The 5-phase recovery lifecycle includes explicit containment (Phase 2) to isolate failed components before executing recovery, preventing cascading security failures.
 
 
 

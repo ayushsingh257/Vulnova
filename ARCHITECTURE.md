@@ -1813,9 +1813,45 @@ Phase 11.4 establishes enterprise-grade database resilience, automated base back
 5. **Role-Based REST API Management**:
    - `/api/v1/database/backups` endpoints are protected with `admin:read` (read-only history/status) and `admin:manage` (trigger backup/restore verification) RBAC permissions.
 
+## 🛡️ 36. Enterprise Disaster Recovery, Failover & Rollback Architecture (Phase 11.5)
 
+Vulnova implements an enterprise disaster recovery infrastructure with documented RTO (< 1 hour) and RPO (< 5 minutes) targets, automated failover workflows, deployment rollback mechanisms, and validated recovery procedures.
 
+### Core Components:
 
+| Component | Location | Purpose |
+|---|---|---|
+| **RecoveryService** | `app/infrastructure/disaster_recovery/recovery_service.py` | Orchestrates the 5-phase recovery lifecycle (Detection → Containment → Recovery → Validation → Restoration) with RTO/RPO tracking. |
+| **FailoverService** | `app/infrastructure/disaster_recovery/failover_service.py` | Manages automated primary-to-secondary PostgreSQL failover with DNS endpoint swap and health validation. |
+| **RollbackService** | `app/infrastructure/disaster_recovery/rollback_service.py` | Executes application deployment rollback to prior stable versions with container image swap and health check validation. |
+| **DR API Router** | `app/api/v1/routers/disaster_recovery.py` | 7 REST endpoints for DR status, recovery execution, failover control, rollback operations, and event history — all `admin:read`/`admin:manage` RBAC-protected. |
+| **DR Runbook** | `docs/operations/DISASTER_RECOVERY.md` | Comprehensive operational runbook with disaster classification matrix, recovery procedures, and post-recovery validation checklist. |
+| **Automated Scripts** | `deployment/scripts/disaster-recovery/` | Bash automation for failover (`failover.sh`), service recovery (`service_recovery.sh`), and deployment rollback (`rollback_deployment.sh`). |
+
+### Recovery Lifecycle Architecture:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│           FastAPI DR Router (/api/v1/disaster-recovery/*)                   │
+│           (admin:read, admin:manage RBAC Guards & Structured Audit Logs)   │
+└──────────────────────────────────┬──────────────────────────────────────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    │              │              │
+                    ▼              ▼              ▼
+          ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+          │ Recovery     │ │ Failover     │ │ Rollback     │
+          │ Service      │ │ Service      │ │ Service      │
+          │ (5-Phase     │ │ (Primary →   │ │ (Version     │
+          │  Lifecycle)  │ │  Secondary)  │ │  Rollback)   │
+          └──────────────┘ └──────────────┘ └──────────────┘
+```
+
+### Key Architectural Decisions:
+1. **Zero Database Table Additions**: All DR state is managed in-memory with structured log persistence, consistent with Era 8+ zero-migration patterns.
+2. **RTO/RPO Validated**: Every recovery execution tracks actual RTO achievement (minutes) and estimated RPO (based on WAL archiving frequency) against defined targets.
+3. **Dependency-Ordered Recovery**: Service restoration follows strict sequential order (PostgreSQL → Redis → Backend → Celery → Frontend) to prevent cascading failures.
+4. **RBAC-Protected Operations**: All DR endpoints require `admin:read` (status/history) or `admin:manage` (execute recovery/failover/rollback) permissions.
 
 
 

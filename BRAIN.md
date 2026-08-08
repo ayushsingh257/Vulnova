@@ -706,10 +706,13 @@ The following discovery engine architecture decisions were finalized during Phas
     - **PostgreSQL WAL Archiving for PITR**: `deployment/postgres/postgresql.conf` tuning `archive_mode = on`, `archive_command`, `archive_timeout = 60`, `wal_level = replica`, and `max_wal_senders` for continuous transaction streaming.
     - **Dry-Run Restore Verification Service**: `RestoreVerificationService` performing dry-run restore validation in temporary sandboxes, verifying SHA-256 checksums, DDL schema integrity, and table row counts.
     - **REST Management Router**: REST router (`/api/v1/database/backups`) offering endpoints for listing backup history (`GET /`), triggering manual base backups (`POST /create`), executing dry-run restore verification (`POST /verify`), and retrieving backup health status (`GET /status`) guarded by `admin:read` and `admin:manage` permissions.
-
-
-
-
+54. **Enterprise Disaster Recovery, Failover & Rollback Architecture (Phase 11.5)**: Production-grade DR infrastructure with documented RTO/RPO targets and automated recovery:
+    - **RecoveryService (5-Phase Lifecycle)**: Orchestrates Detection → Containment → Recovery Execution → Validation → Service Restoration with actual RTO/RPO achievement tracking against defined targets (RTO < 60 min, RPO < 5 min).
+    - **FailoverService (Primary-to-Secondary Promotion)**: Automated PostgreSQL primary-to-secondary failover with health checking, replica promotion, DNS endpoint swap, and post-promotion liveness validation.
+    - **RollbackService (Deployment Version Rollback)**: Single-command application deployment rollback to prior stable versions with container image swap, dependency-ordered service restart, and health check validation.
+    - **DR API Router**: 7 REST endpoints (`/api/v1/disaster-recovery/*`) for DR status monitoring, recovery workflow execution, failover control, deployment rollback, and event history retrieval — all protected by `admin:read`/`admin:manage` RBAC permissions.
+    - **Operational DR Runbook**: `docs/operations/DISASTER_RECOVERY.md` with disaster classification matrix (DR-SEV-1 through DR-SEV-5), recovery lifecycle procedures, PITR/WAL restoration workflows, Redis recovery, service dependency recovery order, and post-recovery validation checklist.
+    - **Automated Bash Scripts**: `deployment/scripts/disaster-recovery/` containing `failover.sh` (database failover), `service_recovery.sh` (dependency-ordered recovery), and `rollback_deployment.sh` (deployment rollback with health validation).
 
 
 

@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
 [![Security: OWASP ASVS](https://img.shields.io/badge/Security-OWASP_ASVS_v4.0-crimson.svg)](SECURITY.md)
 [![Architecture: Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20DDD-black.svg)](ARCHITECTURE.md)
-[![Status: Era 11 Phase 11.4 Complete](https://img.shields.io/badge/Status-Era%2011%20Phase%2011.4%20Database%20Backup%20%26%20PITR%20Complete-brightgreen.svg)](ROADMAP.md)
+[![Status: Era 11 Phase 11.5 Complete](https://img.shields.io/badge/Status-Era%2011%20Phase%2011.5%20Disaster%20Recovery%20%26%20Rollback%20Complete-brightgreen.svg)](ROADMAP.md)
 
 [![Build Status](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](.github/workflows/ci.yml)
 
@@ -187,6 +187,13 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ OpenTelemetry Distributed Tracing**: `TracingService` providing OpenTelemetry span context wrappers (`trace_db_query`, `trace_redis_op`) with Jaeger / OTLP readiness.
   - **✓ Kubernetes Health Probes Router**: `/api/v1/system/health` (summary), `/api/v1/system/readiness` (503 if DB offline), `/api/v1/system/liveness` (200 OK process ping).
   - **✓ Prometheus & Grafana Docker Monitoring Stack**: Integrated Prometheus (`prom/prometheus:v2.50.0`) and Grafana (`grafana/grafana:10.3.0`) with pre-configured dashboards (`api_performance.json`, `database_performance.json`, `security_audit.json`).
+- **Enterprise Disaster Recovery, Failover & Rollback Infrastructure (Phase 11.5)**: Production-grade DR system (`app/infrastructure/disaster_recovery/`) providing verified capabilities:
+  - **✓ 5-Phase Recovery Lifecycle**: `RecoveryService` orchestrating Detection → Containment → Recovery Execution → Validation → Service Restoration with RTO (< 60 min) and RPO (< 5 min) achievement tracking.
+  - **✓ Automated Database Failover**: `FailoverService` managing primary-to-secondary PostgreSQL failover promotion with DNS endpoint swap and health validation.
+  - **✓ Deployment Rollback**: `RollbackService` executing single-command deployment rollback to prior stable versions with container image swap and health check validation.
+  - **✓ DR API Router**: 7 REST endpoints (`/api/v1/disaster-recovery/*`) for status monitoring, recovery execution, failover control, rollback operations, and event history — all `admin:read`/`admin:manage` RBAC-protected.
+  - **✓ DR Runbook**: `docs/operations/DISASTER_RECOVERY.md` with disaster classification matrix, recovery procedures, and post-recovery checklist.
+  - **✓ Automated Scripts**: `deployment/scripts/disaster-recovery/` with `failover.sh`, `service_recovery.sh`, and `rollback_deployment.sh`.
 
 ### 🔑 Machine-to-Machine API Key Management
 - **Secure Key Hashing**: Cryptographically random API keys using `vn_live_` prefixes (8-character identification) + SHA-256 hex digest storage (raw key returned once and unrecoverable).

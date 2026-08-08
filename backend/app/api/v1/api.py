@@ -16,6 +16,7 @@ from app.api.v1.routers import (
     dashboard,
     database_backup,
     database_performance,
+    disaster_recovery,
     discovery,
     infrastructure_validation,
     integrations,
@@ -51,6 +52,7 @@ api_v1_router.include_router(mfa.router)
 api_v1_router.include_router(admin.router)
 api_v1_router.include_router(database_performance.router)
 api_v1_router.include_router(database_backup.router)
+api_v1_router.include_router(disaster_recovery.router)
 api_v1_router.include_router(api_keys.router)
 
 api_v1_router.include_router(users.router)

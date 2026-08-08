@@ -1800,9 +1800,51 @@ All API errors return a standardized JSON error format:
 - **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
 - **Response**: `200 OK` returning JSON status object (`status`, `total_backups`, `total_size_bytes`, `retention_days`, `last_backup_at`, `wal_archiving`, `encryption`).
 
+---
+
+### Section AA: Enterprise Disaster Recovery, Failover & Rollback Endpoints (Phase 11.5 ✅)
+
+#### `GET /api/v1/disaster-recovery/status` (Phase 11.5)
+- **Summary**: Retrieve current disaster recovery readiness, RTO/RPO targets, and component health state (primary database, secondary replica, Redis cluster).
+- **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `DisasterRecoveryStatusDTO` (`status`, `rto_target_minutes`, `rpo_target_minutes`, `primary_database_status`, `secondary_database_status`, `redis_cluster_status`, `last_backup_timestamp`, `last_dr_test_timestamp`, `active_recovery_id`).
+
+#### `POST /api/v1/disaster-recovery/recover` (Phase 11.5)
+- **Summary**: Execute a disaster recovery workflow (SIMULATION, PITR_RESTORE, FAILOVER, or ROLLBACK) with full 5-phase lifecycle tracking and RTO/RPO achievement validation.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Query Params**: `recovery_type` (string, default: `SIMULATION`).
+- **Response**: `200 OK` returning `RecoveryExecutionDTO` (`recovery_id`, `executed_at`, `recovery_type`, `stages_completed`, `duration_seconds`, `rto_achieved_minutes`, `rpo_estimated_minutes`, `rto_target_met`, `rpo_target_met`, `success`, `details`).
+
+#### `GET /api/v1/disaster-recovery/recovery-history` (Phase 11.5)
+- **Summary**: Retrieve all past disaster recovery execution records and RTO/RPO outcomes.
+- **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `List[RecoveryExecutionDTO]`.
+
+#### `POST /api/v1/disaster-recovery/failover` (Phase 11.5)
+- **Summary**: Execute controlled primary-to-secondary database failover with DNS endpoint swap and post-promotion health validation.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `FailoverEventDTO` (`event_id`, `timestamp`, `triggered_by`, `primary_endpoint`, `secondary_endpoint`, `status`, `details`).
+
+#### `GET /api/v1/disaster-recovery/failover-history` (Phase 11.5)
+- **Summary**: Retrieve all past failover event records.
+- **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `List[FailoverEventDTO]`.
+
+#### `POST /api/v1/disaster-recovery/rollback` (Phase 11.5)
+- **Summary**: Execute application deployment rollback to a prior stable version with container image swap and health check validation.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Query Params**: `target_version` (string, default: `11.4.0`).
+- **Response**: `200 OK` returning `RollbackStatusDTO` (`rollback_id`, `timestamp`, `current_version`, `target_version`, `health_check_passed`, `status`, `details`).
+
+#### `GET /api/v1/disaster-recovery/rollback-history` (Phase 11.5)
+- **Summary**: Retrieve all past deployment rollback execution records.
+- **RBAC Guard**: `admin:read` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `List[RollbackStatusDTO]`.
+
 
 ## ⚡ 4. WebSocket Streaming Protocol
 
 
 ### Connection: `GET /api/v1/ws/scans/{scan_id}`
 Clients connect to receive live streaming updates during scan execution.
+

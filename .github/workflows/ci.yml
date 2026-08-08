@@ -40,6 +40,21 @@ jobs:
           test -f docs/audits/ERA_3_COMPLETION_AUDIT.md
           echo "All baseline documentation artifacts present."
 
+      - name: Verify Disaster Recovery Infrastructure
+        run: |
+          echo "Verifying DR infrastructure files..."
+          test -f docs/operations/DISASTER_RECOVERY.md
+          test -f backend/app/infrastructure/disaster_recovery/__init__.py
+          test -f backend/app/infrastructure/disaster_recovery/dto.py
+          test -f backend/app/infrastructure/disaster_recovery/recovery_service.py
+          test -f backend/app/infrastructure/disaster_recovery/failover_service.py
+          test -f backend/app/infrastructure/disaster_recovery/rollback_service.py
+          test -f backend/app/api/v1/routers/disaster_recovery.py
+          test -f deployment/scripts/disaster-recovery/failover.sh
+          test -f deployment/scripts/disaster-recovery/service_recovery.sh
+          test -f deployment/scripts/disaster-recovery/rollback_deployment.sh
+          echo "All DR infrastructure artifacts present."
+
   docker-validation:
     name: Docker Infrastructure Syntax Verification
     runs-on: ubuntu-latest
