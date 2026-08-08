@@ -721,6 +721,12 @@ The following discovery engine architecture decisions were finalized during Phas
     - **ForensicInvestigationService**: Deep querying and correlation of immutable `AuditLogModel` records into threat anomaly clusters, generating tamper-evident evidence packages with SHA-256 cryptographic digests.
     - **PostIncidentReviewService**: Blameless root cause analysis (5 Whys), impact assessments, remediation action items tracking, and structured Markdown report generation.
     - **REST API Router**: 8 endpoints under `/api/v1/incidents/*` guarded by `admin:manage` and `security:manage` RBAC permissions.
+56. **Final Static & Dynamic Security Penetration Audit Architecture (Phase 12.1)**: Production-grade internal security audit, automated SAST/DAST verification, and vulnerability governance:
+    - **Audit Specification**: `docs/security/SECURITY_AUDIT.md` defining 7-phase audit lifecycle, testing scope across 8 security domains, OWASP Web (2021) and API (2023) mapping, CVSS-aligned 4-tier severity matrix, and 90-day risk acceptance governance.
+    - **8 Domain Analyzers**: `SASTSecurityAnalyzer` (AST/code patterns), `DependencySecurityAnalyzer` (SCA/lockfiles), `ConfigurationSecurityAnalyzer` (headers/TLS/CORS), `APISecurityAnalyzer` (BOLA/BFLA/rate limits), `AuthenticationSecurityAnalyzer` (Argon2id/JWT/MFA), `AuthorizationRBACAnalyzer` (role hierarchy/least privilege), `SecretExposureAnalyzer` (Shannon entropy/Fernet encryption), and `ContainerSecurityAnalyzer` (non-root USER/cap_drop/read-only rootfs).
+    - **SecurityAuditService**: Orchestrates multi-domain audits, computes deterministic SHA-256 integrity digests over finding catalogs, tracks remediation lifecycle states (`OPEN` $\rightarrow$ `REMEDIATED` / `ACCEPTED_RISK`), and dispatches immutable audit log events.
+    - **Security Audit REST Router**: 4 endpoints under `/api/v1/security-audit/*` (`GET /status`, `GET /findings`, `POST /run`, `PATCH /findings/{id}/remediate`) guarded by `admin:manage` RBAC permissions.
+
 
 
 

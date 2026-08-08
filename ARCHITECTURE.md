@@ -1911,6 +1911,57 @@ Vulnova's Security Incident Response & Audit Escalation subsystem (`app/infrastr
    - `PostIncidentReviewService` captures 5-Whys root cause analysis, impact assessments, chronological event summaries, and tracks remediation action items with ownership and due dates.
    - Generates structured Markdown and data exports for executive governance and compliance reporting.
 
+---
+
+## 38. Final Security Audit & Penetration Testing Architecture (Phase 12.1)
+
+### Architecture Overview
+
+Vulnova's Final Security Audit & Penetration Testing framework (`app/infrastructure/security_audit/`) operates an automated multi-domain assessment engine for continuous Static Application Security Testing (SAST), Dynamic Application Security Testing (DAST), Software Composition Analysis (SCA), infrastructure configuration auditing, and vulnerability lifecycle governance.
+
+### Component Architecture
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                    FastAPI Security Audit Router (/api/v1/security-audit/*)                 │
+│              (admin:manage RBAC Permission Guard & Structured Audit Logging)                │
+└──────────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                               │
+                                               ▼
+                              ┌──────────────────────────────────┐
+                              │       SecurityAuditService       │
+                              │  (Orchestrator, SHA-256 Digest,  │
+                              │   Score Calculation & Lifecycle) │
+                              └────────────────┬─────────────────┘
+                                               │
+       ┌──────────────┬──────────────┬─────────┴────┬──────────────┬──────────────┬────────────┐
+       ▼              ▼              ▼              ▼              ▼              ▼            ▼
+ ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐┌───────────┐
+ │   SAST    │  │ Dependency│  │  Config   │  │    API    │  │   Auth    │  │   RBAC    ││  Secret   │
+ │ Analyzer  │  │ (SCA)     │  │ Analyzer  │  │  Security │  │ Analyzer  │  │ Governance││ Detection │
+ │ (Code/AST)│  │ Analyzer  │  │ (TLS/HSTS)│  │ (BOLA/DoS)│  │(Argon/JWT)│  │ (4-Tier)  ││ (Entropy) │
+ └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘└───────────┘
+```
+
+### Core Architectural Capabilities
+
+1. **8 Specialized Domain Analyzers**:
+   - `SASTSecurityAnalyzer`: Evaluates AST patterns, raw SQL parameterization, shell process isolation, directory traversal, and safe deserialization.
+   - `DependencySecurityAnalyzer`: Audits supply chain lockfiles, package version pinning, and known CVE advisories.
+   - `ConfigurationSecurityAnalyzer`: Audits HTTP security headers (HSTS, CSP, X-Frame-Options), TLS 1.3/1.2 ciphers, CORS allowed origins, and `DEBUG=False` production settings.
+   - `APISecurityAnalyzer`: Evaluates BOLA/IDOR multi-tenant boundary checks, BFLA RBAC decorators, Pydantic input schemas, and distributed rate limiting.
+   - `AuthenticationSecurityAnalyzer`: Verifies Argon2id password hashing, 256-bit JWT entropy, RFC 6238 TOTP MFA, and refresh token revocation.
+   - `AuthorizationRBACAnalyzer`: Verifies integer-ordered role precedence (`OWNER` > `ADMIN` > `SECURITY_ANALYST` > `VIEWER`), `PERMISSION_MAP` completeness, and orphan prevention.
+   - `SecretExposureAnalyzer`: Scans for high-entropy tokens, database AES-256 Fernet encryption at rest, and SHA-256 API key hashing.
+   - `ContainerSecurityAnalyzer`: Audits non-root execution (`UID 10001`), Linux capability dropping (`cap_drop: [ALL]`), and read-only root filesystems.
+
+2. **Tamper-Evident SHA-256 Audit Integrity Digest**:
+   - Computes deterministic SHA-256 cryptographic hashes over finding catalogs to guarantee non-repudiation and audit trail integrity.
+
+3. **Finding Lifecycle & Risk Acceptance Governance**:
+   - Manages state transitions across `OPEN` $\rightarrow$ `REMEDIATED` / `ACCEPTED_RISK` / `FALSE_POSITIVE` with assigned SLA tracking and executive justification recording.
+
+
 
 
 

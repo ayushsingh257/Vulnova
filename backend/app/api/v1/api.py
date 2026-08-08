@@ -34,6 +34,7 @@ from app.api.v1.routers import (
     scan_stream,
     scan_targets,
     secrets_validation,
+    security_audit,
     status,
     system_health,
     threat_validation,
@@ -93,3 +94,4 @@ api_v1_router.include_router(secrets_validation.router)
 api_v1_router.include_router(threat_validation.router)
 api_v1_router.include_router(regression_validation.router)
 api_v1_router.include_router(certification_validation.router)
+api_v1_router.include_router(security_audit.router)

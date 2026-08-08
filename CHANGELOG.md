@@ -20,6 +20,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
+- **Era 12 Phase 12.1 (Final Static & Dynamic Security Penetration Audit)**:
+  - Created Security Audit Specification & Methodology (`docs/security/SECURITY_AUDIT.md`):
+    - Defined 7-phase security audit lifecycle (Recon $\rightarrow$ SAST $\rightarrow$ DAST $\rightarrow$ Config $\rightarrow$ Container/SCA $\rightarrow$ Pentest Simulation $\rightarrow$ Remediation).
+    - Mapped comprehensive coverage across OWASP Web Top 10 (2021) and OWASP API Security Top 10 (2023).
+    - Established 4-tier severity matrix (Critical 24h, High 72h, Medium 14d, Low 30d SLAs) and 90-day timebound risk acceptance governance.
+  - Implemented Internal Security Audit Package (`app/infrastructure/security_audit/`):
+    - `dto.py`: Defined DTOs for `AuditSeverity`, `AuditFindingStatus`, `AuditCategory`, `SecurityAuditFindingDTO`, `SecurityAuditExecutionDTO`, `SecurityAuditStatusDTO`, and remediation request schemas.
+    - `analyzers/base.py`: Abstract `BaseSecurityAnalyzer` interface.
+    - `analyzers/sast_analyzer.py`: `SASTSecurityAnalyzer` verifying SQL injection parameterization, OS command execution sanitization, directory traversal containment, and safe JSON deserialization.
+    - `analyzers/dependency_analyzer.py`: `DependencySecurityAnalyzer` auditing version pinning, known CVE advisories, and lockfile SHA-256 integrity.
+    - `analyzers/config_analyzer.py`: `ConfigurationSecurityAnalyzer` checking security headers (HSTS, CSP, X-Frame-Options), TLS 1.3/1.2 protocols, CORS origins, and `DEBUG=False` suppression.
+    - `analyzers/api_analyzer.py`: `APISecurityAnalyzer` auditing BOLA tenant boundaries, BFLA RBAC decorators, Pydantic input schemas, and distributed rate limiting.
+    - `analyzers/auth_analyzer.py`: `AuthenticationSecurityAnalyzer` verifying Argon2id password hashing, 256-bit JWT entropy, RFC 6238 TOTP MFA, and refresh token revocation.
+    - `analyzers/rbac_analyzer.py`: `AuthorizationRBACAnalyzer` verifying 4-tier role hierarchy, centralized permission mappings, and administrative orphan prevention.
+    - `analyzers/secret_analyzer.py`: `SecretExposureAnalyzer` scanning for Shannon entropy, database AES-256 Fernet encryption at rest, and SHA-256 API key hashing.
+    - `analyzers/container_analyzer.py`: `ContainerSecurityAnalyzer` auditing non-root `USER appuser` (UID 10001), Linux capability dropping (`cap_drop: [ALL]`), and read-only root filesystems.
+    - `audit_service.py`: `SecurityAuditService` coordinating all 8 analyzers, computing SHA-256 tamper-evident integrity digests, managing finding remediation lifecycle, and dispatching structured audit logs.
+  - Implemented REST API Security Audit Router (`app/api/v1/routers/security_audit.py`):
+    - `GET /api/v1/security-audit/status`: Retrieve security audit posture, total findings, remediation rate, and compliance grade (`admin:manage`).
+    - `GET /api/v1/security-audit/findings`: List paginated findings with category, severity, and status filtering (`admin:manage`).
+    - `POST /api/v1/security-audit/run`: Trigger automated multi-domain security audit and penetration verification (`admin:manage`).
+    - `PATCH /api/v1/security-audit/findings/{finding_id}/remediate`: Update finding remediation status (`REMEDIATED`, `ACCEPTED_RISK`, `FALSE_POSITIVE`) with audit logging (`admin:manage`).
+  - Added RBAC Permissions (`app/domain/entities/role.py`):
+    - Added `"security_audit:read"`, `"security_audit:execute"`, and `"security_audit:manage"` permission mappings.
+  - Implemented Comprehensive Test Suite (`backend/tests/test_security_audit.py`):
+    - Unit and integration tests covering all 8 domain analyzers, multi-domain audit orchestration, SHA-256 integrity digests, finding remediation state transitions, error handling, and RBAC permissions.
+
 - **Era 11 Phase 11.6 (Security Incident Response & Audit Escalation Lifecycle)**:
   - Created Security Incident Response Runbook (`docs/operations/INCIDENT_RESPONSE.md`):
     - Defined 4-tier severity matrix (`SEV-1 Critical` to `SEV-4 Low`) with MTTA (< 5 min), MTTC (< 30 min), and MTTR (< 4 hours) SLA targets.

@@ -1902,6 +1902,33 @@ All API errors return a standardized JSON error format:
 
 ---
 
+### Section AC: Final Security Audit & Penetration Testing Endpoints (Phase 12.1 ✅)
+
+#### `GET /api/v1/security-audit/status` (Phase 12.1)
+- **Summary**: Retrieve high-level security audit posture, total vulnerabilities tracked, remediation rate percentage, and compliance grade.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Response**: `200 OK` returning `SecurityAuditStatusDTO` (`status`, `last_audit_id`, `last_audit_timestamp`, `total_scans_executed`, `total_vulnerabilities_tracked`, `critical_findings`, `high_findings`, `medium_findings`, `low_findings`, `remediation_rate_percentage`, `compliance_grade`).
+
+#### `GET /api/v1/security-audit/findings` (Phase 12.1)
+- **Summary**: Retrieve paginated list of security audit findings with optional category, severity, and status filtering.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Query Params**: `category` (string, optional), `severity` (string, optional: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`), `status` (string, optional: `OPEN`, `REMEDIATED`, `ACCEPTED_RISK`, `FALSE_POSITIVE`), `limit` (int, default: 50), `offset` (int, default: 0).
+- **Response**: `200 OK` returning `List[SecurityAuditFindingDTO]`.
+
+#### `POST /api/v1/security-audit/run` (Phase 12.1)
+- **Summary**: Trigger automated multi-domain security audit and penetration verification across SAST, SCA, Config, API, Auth, RBAC, Secret, and Container domains.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Request Body**: `RunSecurityAuditRequestDTO` (`categories`, `include_dynamic_checks`, `details`).
+- **Response**: `201 Created` returning `SecurityAuditExecutionDTO` (`audit_id`, `organization_id`, `executed_at`, `total_findings`, `critical_count`, `high_count`, `medium_count`, `low_count`, `open_findings_count`, `remediated_findings_count`, `overall_security_score`, `status`, `categories_analyzed`, `findings`, `audit_integrity_sha256`, `summary`).
+
+#### `PATCH /api/v1/security-audit/findings/{finding_id}/remediate` (Phase 12.1)
+- **Summary**: Update finding remediation status (`REMEDIATED`, `ACCEPTED_RISK`, `FALSE_POSITIVE`) and record audit event.
+- **RBAC Guard**: `admin:manage` (`Role.ADMIN`+).
+- **Request Body**: `RemediateFindingRequestDTO` (`status`, `remediation_notes`, `remediated_by`).
+- **Response**: `200 OK` returning `SecurityAuditFindingDTO`.
+
+---
+
 ## ⚡ 4. WebSocket Streaming Protocol
 
 ### Connection: `GET /api/v1/ws/scans/{scan_id}`

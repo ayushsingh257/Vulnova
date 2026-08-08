@@ -75,6 +75,27 @@ jobs:
           test -f backend/app/api/v1/routers/incidents.py
           echo "All Incident Response infrastructure artifacts present."
 
+      - name: Verify Security Audit Infrastructure
+        run: |
+          echo "Verifying Security Audit infrastructure files..."
+          test -f docs/security/SECURITY_AUDIT.md
+          test -f backend/app/infrastructure/security_audit/__init__.py
+          test -f backend/app/infrastructure/security_audit/dto.py
+          test -f backend/app/infrastructure/security_audit/audit_service.py
+          test -f backend/app/infrastructure/security_audit/analyzers/__init__.py
+          test -f backend/app/infrastructure/security_audit/analyzers/base.py
+          test -f backend/app/infrastructure/security_audit/analyzers/sast_analyzer.py
+          test -f backend/app/infrastructure/security_audit/analyzers/dependency_analyzer.py
+          test -f backend/app/infrastructure/security_audit/analyzers/config_analyzer.py
+          test -f backend/app/infrastructure/security_audit/analyzers/api_analyzer.py
+          test -f backend/app/infrastructure/security_audit/analyzers/auth_analyzer.py
+          test -f backend/app/infrastructure/security_audit/analyzers/rbac_analyzer.py
+          test -f backend/app/infrastructure/security_audit/analyzers/secret_analyzer.py
+          test -f backend/app/infrastructure/security_audit/analyzers/container_analyzer.py
+          test -f backend/app/api/v1/routers/security_audit.py
+          test -f backend/tests/test_security_audit.py
+          echo "All Security Audit infrastructure artifacts present."
+
   docker-validation:
     name: Docker Infrastructure Syntax Verification
     runs-on: ubuntu-latest

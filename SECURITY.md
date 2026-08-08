@@ -928,6 +928,28 @@ Phase 11.6 establishes enterprise security incident response, alert escalation w
    - Viewing incidents and status requires `admin:manage` or `incidents:read`; creating, state transitions, escalations, and PIR creation require `admin:manage` / `security:manage`.
    - All incident operations enforce strict `organization_id = current_user.organization_id` boundary checks.
 
+---
+
+## 🔍 42. Final Security Audit & Automated SAST/DAST Verification Controls (Phase 12.1)
+
+Phase 12.1 establishes Vulnova's internal security audit, penetration testing verification, and vulnerability governance framework:
+
+1. **Multi-Domain Security Audit Execution**:
+   - `SecurityAuditService` coordinates 8 specialized analyzers covering Static Application Security Testing (SAST), Software Composition Analysis (SCA), Configuration Hardening, API Security, Authentication, Authorization RBAC, Secret Exposure, and Container Security.
+2. **Cryptographic SHA-256 Audit Integrity**:
+   - Every audit execution calculates a deterministic SHA-256 integrity hash over finding identifiers and severity tiers, guaranteeing tamper-evident proof of audit completeness.
+3. **Vulnerability Classification & SLAs**:
+   - Categorizes findings into 4 severity tiers with strict remediation SLAs:
+     - **CRITICAL** (CVSS 9.0–10.0): 24-hour SLA.
+     - **HIGH** (CVSS 7.0–8.9): 72-hour SLA.
+     - **MEDIUM** (CVSS 4.0–6.9): 14-day SLA.
+     - **LOW** (CVSS 0.1–3.9): 30-day SLA.
+4. **Risk Acceptance Governance**:
+   - Risk acceptance requires formal justification, compensating security controls, CISO approval, and a maximum 90-day timebound exception window.
+5. **Strict RBAC & Tenant Isolation**:
+   - All `/api/v1/security-audit/*` endpoints are guarded by `admin:manage` (`Role.ADMIN` level 30+) and enforce strict `organization_id` tenant data isolation.
+
+
 
 
 

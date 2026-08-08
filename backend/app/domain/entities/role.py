@@ -159,6 +159,10 @@ PERMISSION_MAP: Dict[str, Role] = {
     "incidents:manage": Role.ADMIN,
     "incidents:escalate": Role.SECURITY_ANALYST,
     "incidents:pir": Role.SECURITY_ANALYST,
+    # ── Final Security Audit & Penetration Testing (Phase 12.1) ──
+    "security_audit:read": Role.VIEWER,
+    "security_audit:execute": Role.SECURITY_ANALYST,
+    "security_audit:manage": Role.ADMIN,
 }
 
 ALL_PERMISSIONS: FrozenSet[str] = frozenset(PERMISSION_MAP.keys())
