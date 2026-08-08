@@ -112,12 +112,13 @@ def test_production_deployment_artifacts_exist() -> None:
 
 def test_core_api_router_imports() -> None:
     """Verify FastAPI application and core routers import cleanly."""
+    from fastapi.routing import APIRoute
     from app.main import app
 
     assert app.title == settings.app_name
 
     # Verify core routes registered
-    route_paths = [r.path for r in app.routes]  # type: ignore[attr-defined]
+    route_paths = [route.path for route in app.routes if isinstance(route, APIRoute)]
     assert any("/api/v1" in path for path in route_paths)
     assert any("/health" in path for path in route_paths)
 
