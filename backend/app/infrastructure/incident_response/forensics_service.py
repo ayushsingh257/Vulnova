@@ -109,7 +109,9 @@ class ForensicInvestigationService:
 
         if auth_failures:
             ips = [e.client_ip for e in auth_failures if e.client_ip is not None]
-            actors = [e.actor_user_id for e in auth_failures if e.actor_user_id is not None]
+            actors = [
+                e.actor_user_id for e in auth_failures if e.actor_user_id is not None
+            ]
             clusters.append(
                 ForensicCorrelatedEventDTO(
                     correlation_key="AUTH_ANOMALIES",
@@ -126,7 +128,11 @@ class ForensicInvestigationService:
 
         if privilege_changes:
             ips = [e.client_ip for e in privilege_changes if e.client_ip is not None]
-            actors = [e.actor_user_id for e in privilege_changes if e.actor_user_id is not None]
+            actors = [
+                e.actor_user_id
+                for e in privilege_changes
+                if e.actor_user_id is not None
+            ]
             clusters.append(
                 ForensicCorrelatedEventDTO(
                     correlation_key="PRIVILEGE_ESCALATION",
@@ -143,7 +149,11 @@ class ForensicInvestigationService:
 
         if token_revocations:
             ips = [e.client_ip for e in token_revocations if e.client_ip is not None]
-            actors = [e.actor_user_id for e in token_revocations if e.actor_user_id is not None]
+            actors = [
+                e.actor_user_id
+                for e in token_revocations
+                if e.actor_user_id is not None
+            ]
             clusters.append(
                 ForensicCorrelatedEventDTO(
                     correlation_key="CREDENTIAL_ROTATION",
@@ -160,7 +170,9 @@ class ForensicInvestigationService:
 
         if bulk_exports:
             ips = [e.client_ip for e in bulk_exports if e.client_ip is not None]
-            actors = [e.actor_user_id for e in bulk_exports if e.actor_user_id is not None]
+            actors = [
+                e.actor_user_id for e in bulk_exports if e.actor_user_id is not None
+            ]
             clusters.append(
                 ForensicCorrelatedEventDTO(
                     correlation_key="DATA_EXFILTRATION_RISK",
