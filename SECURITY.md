@@ -949,6 +949,25 @@ Phase 12.1 establishes Vulnova's internal security audit, penetration testing ve
 5. **Strict RBAC & Tenant Isolation**:
    - All `/api/v1/security-audit/*` endpoints are guarded by `admin:manage` (`Role.ADMIN` level 30+) and enforce strict `organization_id` tenant data isolation.
 
+---
+
+## 🔒 43. Production Infrastructure Security Controls (Phase 12.2)
+
+Phase 12.2 establishes Vulnova's enterprise production deployment security architecture:
+
+1. **Non-Root Unprivileged Execution & Privilege Drop**:
+   - Kubernetes deployments (`deployment/kubernetes/`) enforce `runAsNonRoot: true`, `runAsUser: 10001`, `runAsGroup: 10001`, `allowPrivilegeEscalation: false`, and Linux capability dropping (`cap_drop: [ALL]`).
+2. **Ingress TLS 1.2+ & Cert-Manager Automation**:
+   - Ingress controller (`deployment/kubernetes/ingress/ingress.yaml`) integrates with `cert-manager` Let's Encrypt CA to automate 90-day TLS certificate generation and renewal.
+   - Enforces HTTP-to-HTTPS redirect and injects `HSTS`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy`.
+3. **Secret & Configuration Isolation**:
+   - Production environment configuration (`.env.production.example` and `secrets.yaml.example`) isolates secrets from codebase source control.
+   - Sensitive variables (`POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `JWT_SECRET`, `MINIO_ROOT_PASSWORD`, `QDRANT_API_KEY`) are passed via Kubernetes Secret objects or Docker secrets.
+4. **Network & Storage Isolation**:
+   - Production Docker Compose network `vulnova_prod_net` isolates container inter-communications.
+   - Persistent volumes (`postgres_prod_data`, `redis_prod_data`, `minio_prod_data`, `qdrant_prod_data`) enforce persistent data retention with volume claim limits.
+
+
 
 
 

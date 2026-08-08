@@ -1,0 +1,247 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: vulnova-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vulnova_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vulnova_prod_secure_password_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-vulnova_db}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    networks:
+      - vulnova_prod_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vulnova_admin} -d ${POSTGRES_DB:-vulnova_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4096M
+        reservations:
+          cpus: '0.5'
+          memory: 1024M
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: vulnova-redis-prod
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-vulnova_redis_prod_password_change_me}
+    volumes:
+      - redis_prod_data:/data
+    networks:
+      - vulnova_prod_net
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-vulnova_redis_prod_password_change_me} ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2048M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  minio:
+    image: minio/minio:RELEASE.2024-01-31T02-03-41Z
+    container_name: vulnova-minio-prod
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-vulnova_minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-vulnova_minio_secure_password_change_me}
+    volumes:
+      - minio_prod_data:/data
+    networks:
+      - vulnova_prod_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2048M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: vulnova-qdrant-prod
+    restart: always
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-vulnova_qdrant_secure_api_key_change_me}
+    volumes:
+      - qdrant_prod_data:/qdrant/storage
+    networks:
+      - vulnova_prod_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6333/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2048M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vulnova-backend-prod
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "False"
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vulnova_admin}:${POSTGRES_PASSWORD:-vulnova_prod_secure_password_change_me}@postgres:5432/${POSTGRES_DB:-vulnova_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-vulnova_redis_prod_password_change_me}@redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-vulnova_minio_admin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-vulnova_minio_secure_password_change_me}
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-vulnova_qdrant_secure_api_key_change_me}
+      JWT_SECRET: ${JWT_SECRET:-vulnova_prod_jwt_secret_key_32_characters_minimum_required}
+    ports:
+      - "8000:8000"
+    networks:
+      - vulnova_prod_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4096M
+        reservations:
+          cpus: '0.5'
+          memory: 1024M
+
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vulnova-celery-worker-prod
+    restart: always
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=4
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vulnova_admin}:${POSTGRES_PASSWORD:-vulnova_prod_secure_password_change_me}@postgres:5432/${POSTGRES_DB:-vulnova_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-vulnova_redis_prod_password_change_me}@redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-vulnova_prod_jwt_secret_key_32_characters_minimum_required}
+    networks:
+      - vulnova_prod_net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 3072M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vulnova-celery-beat-prod
+    restart: always
+    command: celery -A app.core.celery_app beat --loglevel=info
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vulnova_admin}:${POSTGRES_PASSWORD:-vulnova_prod_secure_password_change_me}@postgres:5432/${POSTGRES_DB:-vulnova_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-vulnova_redis_prod_password_change_me}@redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-vulnova_prod_jwt_secret_key_32_characters_minimum_required}
+    networks:
+      - vulnova_prod_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1024M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vulnova-frontend-prod
+    restart: always
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    ports:
+      - "3000:3000"
+    networks:
+      - vulnova_prod_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2048M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+networks:
+  vulnova_prod_net:
+    name: vulnova_prod_net
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
+    name: vulnova_postgres_prod_data
+  redis_prod_data:
+    name: vulnova_redis_prod_data
+  minio_prod_data:
+    name: vulnova_minio_prod_data
+  qdrant_prod_data:
+    name: vulnova_qdrant_prod_data

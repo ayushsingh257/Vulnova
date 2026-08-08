@@ -199,10 +199,20 @@ For production enterprise deployments, Vulnova provides Helm charts under `infra
 - **Container Sandbox Isolation**: Worker task executions enforce container sandbox resource caps: `cpu_limit_vcpu=1.0`, `memory_limit_mb=512`, `read_only_rootfs=True`, `no_new_privs=True`, unprivileged UID/GID `10001`, dropped `ALL` capabilities, and network egress filtering.
 - **Worker Cluster Schema Indexing**: `worker_nodes` and `worker_task_executions` include composite indexes `idx_worker_node_org_status`, `idx_worker_node_heartbeat`, `idx_worker_task_org_state`, and `idx_worker_task_scan` ensuring sub-5ms heartbeat registration and cluster metrics calculations.
 
+---
 
+## 🚀 16. Production Docker Compose & Kubernetes Deployment Blueprint (Phase 12.2)
 
-
-
+- **Production Docker Compose Orchestration (`docker-compose.prod.yml`)**:
+  - Launches 8 production-tier services: `frontend`, `backend`, `postgres`, `redis`, `celery-worker`, `celery-beat`, `minio`, and `qdrant`.
+  - Configured with persistent volumes (`postgres_prod_data`, `redis_prod_data`, `minio_prod_data`, `qdrant_prod_data`), isolated network `vulnova_prod_net`, resource limits (`deploy.resources`), and container health probes.
+  - Single-command production deployment: `docker compose -f docker-compose.prod.yml up -d`.
+- **Kubernetes Cluster Manifests (`deployment/kubernetes/`)**:
+  - Namespace `vulnova-prod` with ConfigMap (`configmap.yaml`) and Secret (`secrets.yaml.example`) abstraction.
+  - Rolling update Deployments for Backend API (3 replicas, HPA 3–10) and Frontend App (2 replicas, HPA 2–8).
+  - PostgreSQL StatefulSet (50GB storage claim) and Redis Deployment with password authentication.
+  - NGINX Ingress (`ingress.yaml`) with cert-manager Let's Encrypt TLS termination and security header injection.
+- **Production Runbook**: Complete documentation in `docs/deployment/PRODUCTION_DEPLOYMENT.md`.
 
 
 

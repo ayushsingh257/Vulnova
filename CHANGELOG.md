@@ -20,6 +20,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Auth CI Fix (`f9af674`)**: Added missing `email-validator>=2.1.0` to `requirements.txt` and `pyproject.toml`. Pydantic `EmailStr` requires this package at import time; omission caused `ModuleNotFoundError` in CI fresh environments.
 - **Celery Dependency CI Fix**: Added missing `celery>=5.4.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure CI runner clean environment imports succeed.
 
+- **Era 12 Phase 12.2 (Production Docker Compose & Kubernetes Deployment Infrastructure)**:
+  - Implemented Production Docker Compose Infrastructure (`docker-compose.prod.yml`):
+    - Configured 8 production services (`frontend`, `backend`, `postgres`, `redis`, `celery-worker`, `celery-beat`, `minio`, `qdrant`).
+    - Enforced network isolation (`vulnova_prod_net`), persistent volume storage, health probes (`curl`, `wget`, `pg_isready`, `redis-cli`), container restart policies (`always`), and resource limits.
+    - Single-command production stack start (`docker compose -f docker-compose.prod.yml up -d`).
+  - Implemented Production Environment Configuration (`.env.production.example`):
+    - Defined placeholders and parameter templates for PostgreSQL, Redis, MinIO, Qdrant, 64-hex-character JWT secrets, TLS, and monitoring.
+  - Implemented Kubernetes Cluster Deployment Manifests (`deployment/kubernetes/`):
+    - `namespace.yaml`: Dedicated `vulnova-prod` namespace.
+    - `configmap.yaml` & `secrets.yaml.example`: Environmental abstraction and secret isolation.
+    - `backend/`: 3-replica Deployment with rolling updates, ClusterIP Service, and Horizontal Pod Autoscaler (HPA 3–10 replicas on 75% CPU / 80% Memory).
+    - `frontend/`: 2-replica Deployment with rolling updates, ClusterIP Service, and Horizontal Pod Autoscaler (HPA 2–8 replicas on 75% CPU / 80% Memory).
+    - `postgres/`: StatefulSet with 50GB PersistentVolumeClaim and ClusterIP Service.
+    - `redis/`: Password-authenticated Deployment and ClusterIP Service.
+    - `ingress/`: NGINX Ingress Controller manifest with cert-manager Let's Encrypt TLS termination and security header injection.
+  - Created Production Deployment Runbook (`docs/deployment/PRODUCTION_DEPLOYMENT.md`):
+    - Comprehensive production deployment guide covering topology, Docker Compose instructions, Kubernetes manifests, TLS/HTTPS strategy, HPA scaling, and zero-downtime rolling update/rollback procedures.
+  - Updated CI/CD Workflows (`.github/workflows/ci.yml`):
+    - Added production infrastructure artifact verification and syntax validation for `docker-compose.prod.yml` and Kubernetes manifests.
+
 - **Era 12 Phase 12.1 (Final Static & Dynamic Security Penetration Audit)**:
   - Created Security Audit Specification & Methodology (`docs/security/SECURITY_AUDIT.md`):
     - Defined 7-phase security audit lifecycle (Recon $\rightarrow$ SAST $\rightarrow$ DAST $\rightarrow$ Config $\rightarrow$ Container/SCA $\rightarrow$ Pentest Simulation $\rightarrow$ Remediation).

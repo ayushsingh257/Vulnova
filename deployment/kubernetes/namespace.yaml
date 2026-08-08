@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vulnova-prod
+  labels:
+    name: vulnova-prod
+    environment: production
+    security.vulnova.io/managed-by: kubernetes

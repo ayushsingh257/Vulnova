@@ -1961,6 +1961,54 @@ Vulnova's Final Security Audit & Penetration Testing framework (`app/infrastruct
 3. **Finding Lifecycle & Risk Acceptance Governance**:
    - Manages state transitions across `OPEN` $\rightarrow$ `REMEDIATED` / `ACCEPTED_RISK` / `FALSE_POSITIVE` with assigned SLA tracking and executive justification recording.
 
+---
+
+## 39. Production Deployment Architecture (Phase 12.2)
+
+### Architecture Overview
+
+Vulnova's Production Deployment Architecture supports enterprise single-host container orchestration via `docker-compose.prod.yml` and multi-node Kubernetes cluster topologies (`deployment/kubernetes/`), incorporating ingress TLS termination, horizontal pod autoscaling, health monitoring probes, and zero-downtime rolling updates.
+
+### Production Topology
+
+```text
+                               ┌──────────────────────────────────────────────┐
+                               │            NGINX / Ingress Controller         │
+                               │  (TLS Termination, HSTS, CSP, Cert-Manager)  │
+                               └──────────────────────┬───────────────────────┘
+                                                      │
+                                   ┌──────────────────┴──────────────────┐
+                                   ▼                                     ▼
+                      ┌─────────────────────────┐           ┌─────────────────────────┐
+                      │    Frontend Service     │           │     Backend API Pods    │
+                      │  (Next.js App / Node)   │           │    (FastAPI / Uvicorn)   │
+                      └─────────────────────────┘           └────────────┬────────────┘
+                                                                         │
+                   ┌──────────────────────┬──────────────────────────────┼──────────────────────────────┐
+                   ▼                      ▼                              ▼                              ▼
+      ┌────────────────────────┐┌───────────────────┐    ┌──────────────────────────────┐    ┌────────────────────┐
+      │   PostgreSQL + Vector  ││   Redis Cluster   │    │  Celery Worker & Beat Pods   │    │   MinIO & Qdrant   │
+      │ (Multi-Tenant Relational││  (Session/Cache)  │    │  (Async Scan Tasks & Cron)   │    │  (Reports & Vector)│
+      └────────────────────────┘└───────────────────┘    └──────────────────────────────┘    └────────────────────┘
+```
+
+### Core Production Architecture Capabilities
+
+1. **Production Docker Compose Infrastructure (`docker-compose.prod.yml`)**:
+   - Single-command production stack start (`docker compose -f docker-compose.prod.yml up -d`).
+   - Includes PostgreSQL (`pgvector/pgvector:pg16`), Redis 7.2, MinIO object storage, Qdrant vector search engine, FastAPI backend API, Celery worker/beat, and Next.js frontend.
+   - Enforces strict resource requests/limits, network isolation (`vulnova_prod_net`), persistent volumes, and health checks across all containers.
+
+2. **Kubernetes Production Cluster Manifests (`deployment/kubernetes/`)**:
+   - Dedicated namespace isolation (`vulnova-prod`).
+   - ConfigMap (`configmap.yaml`) and Secret (`secrets.yaml.example`) abstraction.
+   - Backend API Deployment (3 replicas rolling update, CPU/Memory HPA 3–10 replicas).
+   - Frontend Deployment (2 replicas rolling update, CPU/Memory HPA 2–8 replicas).
+   - PostgreSQL StatefulSet (50GB PersistentVolumeClaim).
+   - Redis Deployment with password authentication.
+   - NGINX Ingress Controller (`ingress.yaml`) with cert-manager Let's Encrypt TLS termination and security header injection.
+
+
 
 
 

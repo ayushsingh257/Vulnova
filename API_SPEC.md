@@ -1929,6 +1929,21 @@ All API errors return a standardized JSON error format:
 
 ---
 
+### Section AD: Production Deployment API Considerations (Phase 12.2 ✅)
+
+- **System Health & Readiness Endpoints**:
+  - `GET /health`: Basic container process liveness probe (`200 OK`).
+  - `GET /api/v1/system/readiness`: Deep database, Redis, MinIO, and Qdrant readiness check. Returns `200 OK` when all dependent services are healthy.
+  - `GET /api/v1/system/liveness`: Container liveness check for Kubernetes Kubelet probes (`200 OK`).
+- **Ingress TLS & Custom Domains**:
+  - All production API endpoints must be accessed via HTTPS with TLS 1.2+ (`https://api.vulnova.enterprise.com/api/v1/...`).
+  - NGINX Ingress controller automatically strips TLS at boundary and injects `X-Forwarded-For`, `X-Forwarded-Proto`, and `X-Request-ID` headers.
+- **Rate Limiting & DDOS Governance**:
+  - Production APIs enforce Redis-backed token bucket rate limits (100 req/min for authenticated endpoints, 10 req/min for auth endpoints).
+
+
+---
+
 ## ⚡ 4. WebSocket Streaming Protocol
 
 ### Connection: `GET /api/v1/ws/scans/{scan_id}`

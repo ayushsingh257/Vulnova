@@ -96,15 +96,43 @@ jobs:
           test -f backend/tests/test_security_audit.py
           echo "All Security Audit infrastructure artifacts present."
 
+      - name: Verify Production Infrastructure Artifacts
+        run: |
+          echo "Verifying Production Deployment infrastructure files..."
+          test -f docker-compose.prod.yml
+          test -f .env.production.example
+          test -f docs/deployment/PRODUCTION_DEPLOYMENT.md
+          test -f deployment/kubernetes/namespace.yaml
+          test -f deployment/kubernetes/configmap.yaml
+          test -f deployment/kubernetes/secrets.yaml.example
+          test -f deployment/kubernetes/backend/deployment.yaml
+          test -f deployment/kubernetes/backend/service.yaml
+          test -f deployment/kubernetes/backend/hpa.yaml
+          test -f deployment/kubernetes/frontend/deployment.yaml
+          test -f deployment/kubernetes/frontend/service.yaml
+          test -f deployment/kubernetes/frontend/hpa.yaml
+          test -f deployment/kubernetes/postgres/statefulset.yaml
+          test -f deployment/kubernetes/postgres/service.yaml
+          test -f deployment/kubernetes/redis/deployment.yaml
+          test -f deployment/kubernetes/redis/service.yaml
+          test -f deployment/kubernetes/ingress/ingress.yaml
+          echo "All Production Deployment infrastructure artifacts present."
+
   docker-validation:
-    name: Docker Infrastructure Syntax Verification
+    name: Docker & Kubernetes Infrastructure Syntax Verification
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Validate Docker Compose Configuration Syntax
+      - name: Validate Development Docker Compose Configuration Syntax
         run: docker compose config
+
+      - name: Validate Production Docker Compose Configuration Syntax
+        run: docker compose -f docker-compose.prod.yml config
+
+      - name: Validate Kubernetes Manifests Syntax (PyYAML)
+        run: python3 -c "import glob, yaml; [yaml.safe_load(open(f)) for f in glob.glob('deployment/kubernetes/**/*.yaml', recursive=True)] and print('Kubernetes YAML manifests validated!')"
 
   backend-checks:
     name: Backend Lint, Black, Mypy & Pytest Verification

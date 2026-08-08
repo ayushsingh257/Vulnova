@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
 [![Security: OWASP ASVS](https://img.shields.io/badge/Security-OWASP_ASVS_v4.0-crimson.svg)](SECURITY.md)
 [![Architecture: Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20DDD-black.svg)](ARCHITECTURE.md)
-[![Status: Era 11 Phase 11.5 Complete](https://img.shields.io/badge/Status-Era%2011%20Phase%2011.5%20Disaster%20Recovery%20%26%20Rollback%20Complete-brightgreen.svg)](ROADMAP.md)
+[![Status: Era 12 Phase 12.2 Complete](https://img.shields.io/badge/Status-Era%2012%20Phase%2012.2%20Production%20Deployment%20Complete-brightgreen.svg)](ROADMAP.md)
 
 [![Build Status](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-brightgreen.svg)](.github/workflows/ci.yml)
 
@@ -257,6 +257,11 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
   - **✓ WeasyPrint PDF Generation & Fallback**: `PDFGeneratorService` compiling PDF binary streams with graceful fallback to compliant binary PDF/1.4 container wrapper if system libraries are missing.
   - **✓ Audit Event Non-Repudiation**: Dispatches audit log events (`report.generated`, `report.downloaded`) capturing report ID, user ID, organization ID, format, and payload size.
   - **✓ Next.js 14 CISO Reporting Workspace**: CISO reporting dashboard (`/reports`), report detail view (`/reports/[id]`), report generation modal (`ReportGenerationModal`), security metrics summary cards (`SecurityMetricsSummary`), and PDF export buttons (`ReportDownloadActions`).
+- **Production Docker Compose & Kubernetes Deployment Infrastructure (Phase 12.2)**: Enterprise production deployment infrastructure providing verified capabilities:
+  - **✓ Production Docker Compose**: Single-command startup (`docker compose -f docker-compose.prod.yml up -d`) orchestrating 8 production services (`frontend`, `backend`, `postgres`, `redis`, `celery-worker`, `celery-beat`, `minio`, `qdrant`) with network isolation, health checks, and resource limits.
+  - **✓ Production Kubernetes Manifests**: Production cluster manifests (`deployment/kubernetes/`) including namespace `vulnova-prod`, ConfigMaps, Secrets, rolling update Deployments for Backend (3 replicas, HPA 3–10) and Frontend (2 replicas, HPA 2–8), PostgreSQL StatefulSet, Redis Deployment, and NGINX Ingress with cert-manager Let's Encrypt TLS termination.
+  - **✓ Production Environment Template**: `.env.production.example` defining parameters for database, cache, storage, vector engine, 64-hex JWT keys, and TLS configuration.
+  - **✓ Production Runbook**: Comprehensive deployment documentation in `docs/deployment/PRODUCTION_DEPLOYMENT.md`.
 
 
 ### 🛡️ Enterprise Production Reliability & Operational Pillars
