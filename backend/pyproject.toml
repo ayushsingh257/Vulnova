@@ -1,6 +1,6 @@
 [project]
 name = "vulnova-backend"
-version = "0.1.0"
+version = "1.0.0"
 description = "Vulnova Enterprise AI Application Security Platform Backend Control Plane"
 authors = [{ name = "Vulnova Security Core Team" }]
 readme = "README.md"

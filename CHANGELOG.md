@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [v1.0.0] - 2026-08-09
+
+### Added
+- **Flagship Enterprise Release (v1.0.0)**:
+  - Official production release of Vulnova Enterprise AI Application Security Platform.
+  - Complete 12-Era engineering roadmap execution covering system architecture, dynamic scanning engines, threat intelligence graphs, AI security analyst capabilities, distributed Celery scheduling, Next.js web application, compliance frameworks, performance optimization, incident response maturity, final security audits, and production infrastructure.
+  - Production Release Validation Test Suite (`backend/tests/test_release_validation.py` & `tests/release/release_validation.py`) with 5 automated verification gates.
+  - Single-source version control (`VERSION`, `backend/pyproject.toml`, `frontend/package.json` set to `1.0.0`).
+  - Comprehensive Release Documentation (`docs/releases/V1.0.0_RELEASE_NOTES.md`).
+
 ## [Unreleased]
 
 ### Fixed

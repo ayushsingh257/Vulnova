@@ -96,9 +96,12 @@ jobs:
           test -f backend/tests/test_security_audit.py
           echo "All Security Audit infrastructure artifacts present."
 
-      - name: Verify Production Infrastructure Artifacts
+      - name: Verify Production Deployment Infrastructure & Release Artifacts
         run: |
           echo "Verifying Production Deployment infrastructure files..."
+          test -f VERSION
+          test -f docs/releases/V1.0.0_RELEASE_NOTES.md
+          test -f tests/release/release_validation.py
           test -f docker-compose.prod.yml
           test -f .env.production.example
           test -f docs/deployment/PRODUCTION_DEPLOYMENT.md
@@ -116,7 +119,7 @@ jobs:
           test -f deployment/kubernetes/redis/deployment.yaml
           test -f deployment/kubernetes/redis/service.yaml
           test -f deployment/kubernetes/ingress/ingress.yaml
-          echo "All Production Deployment infrastructure artifacts present."
+          echo "All Production Deployment infrastructure and release artifacts present."
 
   docker-validation:
     name: Docker & Kubernetes Infrastructure Syntax Verification
@@ -142,32 +145,35 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: '3.12'
-          cache: 'pip'
-          cache-dependency-path: backend/requirements.txt
 
-      - name: Install Backend Dependencies from Authoritative requirements.txt
+      - name: Install Dependencies
+        working-directory: backend
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
+          pip install -r requirements.txt
+          pip install ruff black mypy pytest pytest-asyncio types-pyyaml
 
-      - name: Run Black Formatter Check
-        run: black --check backend/app
-
-      - name: Run Ruff Linter
-        run: ruff check backend/app
-
-      - name: Run Mypy Type Checker
+      - name: Check Code Formatting with Black
         working-directory: backend
-        env:
-          PYTHONPATH: .
+        run: black --check app tests
+
+      - name: Lint Code with Ruff
+        working-directory: backend
+        run: ruff check app
+
+      - name: Type Check with Mypy
+        working-directory: backend
         run: mypy app --ignore-missing-imports
 
       - name: Run Pytest Suite
         working-directory: backend
         run: pytest
+
+      - name: Run Production Release Validation Suite
+        run: python tests/release/release_validation.py
 
   frontend-checks:
     name: Frontend Lint, Type-Check & Build Verification

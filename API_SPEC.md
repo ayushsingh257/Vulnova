@@ -1939,10 +1939,17 @@ All API errors return a standardized JSON error format:
   - All production API endpoints must be accessed via HTTPS with TLS 1.2+ (`https://api.vulnova.enterprise.com/api/v1/...`).
   - NGINX Ingress controller automatically strips TLS at boundary and injects `X-Forwarded-For`, `X-Forwarded-Proto`, and `X-Request-ID` headers.
 - **Rate Limiting & DDOS Governance**:
-  - Production APIs enforce Redis-backed token bucket rate limits (100 req/min for authenticated endpoints, 10 req/min for auth endpoints).
-
-
 ---
+
+### Section AE: Release Specification & Version Management (Phase 12.3 / v1.0.0 ✅)
+
+- **Platform Version Response Header**:
+  - All REST API responses include the `X-Vulnova-Version: 1.0.0` header.
+- **OpenAPI Schema Version**:
+  - `GET /api/v1/openapi.json` returns OpenAPI 3.1 specification with `info.version: "1.0.0"`.
+- **System Version API Endpoint**:
+  - `GET /api/v1/system/version`: Returns platform version details (`version: "1.0.0"`, `environment: "production"`, `build_date: "2026-08-09"`).
+  - **RBAC Guard**: Public / Open.
 
 ## ⚡ 4. WebSocket Streaming Protocol
 
