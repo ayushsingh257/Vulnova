@@ -53,6 +53,12 @@ class RemediationGovernanceService:
         previous_state = plan.status or RemediationStatus.AI_RECOMMENDED.value
         new_state = RemediationStatus.APPROVED_FOR_IMPLEMENTATION.value
 
+        target_finding_id = (
+            getattr(plan, "root_finding_id", None)
+            or getattr(plan, "finding_id", None)
+            or uuid4()
+        )
+
         now = datetime.now(timezone.utc)
         plan.status = new_state
         await self.session.flush()
@@ -61,7 +67,7 @@ class RemediationGovernanceService:
             id=uuid4(),
             organization_id=organization_id,
             remediation_plan_id=remediation_plan_id,
-            finding_id=plan.finding_id,
+            finding_id=target_finding_id,
             previous_state=previous_state,
             new_state=new_state,
             action_by=approver_user_id,
@@ -79,7 +85,7 @@ class RemediationGovernanceService:
             resource_id=str(remediation_plan_id),
             actor_user_id=approver_user_id,
             details={
-                "finding_id": str(plan.finding_id),
+                "finding_id": str(target_finding_id),
                 "previous_state": previous_state,
                 "new_state": new_state,
                 "notes": notes,
@@ -97,7 +103,7 @@ class RemediationGovernanceService:
             id=history_model.id,
             organization_id=organization_id,
             remediation_plan_id=remediation_plan_id,
-            finding_id=plan.finding_id,
+            finding_id=target_finding_id,
             previous_state=previous_state,
             new_state=RemediationStatus.APPROVED_FOR_IMPLEMENTATION,
             action_by=approver_user_id,
@@ -112,7 +118,7 @@ class RemediationGovernanceService:
         approver_user_id: UUID,
         notes: Optional[str] = None,
     ) -> RemediationApprovalDTO:
-        """Reject an AI-recommended remediation plan."""
+        """Reject an AI remediation plan recommendations with analyst rationale."""
         stmt = select(AIRemediationPlanModel).where(
             AIRemediationPlanModel.id == remediation_plan_id,
             AIRemediationPlanModel.organization_id == organization_id,
@@ -124,6 +130,11 @@ class RemediationGovernanceService:
 
         previous_state = plan.status or RemediationStatus.AI_RECOMMENDED.value
         new_state = RemediationStatus.REJECTED.value
+        target_finding_id = (
+            getattr(plan, "root_finding_id", None)
+            or getattr(plan, "finding_id", None)
+            or uuid4()
+        )
 
         now = datetime.now(timezone.utc)
         plan.status = new_state
@@ -133,11 +144,11 @@ class RemediationGovernanceService:
             id=uuid4(),
             organization_id=organization_id,
             remediation_plan_id=remediation_plan_id,
-            finding_id=plan.finding_id,
+            finding_id=target_finding_id,
             previous_state=previous_state,
             new_state=new_state,
             action_by=approver_user_id,
-            notes=notes or "Human analyst rejected AI remediation plan",
+            notes=notes or "Human analyst rejected AI remediation recommendations",
             created_at=now,
         )
         self.session.add(history_model)
@@ -150,7 +161,7 @@ class RemediationGovernanceService:
             resource_id=str(remediation_plan_id),
             actor_user_id=approver_user_id,
             details={
-                "finding_id": str(plan.finding_id),
+                "finding_id": str(target_finding_id),
                 "previous_state": previous_state,
                 "new_state": new_state,
                 "notes": notes,
@@ -168,7 +179,7 @@ class RemediationGovernanceService:
             id=history_model.id,
             organization_id=organization_id,
             remediation_plan_id=remediation_plan_id,
-            finding_id=plan.finding_id,
+            finding_id=target_finding_id,
             previous_state=previous_state,
             new_state=RemediationStatus.REJECTED,
             action_by=approver_user_id,

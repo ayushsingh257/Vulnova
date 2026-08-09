@@ -16,7 +16,6 @@ from app.infrastructure.ai_confidence.dto import (
     FindingReviewDTO,
     FindingReviewRequestDTO,
     FindingVerificationAttemptDTO,
-    RemediationActionRequestDTO,
     RemediationApprovalDTO,
 )
 from app.infrastructure.ai_confidence.remediation_governance_service import (

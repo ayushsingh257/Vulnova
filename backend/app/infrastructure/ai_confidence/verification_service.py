@@ -5,8 +5,7 @@ and Phase 12.5 target authorization checks to verify finding authenticity.
 """
 
 from datetime import datetime, timezone
-import json
-from typing import Any, Dict, Optional, Tuple
+from typing import Optional, Tuple
 from uuid import UUID, uuid4
 
 import httpx
@@ -61,12 +60,17 @@ class FindingVerificationService:
             raise ResourceNotFoundException("Security finding not found.")
 
         # ── Step 1: Phase 12.5 Target Authorization & Ownership Check ──
-        target_stmt = select(ScanTargetModel).where(
-            ScanTargetModel.id == finding.scan_target_id,
-            ScanTargetModel.organization_id == organization_id,
+        target_id_val = (
+            getattr(finding, "scan_target_id", None) or finding.asset_node_id
         )
-        target_res = await self.session.execute(target_stmt)
-        target = target_res.scalar_one_or_none()
+        target = None
+        if target_id_val:
+            target_stmt = select(ScanTargetModel).where(
+                ScanTargetModel.id == target_id_val,
+                ScanTargetModel.organization_id == organization_id,
+            )
+            target_res = await self.session.execute(target_stmt)
+            target = target_res.scalar_one_or_none()
 
         if target:
             auth_res = await self.auth_service.authorize_scan(
@@ -112,9 +116,13 @@ class FindingVerificationService:
 
         # Update finding status if verified or false positive
         if is_reproduced:
-            finding.status = "CONFIRMED"
+            finding.confidence = "CONFIRMED"
+            if hasattr(finding, "status"):
+                finding.status = "CONFIRMED"
         else:
-            finding.status = "NEEDS_REVIEW"
+            finding.confidence = "NEEDS_REVIEW"
+            if hasattr(finding, "status"):
+                finding.status = "NEEDS_REVIEW"
         await self.session.flush()
 
         # ── Step 4: Re-calculate Confidence Score ──

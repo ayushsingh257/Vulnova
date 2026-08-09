@@ -4,8 +4,8 @@ Handles security analyst review decisions (CONFIRM, FALSE_POSITIVE, ACCEPT_RISK,
 and persists audit records.
 """
 
-from datetime import datetime, timezone
 import json
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
@@ -55,11 +55,14 @@ class FindingReviewService:
             raise ResourceNotFoundException("Security finding not found.")
 
         now = datetime.now(timezone.utc)
+        target_id_val = str(
+            getattr(finding, "scan_target_id", None) or finding.asset_node_id or ""
+        )
         evidence_snapshot = json.dumps(
             {
                 "title": finding.title,
                 "severity": finding.severity,
-                "target_id": str(finding.scan_target_id),
+                "target_id": target_id_val,
                 "plugin_id": finding.plugin_id,
             }
         )
@@ -78,7 +81,9 @@ class FindingReviewService:
 
         # Update finding triage status based on decision
         new_status = self.DECISION_STATUS_MAP.get(decision, "NEEDS_REVIEW")
-        finding.status = new_status
+        finding.confidence = new_status
+        if hasattr(finding, "status"):
+            finding.status = new_status
         await self.session.flush()
 
         # Record immutable audit event

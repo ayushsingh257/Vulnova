@@ -4,7 +4,6 @@ Calculates multi-dimensional finding confidence scores based on evidence quality
 scanner plugin reliability, automated reproduction success, and AI analysis.
 """
 
-from typing import Any, Dict, Optional
 from uuid import UUID
 
 from sqlalchemy import select
@@ -22,9 +21,6 @@ from app.infrastructure.database.models.ai_confidence import (
     FindingVerificationAttemptModel,
 )
 from app.infrastructure.database.models.assessment import SecurityFindingModel
-from app.infrastructure.database.repositories.assessment_repository import (
-    AssessmentRepository,
-)
 
 logger = get_logger("vulnova.finding_confidence_service")
 
@@ -134,9 +130,15 @@ class FindingConfidenceService:
         """Score evidence completeness from HTTP payloads, database errors, and stack traces."""
         score = 30.0  # Base score for finding title/description
 
-        raw_evidence = (finding.raw_evidence or "").lower()
-        poc = (finding.proof_of_concept or "").lower()
-        evidence_text = f"{raw_evidence} {poc}"
+        ev_dict = (
+            finding.evidence_json if isinstance(finding.evidence_json, dict) else {}
+        )
+        ev_str = " ".join(str(v) for v in ev_dict.values()).lower()
+        desc = (finding.description or "").lower()
+        rem = (finding.remediation or "").lower()
+        raw_ev = str(getattr(finding, "raw_evidence", "") or "").lower()
+        poc = str(getattr(finding, "proof_of_concept", "") or "").lower()
+        evidence_text = f"{ev_str} {desc} {rem} {raw_ev} {poc}"
 
         if (
             "http/" in evidence_text

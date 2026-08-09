@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -12,7 +12,6 @@ from app.infrastructure.ai_confidence.confidence_service import (
 )
 from app.infrastructure.ai_confidence.dto import (
     ConfidenceLevel,
-    FindingReviewRequestDTO,
     RemediationStatus,
     ReviewDecision,
     VerificationStatus,
@@ -22,10 +21,7 @@ from app.infrastructure.ai_confidence.remediation_governance_service import (
 )
 from app.infrastructure.ai_confidence.review_service import FindingReviewService
 from app.infrastructure.database.models.ai_confidence import (
-    AIFindingConfidenceAnalysisModel,
-    FindingReviewModel,
     FindingVerificationAttemptModel,
-    RemediationApprovalHistoryModel,
 )
 from app.infrastructure.database.models.ai_remediation import AIRemediationPlanModel
 from app.infrastructure.database.models.assessment import SecurityFindingModel
@@ -148,8 +144,6 @@ async def test_confidence_with_reproduced_verification(mock_session: AsyncMock) 
     verification.verification_status = "CONFIRMED"
     verification.is_reproduced = True
     verification.created_at = datetime.now(timezone.utc)
-
-    call_count = {"n": 0}
 
     async def _mock_exec(stmt: Any, *a: Any, **kw: Any) -> MagicMock:
         stmt_str = str(stmt).lower()
@@ -283,6 +277,7 @@ async def test_remediation_approval_workflow(mock_session: AsyncMock) -> None:
     plan.id = plan_id
     plan.organization_id = org_id
     plan.finding_id = finding_id
+    plan.root_finding_id = finding_id
     plan.status = "AI_RECOMMENDED"
 
     async def _mock_exec(stmt: Any, *a: Any, **kw: Any) -> MagicMock:
@@ -320,6 +315,7 @@ async def test_remediation_rejection_workflow(mock_session: AsyncMock) -> None:
     plan.id = plan_id
     plan.organization_id = org_id
     plan.finding_id = finding_id
+    plan.root_finding_id = finding_id
     plan.status = "AI_RECOMMENDED"
 
     async def _mock_exec(stmt: Any, *a: Any, **kw: Any) -> MagicMock:
@@ -375,6 +371,7 @@ async def test_full_finding_lifecycle_flow(mock_session: AsyncMock) -> None:
     plan.id = plan_id
     plan.organization_id = org_id
     plan.finding_id = finding_id
+    plan.root_finding_id = finding_id
     plan.status = "AI_RECOMMENDED"
 
     async def _mock_exec(stmt: Any, *a: Any, **kw: Any) -> MagicMock:
