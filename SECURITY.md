@@ -1043,6 +1043,29 @@ Phase 12.6 enforces strict human-in-the-loop security governance for all AI-assi
 5. **Immutable Security Audit Log Integration**:
    - Every AI analysis, analyst decision review (`CONFIRM`, `FALSE_POSITIVE`, `ACCEPT_RISK`, `REQUEST_MORE_EVIDENCE`), and remediation approval/rejection event is permanently recorded in the immutable audit log with full actor user identity and timestamp.
 
+---
+
+## 🔒 49. Secure Plugin Governance Model & Zero-Trust Sandbox Isolation (Phase 12.7)
+
+Phase 12.7 enforces strict cryptographic trust validation, capability permission boundaries, and out-of-process execution sandboxing for all security plugins:
+
+1. **Cryptographic Ed25519 Signature Verification**:
+   - Every security plugin manifest package must be cryptographically signed using an Ed25519 private key belonging to a registered and trusted publisher.
+   - `PluginSignatureService` verifies canonical byte hashes (`plugin_id:version:publisher_id:package_hash:sorted_capabilities`) before allowing any plugin to be loaded or executed.
+   - Unsigned plugins, corrupted signatures, and unknown publisher signatures are rejected immediately.
+2. **Trusted Publisher Key Lifecycle Governance**:
+   - Publishers must register verified 32-byte Ed25519 public keys (`PluginTrustService`), tracked via SHA-256 key fingerprints.
+   - Administrators can instantly revoke compromised publishers (`DELETE /api/v1/plugins/trust/{id}`), immediately blocking all associated plugins across the organization.
+   - Key rotation is supported with full audit trail history.
+3. **Capability-Based Permission Manifests**:
+   - Plugins declare runtime capabilities (`network:http`, `network:dns`, `network:tcp`, `filesystem:read`, `filesystem:write`, `process:execute`).
+   - `PluginCapabilityService` validates manifests and blocks any runtime attempt to execute undeclared capabilities (`ValidationException: Permission Denied`).
+4. **Out-of-Process Sandbox Runtime Isolation**:
+   - `PluginRunnerService` executes plugins in isolated subprocess or container runtimes, enforcing strict CPU limits (1.0 core), memory caps (256 MB), and execution timeouts (30s).
+5. **Immutable Security Audit Logging**:
+   - Generates immutable audit events (`plugin.signature_verified`, `plugin.signature_failed`, `plugin.execution_started`, `plugin.execution_completed`, `plugin.execution_blocked`, `plugin.publisher_trusted`, `plugin.publisher_revoked`) recording full actor attribution and timestamps via `AuditLogService`.
+
+
 
 
 

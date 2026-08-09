@@ -55,6 +55,12 @@ from app.infrastructure.database.models.incident import (
     PostIncidentReviewModel,
 )
 from app.infrastructure.database.models.organization import OrganizationModel
+from app.infrastructure.database.models.plugin_security import (
+    PluginExecutionAuditModel,
+    PluginManifestModel,
+    PluginSignatureModel,
+    PluginTrustedPublisherModel,
+)
 from app.infrastructure.database.models.refresh_token import RefreshTokenModel
 from app.infrastructure.database.models.risk_snapshot import RiskPostureSnapshotModel
 from app.infrastructure.database.models.scan_approval_request import (
@@ -134,4 +140,8 @@ __all__ = [
     "WorkerTaskModel",
     "ScanScheduleModel",
     "RiskPostureSnapshotModel",
+    "PluginTrustedPublisherModel",
+    "PluginManifestModel",
+    "PluginSignatureModel",
+    "PluginExecutionAuditModel",
 ]

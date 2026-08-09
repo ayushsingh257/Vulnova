@@ -27,6 +27,7 @@ from app.api.v1.routers import (
     organizations,
     owasp_validation,
     pentest_validation,
+    plugin_security,
     regression_validation,
     report_exports,
     reports,
@@ -101,3 +102,4 @@ api_v1_router.include_router(security_audit.router)
 api_v1_router.include_router(scanner_sandbox.router)
 api_v1_router.include_router(target_authorization.router)
 api_v1_router.include_router(ai_confidence.router)
+api_v1_router.include_router(plugin_security.router)

@@ -765,6 +765,16 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Remediation Approval Governance**: `RemediationGovernanceService` enforces strict human approval gates (`AI_RECOMMENDED` $\rightarrow$ `ANALYST_REVIEW` $\rightarrow$ `APPROVED_FOR_IMPLEMENTATION` $\rightarrow$ `IMPLEMENTED` $\rightarrow$ `VERIFIED`). `validate_execution_allowed()` blocks remediation unless `APPROVED_FOR_IMPLEMENTATION`.
     - **Database ORM & Alembic Migration**: `FindingVerificationAttemptModel` (`finding_verification_attempts`), `FindingReviewModel` (`finding_reviews`), `RemediationApprovalHistoryModel` (`remediation_approval_history`), and migration `0008_create_finding_confidence_and_remediation_tables.py`.
     - **Immutable Audit Trail**: Dispatches audit events (`finding.verification_attempted`, `finding.reviewed`, `remediation.approved`, `remediation.rejected`) via `AuditLogService` with actor user context.
+63. **Cryptographically Signed & Sandboxed Plugin Ecosystem Architecture (Phase 12.7)**: Zero-trust executable component governance and out-of-process isolation:
+    - **Core Engineering Principle**: All third-party executable components require cryptographic trust verification and sandbox isolation. Unsigned or unverified executable code is strictly blocked from the platform.
+    - **Cryptographic Ed25519 Signature Verification**: `PluginSignatureService` enforces Ed25519 digital signature validation over canonical manifest bytes (`plugin_id:version:publisher_id:package_hash:sorted_capabilities`) and computes SHA-256 public key fingerprints.
+    - **Trusted Publisher Key Lifecycle Governance**: `PluginTrustService` manages publisher keyrings, public key validation (32 bytes / 64 hex characters), emergency revocation (`PublisherTrustStatus.REVOKED`), and key rotation with audit history.
+    - **Capability Permission Manifests**: `PluginCapabilityService` validates declared capability boundaries (`network:http`, `network:dns`, `network:tcp`, `filesystem:read`, `filesystem:write`, `process:execute`) and blocks runtime capability escalation (`ValidationException: Permission Denied`).
+    - **Out-of-Process Sandbox Execution Isolation**: `PluginRunnerService` dispatches security plugins within isolated subprocess runtimes enforcing CPU quota (1.0 core), memory limits (256 MB), and execution timeouts (30s).
+    - **Zero-Trust Security Reporting**: `PluginSecurityReportService` aggregates signatures, publisher trust, declared capabilities, and audit telemetry into zero-trust security reports (`GET /api/v1/plugins/{id}/security-report`).
+    - **Database ORM & Alembic Migration**: `PluginTrustedPublisherModel` (`plugin_trusted_publishers`), `PluginManifestModel` (`plugin_manifests`), `PluginSignatureModel` (`plugin_signatures`), `PluginExecutionAuditModel` (`plugin_execution_audits`), and Alembic migration `0009_create_plugin_security_tables.py`.
+    - **Immutable Audit Trail**: Dispatches audit events (`plugin.signature_verified`, `plugin.signature_failed`, `plugin.execution_started`, `plugin.execution_completed`, `plugin.execution_blocked`, `plugin.publisher_trusted`, `plugin.publisher_revoked`) via `AuditLogService`.
+
 
 
 

@@ -44,6 +44,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Added REST API endpoints under `/api/v1/findings/{id}/confidence`, `/findings/{id}/verify`, `/findings/{id}/review`, `/remediation/{id}/approve`, and `/remediation/{id}/reject`.
   - Added frontend `AIConfidenceService` (`frontend/services/ai_confidence.service.ts`) and `FindingConfidencePanel` React component (`frontend/components/vulnerabilities/finding-confidence-panel.tsx`).
   - Added unit, integration, confidence calculation, analyst review, and remediation governance test suite in `backend/tests/test_ai_confidence_remediation.py` (10/10 passed cleanly).
+- **Era 12 Phase 12.7 — Cryptographically Signed & Sandboxed Plugin Ecosystem Architecture**:
+  - Implemented Ed25519 digital signature validation service (`app/infrastructure/plugin_security/signature_service.py`) verifying canonical manifest byte hashes (`plugin_id:version:publisher_id:package_hash:sorted_capabilities`) and calculating SHA-256 public key fingerprints.
+  - Implemented trusted publisher registry & lifecycle governance service (`app/infrastructure/plugin_security/trust_service.py`) supporting public key validation (32 bytes / 64 hex characters), emergency trust revocation (`REVOKED`), and key rotation with audit history.
+  - Implemented capability manifest & permission governance service (`app/infrastructure/plugin_security/capability_service.py`) enforcing runtime boundaries for declared capabilities (`network:http`, `network:dns`, `network:tcp`, `filesystem:read`, `filesystem:write`, `process:execute`) and blocking privilege escalation attempts.
+  - Implemented isolated plugin runner service (`app/infrastructure/plugin_security/runner_service.py`) executing security plugins inside isolated out-of-process subprocess sandboxes with CPU quota (1.0 core), memory limits (256 MB), and strict execution timeout (30s) enforcement.
+  - Implemented zero-trust security report generator service (`app/infrastructure/plugin_security/security_report_service.py`).
+  - Added database ORM models: `PluginTrustedPublisherModel` (`plugin_trusted_publishers`), `PluginManifestModel` (`plugin_manifests`), `PluginSignatureModel` (`plugin_signatures`), `PluginExecutionAuditModel` (`plugin_execution_audits`), and Alembic migration `0009_create_plugin_security_tables.py`.
+  - Added REST API endpoints under `/api/v1/plugins/{id}/verify`, `/plugins/trusted`, `/plugins/trust`, `/plugins/trust/{id}`, `/plugins/{id}/execute`, and `/plugins/{id}/security-report`.
+  - Added frontend `PluginSecurityService` (`frontend/services/plugin_security.service.ts`) and `PluginSecurityPanel` React component (`frontend/components/plugins/plugin-security-panel.tsx`).
+  - Added comprehensive test suite in `backend/tests/test_plugin_security.py` (20/20 passed cleanly).
 
 ### Planned
 - **Enterprise Security Hardening Roadmap Expansion (Phases 12.5 – 12.9)**:

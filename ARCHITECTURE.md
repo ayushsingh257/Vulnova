@@ -2242,6 +2242,67 @@ Phase 12.6 introduces multi-dimensional AI-assisted finding confidence scoring a
 5. **Human-Controlled Remediation Lifecycle**:
    - AI recommendations flow through mandatory `ANALYST_REVIEW` → `APPROVED_FOR_IMPLEMENTATION` gates before any system modifications are permitted.
 
+---
+
+## 🔒 Plugin Zero Trust Security Architecture (Phase 12.7)
+
+Phase 12.7 transforms Vulnova's plugin system into a zero-trust, cryptographically verified, capability-governed, and out-of-process sandboxed ecosystem:
+
+### Plugin Security Architecture Diagram
+
+```text
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                      PLUGIN PACKAGE BUNDLE                      │
+    │  (Manifest, Python / WASM Entrypoint, SHA-256 Checksum, Sig)    │
+    └────────────────────────────────┬────────────────────────────────┘
+                                     │
+                                     ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │              PLUGIN SIGNATURE VERIFICATION SERVICE              │
+    │  (Ed25519 Cryptographic Signature & Canonical Manifest Hash)    │
+    └────────────────────────────────┬────────────────────────────────┘
+                                     │
+                                     ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                 TRUSTED PUBLISHER REGISTRY                      │
+    │  (Public Key Fingerprint, Status: TRUSTED / REVOKED / PENDING)  │
+    └────────────────────────────────┬────────────────────────────────┘
+                                     │
+                                     ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                 CAPABILITY MANIFEST GOVERNANCE                  │
+    │  Declared: [network:http, network:dns, filesystem:read]         │
+    │  Enforced: Blocks undeclared syscalls & process execution       │
+    └────────────────────────────────┬────────────────────────────────┘
+                                     │
+                                     ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │               SANDBOXED OUT-OF-PROCESS RUNNER                   │
+    │  (Subprocess / WASM / Container Driver, CPU/Memory/Timeout)     │
+    └────────────────────────────────┬────────────────────────────────┘
+                                     │
+                                     ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │               IMMUTABLE SECURITY AUDIT LOGGING                  │
+    │  (plugin.registered, plugin.verified, plugin.execution_*)       │
+    └─────────────────────────────────────────────────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Cryptographic Ed25519 Signature Verification**:
+   - Every plugin manifest is signed using Ed25519 asymmetric cryptography over canonical bytes (`plugin_id`, `version`, `publisher_id`, `package_hash`, `capabilities`).
+   - Unsigned plugins, corrupted signatures, and unknown publishers are strictly blocked from registration and execution.
+2. **Trusted Publisher Key Lifecycle Governance**:
+   - Publishers must be registered and verified in `PluginTrustModel` (`PluginTrustedPublisherModel`).
+   - Revoked publishers immediately block all associated plugins across the entire tenant. Supports key rotation with audit trails.
+3. **Strict Capability Permission Manifests**:
+   - Plugins declare runtime capabilities (`network:http`, `network:dns`, `network:tcp`, `filesystem:read`, `filesystem:write`, `process:execute`).
+   - `PluginCapabilityService` enforces permission boundaries at runtime. Undeclared capabilities trigger immediate `ValidationException` and security audit events.
+4. **Out-of-Process Sandbox Execution Isolation**:
+   - `PluginRunnerService` dispatches execution inside isolated subprocess or container environments with CPU quota (1.0 core), memory limit (256 MB), and strict execution timeout (30s).
+5. **Zero-Trust Security Audit Telemetry**:
+   - Full lifecycle audit records persisted in `PluginExecutionAuditModel` and `AuditLogModel` (`plugin.signature_verified`, `plugin.signature_failed`, `plugin.execution_started`, `plugin.execution_completed`, `plugin.execution_blocked`, `plugin.publisher_trusted`, `plugin.publisher_revoked`).
+
 
 
 

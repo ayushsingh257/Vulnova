@@ -1765,17 +1765,23 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Automated confidence scoring reducing analyst triage false-positive alert volume by >80% while strictly enforcing human review before executing any remediation patch. AI assists vulnerability analysis but human approval controls all security actions.
 - **Testing Requirements**: Unit test suite for confidence scoring, evidence quality evaluation, verification state machines, analyst review workflows, remediation approval/rejection governance, and full integration lifecycle flow (10/10 passed cleanly).
 
-### Phase 12.7: Cryptographically Signed & Sandboxed Plugin Ecosystem Architecture
-- **Status**: Planned ⏳
-- **Objective**: Implement Ed25519 cryptographic signature verification for 3rd-party assessment plugins, capability-based permission manifests, and WASM/subprocess plugin sandboxing.
+### ✅ Phase 12.7: Cryptographically Signed & Sandboxed Plugin Ecosystem Architecture
+- **Status**: Completed ✅
+- **Objective**: Implement Ed25519 cryptographic signature verification for assessment plugins, publisher trust lifecycle governance, capability-based permission manifests, and out-of-process sandbox isolation.
 - **Deliverables**:
-  - `CryptographicPluginSignatureVerifier` in `app/infrastructure/plugins/signature_verifier.py`.
-  - Plugin Capability Manifest (`plugin.manifest.json` defining `net:http`, `fs:read`, `env:none`).
-  - WASM / Restricted Subprocess Plugin Sandbox Execution Environment.
-  - Enterprise Plugin Management Console (`/settings/plugins`).
+  - `PluginSignatureService` in `app/infrastructure/plugin_security/signature_service.py` verifying Ed25519 digital signatures, canonical manifest hashing, and SHA-256 public key fingerprinting.
+  - `PluginTrustService` in `app/infrastructure/plugin_security/trust_service.py` managing trusted publisher keyrings, revocation gates, and public key rotation.
+  - `PluginCapabilityService` in `app/infrastructure/plugin_security/capability_service.py` validating manifest schemas (`network:http`, `network:dns`, `network:tcp`, `filesystem:read`, `filesystem:write`, `process:execute`) and enforcing capability runtime boundaries.
+  - `PluginRunnerService` in `app/infrastructure/plugin_security/runner_service.py` executing security plugins inside isolated out-of-process sandbox runtimes with CPU, memory, and timeout governance.
+  - `PluginSecurityReportService` in `app/infrastructure/plugin_security/security_report_service.py` generating comprehensive zero-trust security reports.
+  - Database ORM models: `PluginTrustedPublisherModel` (`plugin_trusted_publishers`), `PluginManifestModel` (`plugin_manifests`), `PluginSignatureModel` (`plugin_signatures`), `PluginExecutionAuditModel` (`plugin_execution_audits`).
+  - Alembic migration `0009_create_plugin_security_tables.py`.
+  - REST API Router (`app/api/v1/routers/plugin_security.py`): `POST /plugins/{id}/verify`, `GET /plugins/trusted`, `POST /plugins/trust`, `DELETE /plugins/trust/{id}`, `POST /plugins/{id}/execute`, `GET /plugins/{id}/security-report`.
+  - Frontend `PluginSecurityService` (`frontend/services/plugin_security.service.ts`) and `PluginSecurityPanel` React component (`frontend/components/plugins/plugin-security-panel.tsx`).
+  - Comprehensive test suite (`backend/tests/test_plugin_security.py`, 20/20 passed cleanly).
 - **Dependencies**: Phase 12.6.
-- **Completion Criteria**: 100% of custom and 3rd-party security assessment plugins cryptographically signed by trusted keyrings prior to runtime registration.
-- **Testing Requirements**: Test suite verifying signature validation failures, capability escalation blocks, and WASM memory isolation.
+- **Completion Criteria**: 100% of executable security plugins cryptographically signed by trusted Ed25519 publisher keyrings and executed under out-of-process capability-gated sandbox isolation.
+- **Testing Requirements**: Test suite covering Ed25519 signature verification, unsigned plugin rejection, invalid signature rejection, revoked publisher rejection, capability escalation blocks, out-of-process sandbox limits, and audit event verification (20/20 passed cleanly).
 
 ### Phase 12.8: Enterprise Secrets Vault & KMS Credential Governance Infrastructure
 - **Status**: Planned ⏳
