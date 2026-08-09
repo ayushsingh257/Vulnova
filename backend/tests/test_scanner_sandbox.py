@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from uuid import uuid4
 
@@ -150,12 +150,17 @@ async def test_sandbox_repository_crud(mock_session: AsyncMock) -> None:
 
 
 @pytest.mark.anyio
-async def test_sandbox_manager_full_execution_flow(mock_session: AsyncMock) -> None:
+async def test_sandbox_manager_full_execution_flow(
+    mock_session: AsyncMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Verify complete sandbox lifecycle orchestration, result collection, and auto-destruction."""
     org_id = uuid4()
     job_id = uuid4()
 
     manager = ScannerSandboxManager(mock_session)
+
+    # Force test environment isolated fallback to guarantee deterministic test execution across local and CI runner environments
+    monkeypatch.setattr(manager.driver, "is_docker_available", lambda: False)
 
     # Mock audit log service record_event to prevent DB calls
     manager.audit_service.record_event = AsyncMock()  # type: ignore[method-assign]
@@ -177,6 +182,54 @@ async def test_sandbox_manager_full_execution_flow(mock_session: AsyncMock) -> N
     assert result.status == SandboxStatus.DESTROYED
     assert result.exit_code == 0
     assert len(result.raw_findings) >= 1
+    assert manager.audit_service.record_event.call_count >= 3
+
+
+@pytest.mark.anyio
+async def test_sandbox_manager_failed_container_execution_flow(
+    mock_session: AsyncMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify sandbox manager handles non-zero exit code error logs while maintaining teardown cleanup."""
+    org_id = uuid4()
+    job_id = uuid4()
+    sandbox_id = uuid4()
+
+    manager = ScannerSandboxManager(mock_session)
+    manager.audit_service.record_event = AsyncMock()  # type: ignore[method-assign]
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    mock_session.execute.return_value = mock_result
+
+    # Mock container execution returning Docker exit code 125
+    failed_result = SandboxExecutionResultDTO(
+        sandbox_id=sandbox_id,
+        container_id="vulnova-sandbox-test-125",
+        scan_job_id=job_id,
+        status=SandboxStatus.FAILED,
+        exit_code=125,
+        duration_seconds=0.1,
+        raw_findings=[],
+        error_log="Docker execution error: image vulnova-scanner-sandbox:v1.0.0 not found",
+        execution_metadata={"error": "image not found"},
+    )
+    mock_driver_run = AsyncMock(return_value=failed_result)
+    monkeypatch.setattr(manager.driver, "create_and_run_sandbox", mock_driver_run)
+    mock_destroy = AsyncMock(return_value=True)
+    monkeypatch.setattr(manager.driver, "destroy_container", mock_destroy)
+
+    request = SandboxCreationRequestDTO(
+        organization_id=org_id,
+        scan_job_id=job_id,
+        target_url="https://example.com",
+        enabled_plugins=["xss_plugin"],
+    )
+
+    result = await manager.execute_sandboxed_scan(request)
+    assert result.status == SandboxStatus.DESTROYED
+    assert result.exit_code == 125
+    assert "Docker execution error" in (result.error_log or "")
+    mock_destroy.assert_called_once_with("vulnova-sandbox-test-125")
     assert manager.audit_service.record_event.call_count >= 3
 
 
