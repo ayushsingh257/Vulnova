@@ -1065,15 +1065,26 @@ Phase 12.7 enforces strict cryptographic trust validation, capability permission
 5. **Immutable Security Audit Logging**:
    - Generates immutable audit events (`plugin.signature_verified`, `plugin.signature_failed`, `plugin.execution_started`, `plugin.execution_completed`, `plugin.execution_blocked`, `plugin.publisher_trusted`, `plugin.publisher_revoked`) recording full actor attribution and timestamps via `AuditLogService`.
 
+---
 
+## 🔒 50. Zero Trust Credential Governance & Enterprise Secrets Vault Model (Phase 12.8)
 
+Phase 12.8 enforces enterprise-grade external Key Management System (KMS) integration, envelope encryption, and automated 90-day credential lifecycle governance:
 
-
-
-
-
-
-
-
-
-
+1. **Envelope Encryption & Ephemeral DEK Generation**:
+   - Every secret is encrypted using a unique, cryptographically secure 256-bit AES-GCM Data Encryption Key (DEK).
+   - Secret payloads are encrypted alongside Authenticated Associated Data ($AAD = kek\_id$) to prevent ciphertext substitution and replay attacks.
+   - The DEK itself is envelope-encrypted via the organization's external KMS Key Encryption Key (KEK) and stored as ciphertext in `secret_vault_entries`.
+2. **Zero Plaintext Secret Exposure**:
+   - REST API listing endpoints and query models **NEVER** expose plaintext secret values, returning only non-sensitive masked previews (`********1234`).
+   - Plaintext values are never printed to console logs, error messages, or telemetry streams.
+3. **Multi-Provider External KMS Integration**:
+   - Supports pluggable Key Management Systems including HashiCorp Vault Transit KV engine (`VaultSecretProvider`), AWS KMS (`AWSKMSSecretProvider`), Google Cloud KMS (`GCPKMSSecretProvider`), and local AES-256 fallback (`LocalDevSecretProvider`).
+4. **Least-Privilege Role Boundaries**:
+   - Access to decrypt and retrieve plaintext credentials requires the strict `secrets:access` permission (`Role.ADMIN` level 30+).
+   - Creation, rotation, and revocation require `secrets:manage` and `secrets:rotate` permissions.
+5. **Automated 90-Day Lifecycle Rotation**:
+   - Enforces default 90-day rotation intervals (`SecretRotationPolicyModel`).
+   - Automated background worker scans for overdue credentials and re-encrypts payloads with fresh DEKs, incrementing `key_version`.
+6. **Immutable Non-Repudiation Audit Logging**:
+   - Every secret lifecycle event is permanently recorded via `AuditLogService` (`secret.created`, `secret.accessed`, `secret.rotated`, `secret.revoked`, `secret.deleted`), capturing actor user ID, tenant ID, client IP address, secret identifier, and UTC timestamp.

@@ -53,7 +53,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Added database ORM models: `PluginTrustedPublisherModel` (`plugin_trusted_publishers`), `PluginManifestModel` (`plugin_manifests`), `PluginSignatureModel` (`plugin_signatures`), `PluginExecutionAuditModel` (`plugin_execution_audits`), and Alembic migration `0009_create_plugin_security_tables.py`.
   - Added REST API endpoints under `/api/v1/plugins/{id}/verify`, `/plugins/trusted`, `/plugins/trust`, `/plugins/trust/{id}`, `/plugins/{id}/execute`, and `/plugins/{id}/security-report`.
   - Added frontend `PluginSecurityService` (`frontend/services/plugin_security.service.ts`) and `PluginSecurityPanel` React component (`frontend/components/plugins/plugin-security-panel.tsx`).
-  - Added comprehensive test suite in `backend/tests/test_plugin_security.py` (20/20 passed cleanly).
+- **Era 12 Phase 12.8 — Enterprise Secrets Vault & KMS Credential Governance Infrastructure**:
+  - Implemented multi-provider KMS abstraction layer (`SecretProviderInterface`) supporting HashiCorp Vault Transit KV engine (`VaultSecretProvider`), AWS KMS (`AWSKMSSecretProvider`), Google Cloud KMS (`GCPKMSSecretProvider`), and local dev AES-256-GCM fallback (`LocalDevSecretProvider`).
+  - Implemented `KMSProviderRegistry` managing dynamic provider resolution and `KMSHealthService` providing live health and latency diagnostic probes.
+  - Implemented envelope encryption service (`EnvelopeEncryptionService`) generating ephemeral 256-bit AES-GCM Data Encryption Keys (DEKs) per secret with Authenticated Associated Data ($AAD = kek\_id$) and encrypting the DEK via external KMS Key Encryption Keys (KEKs).
+  - Implemented enterprise secret storage and access service (`SecretVaultService`) with zero plaintext leakage in listings, masked value previews (`********1234`), role-based access control (`secrets:access`), and non-repudiable audit logging (`secret.created`, `secret.accessed`, `secret.revoked`, `secret.deleted`).
+  - Implemented automated 90-day secret rotation service (`SecretRotationService`) with manual rotation endpoints, automated background scan workers, DEK re-keying, and rotation compliance posture analytics.
+  - Added database ORM models: `SecretVaultEntryModel` (`secret_vault_entries`), `SecretRotationPolicyModel` (`secret_rotation_policies`), `SecretAccessPolicyModel` (`secret_access_policies`), and Alembic migration `0010_create_secret_vault_tables.py`.
+  - Added REST API router endpoints under `/api/v1/secrets/*` (`POST /secrets`, `GET /secrets`, `GET /secrets/rotation-status`, `GET /secrets/providers`, `GET /secrets/kms-health`, `GET /secrets/{id}`, `POST /secrets/{id}/access`, `POST /secrets/{id}/rotate`, `DELETE /secrets/{id}`).
+  - Added frontend `SecretsVaultService` (`frontend/services/secrets_vault.service.ts`) and `SecretsVaultPanel` React component (`frontend/components/secrets/secrets-vault-panel.tsx`).
+  - Added comprehensive test suite in `backend/tests/test_secrets_vault.py` (20/20 passed cleanly).
 
 ### Planned
 - **Enterprise Security Hardening Roadmap Expansion (Phases 12.5 – 12.9)**:

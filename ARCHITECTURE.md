@@ -2303,17 +2303,68 @@ Phase 12.7 transforms Vulnova's plugin system into a zero-trust, cryptographical
 5. **Zero-Trust Security Audit Telemetry**:
    - Full lifecycle audit records persisted in `PluginExecutionAuditModel` and `AuditLogModel` (`plugin.signature_verified`, `plugin.signature_failed`, `plugin.execution_started`, `plugin.execution_completed`, `plugin.execution_blocked`, `plugin.publisher_trusted`, `plugin.publisher_revoked`).
 
+---
 
+## 🔐 25. Enterprise Secrets Vault & KMS Credential Governance Architecture (Phase 12.8)
 
+Phase 12.8 introduces a provider-independent Key Management System (KMS) envelope encryption architecture and automated 90-day secret lifecycle governance:
 
+```text
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                      APPLICATION CALLER / REST API                          │
+    │             (/api/v1/secrets/*, Scanners, Integration Drivers)              │
+    └──────────────────────────────────────┬──────────────────────────────────────┘
+                                           │
+                                           ▼
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                      ENTERPRISE SECRETS VAULT SERVICE                       │
+    │         (app/infrastructure/secrets_vault/vault_service.py)                 │
+    └──────────────────────────────────────┬──────────────────────────────────────┘
+                                           │
+                                           ▼
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                        ENVELOPE ENCRYPTION ENGINE                           │
+    │   1. Generate ephemeral 256-bit AES-GCM Data Encryption Key (DEK)          │
+    │   2. Encrypt plaintext payload with DEK -> [Payload Ciphertext + Auth Tag]  │
+    │   3. Dispatch DEK to KMS Provider to encrypt with Key Encryption Key (KEK)  │
+    └──────────────────────────────────────┬──────────────────────────────────────┘
+                                           │
+                                           ▼
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                         KMS PROVIDER REGISTRY                               │
+    │                (app/infrastructure/secrets_vault/provider_registry.py)      │
+    └──────────┬───────────────────┬───────────────────┬───────────────────┬──────┘
+               │                   │                   │                   │
+               ▼                   ▼                   ▼                   ▼
+    ┌────────────────────┐┌──────────────────┐┌──────────────────┐┌──────────────────┐
+    │LocalDevSecretProv  ││VaultSecretProvider││AWSKMSSecretProv  ││GCPKMSSecretProv  │
+    │(Local AES-256-GCM) ││(Vault Transit KV) ││(AWS KMS REST/SDK)││(Google Cloud KMS)│
+    └────────────────────┘└──────────────────┘└──────────────────┘└──────────────────┘
+                                           │
+                                           ▼
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                  DATABASE STORAGE (ENCRYPTED AT REST)                       │
+    │  SecretVaultEntryModel: [encrypted_payload_hex, encrypted_dek_hex, nonce,   │
+    │                          tag, kek_id, provider, key_version, status]        │
+    │  SecretRotationPolicyModel: [rotation_interval_days=90, next_rotation_due] │
+    │  SecretAccessPolicyModel: [min_role="ADMIN", allowed_ip_cidrs]             │
+    └──────────────────────────────────────┬──────────────────────────────────────┘
+                                           │
+                                           ▼
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                   AUTOMATED 90-DAY ROTATION PIPELINE                        │
+    │           (app/infrastructure/secrets_vault/rotation_service.py)            │
+    │       - Scans for next_rotation_due <= now                                  │
+    │       - Generates fresh DEK & re-encrypts payload                           │
+    │       - Increments key_version & records 'secret.rotated' audit telemetry   │
+    └─────────────────────────────────────────────────────────────────────────────┘
+```
 
-
-
-
-
-
-
-
-
-
+### Key Architectural Safeguards:
+1. **Zero Raw Master Key Storage**: No plaintext master keys exist on host filesystems or environment variables in production; all data encryption keys (DEKs) are dynamically envelope-encrypted with external KMS KEKs.
+2. **Multi-Provider KMS Abstraction**: Seamlessly operates across HashiCorp Vault Transit engine, AWS KMS, GCP Cloud KMS, and local development environments without application code changes.
+3. **Fail-Safe Envelope Encryption**: Plaintext payload is encrypted with AES-256-GCM using authenticated associated data (AAD=kek_id) and an ephemeral 256-bit symmetric DEK. The DEK itself is encrypted exclusively through the external KMS provider.
+4. **Zero Plaintext Leakage**: Plaintext secrets are never exposed in listing APIs, logs, or error messages. Public responses only provide masked previews (`********1234`).
+5. **Role-Based Access Control & IP Governance**: Decryption is strictly restricted to authorized administrators with mandatory non-repudiable audit logging (`secret.created`, `secret.accessed`, `secret.rotated`, `secret.revoked`, `secret.deleted`).
+6. **Automated 90-Day Lifecycle Rotation**: Background rotation engine automatically evaluates expiring secrets, re-encrypts data with fresh DEKs, updates rotation deadlines, and tracks overdue compliance SLAs.
 

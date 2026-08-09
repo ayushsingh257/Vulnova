@@ -30,6 +30,18 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     anthropic_api_key: str = ""
 
+    # External KMS & Enterprise Secrets Vault Configurations (Phase 12.8)
+    kms_provider: str = "local"  # "local", "vault", "aws_kms", "gcp_kms"
+    vault_addr: str = "http://localhost:8200"
+    vault_token: str = ""
+    vault_transit_key: str = "vulnova-kek"
+    aws_kms_key_id: str = "alias/vulnova-kek"
+    aws_kms_region: str = "us-east-1"
+    gcp_kms_key_name: str = (
+        "projects/vulnova-prod/locations/global/keyRings/vulnova-ring/cryptoKeys/vulnova-kek"
+    )
+    secret_default_rotation_days: int = 90
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )

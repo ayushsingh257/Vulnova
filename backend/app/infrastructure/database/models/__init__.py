@@ -72,6 +72,11 @@ from app.infrastructure.database.models.scan_target import (
     ScanTargetModel,
 )
 from app.infrastructure.database.models.scanner_sandbox import ScannerSandboxModel
+from app.infrastructure.database.models.secret_vault import (
+    SecretAccessPolicyModel,
+    SecretRotationPolicyModel,
+    SecretVaultEntryModel,
+)
 from app.infrastructure.database.models.target_verification_challenge import (
     TargetVerificationChallengeModel,
 )
@@ -144,4 +149,7 @@ __all__ = [
     "PluginManifestModel",
     "PluginSignatureModel",
     "PluginExecutionAuditModel",
+    "SecretVaultEntryModel",
+    "SecretRotationPolicyModel",
+    "SecretAccessPolicyModel",
 ]

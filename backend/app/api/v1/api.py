@@ -37,6 +37,7 @@ from app.api.v1.routers import (
     scan_targets,
     scanner_sandbox,
     secrets_validation,
+    secrets_vault,
     security_audit,
     status,
     system_health,
@@ -103,3 +104,4 @@ api_v1_router.include_router(scanner_sandbox.router)
 api_v1_router.include_router(target_authorization.router)
 api_v1_router.include_router(ai_confidence.router)
 api_v1_router.include_router(plugin_security.router)
+api_v1_router.include_router(secrets_vault.router)

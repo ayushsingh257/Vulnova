@@ -774,20 +774,15 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Zero-Trust Security Reporting**: `PluginSecurityReportService` aggregates signatures, publisher trust, declared capabilities, and audit telemetry into zero-trust security reports (`GET /api/v1/plugins/{id}/security-report`).
     - **Database ORM & Alembic Migration**: `PluginTrustedPublisherModel` (`plugin_trusted_publishers`), `PluginManifestModel` (`plugin_manifests`), `PluginSignatureModel` (`plugin_signatures`), `PluginExecutionAuditModel` (`plugin_execution_audits`), and Alembic migration `0009_create_plugin_security_tables.py`.
     - **Immutable Audit Trail**: Dispatches audit events (`plugin.signature_verified`, `plugin.signature_failed`, `plugin.execution_started`, `plugin.execution_completed`, `plugin.execution_blocked`, `plugin.publisher_trusted`, `plugin.publisher_revoked`) via `AuditLogService`.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+64. **Enterprise Secrets Vault & KMS Credential Governance Architecture (Phase 12.8)**: All production secrets must be protected using external key management systems with automated lifecycle governance:
+    - **Core Engineering Principle**: All production secrets must be protected using external key management systems with automated lifecycle governance. Zero raw master encryption keys are stored on host filesystems or environment variables.
+    - **Envelope Encryption Architecture**: `EnvelopeEncryptionService` generates unique, ephemeral 256-bit AES-GCM Data Encryption Keys (DEKs) per secret with Authenticated Associated Data ($AAD = kek\_id$). The DEK is envelope-encrypted using the organization's external KMS Key Encryption Key (KEK).
+    - **Multi-Provider KMS Abstraction Layer**: `SecretProviderInterface` supports HashiCorp Vault Transit engine (`VaultSecretProvider`), AWS KMS (`AWSKMSSecretProvider`), Google Cloud KMS (`GCPKMSSecretProvider`), and local development fallback (`LocalDevSecretProvider`). `KMSProviderRegistry` coordinates runtime provider selection and health probes (`KMSHealthService`).
+    - **Zero Plaintext Secret Exposure**: Database query results, REST API responses, and logs strictly conceal raw secret values, presenting only non-sensitive masked previews (`********1234`).
+    - **Automated 90-Day Lifecycle Rotation**: `SecretRotationService` executes on-demand and scheduled background rotation of expiring secrets, generating fresh DEKs, re-encrypting payloads, incrementing `key_version`, and tracking rotation SLAs.
+    - **Least-Privilege RBAC & IP Governance**: Decrypting raw secret values requires the `secrets:access` permission (`Role.ADMIN` level 30+). Administrative mutations require `secrets:manage` and `secrets:rotate`.
+    - **Database ORM & Alembic Migration**: `SecretVaultEntryModel` (`secret_vault_entries`), `SecretRotationPolicyModel` (`secret_rotation_policies`), `SecretAccessPolicyModel` (`secret_access_policies`), and Alembic migration `0010_create_secret_vault_tables.py`.
+    - **Immutable Non-Repudiation Audit Trail**: Dispatches audit events (`secret.created`, `secret.accessed`, `secret.rotated`, `secret.revoked`, `secret.deleted`) via `AuditLogService` with actor user attribution and UTC timestamps.
 
 
 

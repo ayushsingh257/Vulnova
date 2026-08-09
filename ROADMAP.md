@@ -1783,17 +1783,24 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: 100% of executable security plugins cryptographically signed by trusted Ed25519 publisher keyrings and executed under out-of-process capability-gated sandbox isolation.
 - **Testing Requirements**: Test suite covering Ed25519 signature verification, unsigned plugin rejection, invalid signature rejection, revoked publisher rejection, capability escalation blocks, out-of-process sandbox limits, and audit event verification (20/20 passed cleanly).
 
-### Phase 12.8: Enterprise Secrets Vault & KMS Credential Governance Infrastructure
-- **Status**: Planned ⏳
-- **Objective**: Integrate external Enterprise Key Management Services (HashiCorp Vault, AWS KMS, GCP KMS) and build automated 90-day secret rotation and master key re-encryption pipelines.
+### ✅ Phase 12.8: Enterprise Secrets Vault & KMS Credential Governance Infrastructure
+- **Status**: Completed ✅
+- **Objective**: Integrate external Enterprise Key Management Services (HashiCorp Vault, AWS KMS, GCP KMS) and build envelope encryption architecture (AES-256-GCM DEK + external KMS KEK), automated 90-day secret rotation pipelines, and zero-trust credential governance.
 - **Deliverables**:
-  - `ExternalKMSProvider` abstraction supporting HashiCorp Vault Transit engine, AWS KMS, and GCP KMS.
-  - Automated 90-day Secret Rotation Worker in Celery Beat.
-  - Envelope Encryption Re-Keying Pipeline (`SecretsReKeyingService`).
-  - Key Governance Audit Dashboard (`/settings/security/vault`).
+  - `SecretProviderInterface` abstraction supporting HashiCorp Vault Transit engine (`VaultSecretProvider`), AWS KMS (`AWSKMSSecretProvider`), GCP KMS (`GCPKMSSecretProvider`), and local dev fallback (`LocalDevSecretProvider`).
+  - `KMSProviderRegistry` managing runtime provider switching through configuration with fallback resilience.
+  - `EnvelopeEncryptionService` in `app/infrastructure/secrets_vault/envelope_encryption.py` generating ephemeral 256-bit AES-GCM Data Encryption Keys (DEKs) and encrypting DEKs via external KMS Key Encryption Keys (KEKs).
+  - `SecretVaultService` in `app/infrastructure/secrets_vault/vault_service.py` managing secret storage, masked previews (`********1234`), and authorized plaintext retrieval with non-repudiable audit logging (`secret.created`, `secret.accessed`, `secret.revoked`, `secret.deleted`).
+  - `SecretRotationService` in `app/infrastructure/secrets_vault/rotation_service.py` managing on-demand and automated 90-day background rotation with DEK re-keying and posture metrics calculation.
+  - `KMSHealthService` in `app/infrastructure/secrets_vault/kms_health_service.py` diagnosing live provider connectivity and latency.
+  - Database ORM models: `SecretVaultEntryModel` (`secret_vault_entries`), `SecretRotationPolicyModel` (`secret_rotation_policies`), `SecretAccessPolicyModel` (`secret_access_policies`).
+  - Alembic migration `0010_create_secret_vault_tables.py`.
+  - REST API Router (`app/api/v1/routers/secrets_vault.py`): `POST /secrets`, `GET /secrets`, `GET /secrets/rotation-status`, `GET /secrets/providers`, `GET /secrets/kms-health`, `GET /secrets/{id}`, `POST /secrets/{id}/access`, `POST /secrets/{id}/rotate`, `DELETE /secrets/{id}`.
+  - Frontend `SecretsVaultService` (`frontend/services/secrets_vault.service.ts`) and `SecretsVaultPanel` React component (`frontend/components/secrets/secrets-vault-panel.tsx`).
+  - Comprehensive test suite (`backend/tests/test_secrets_vault.py`, 20/20 passed cleanly).
 - **Dependencies**: Phase 12.7.
-- **Completion Criteria**: Zero raw master encryption keys stored on host disks; all DB column encryption keys derived dynamically from external KMS / Vault envelopes.
-- **Testing Requirements**: Integration tests with Vault/KMS mocks verifying key rotation, zero-downtime re-keying, and secret audit logging.
+- **Completion Criteria**: Zero raw master encryption keys stored in plaintext on host disks; all sensitive credential payloads protected using external KMS envelope encryption with automated 90-day lifecycle rotation governance.
+- **Testing Requirements**: Comprehensive test suite covering envelope encryption roundtrip, tampered ciphertext detection, multi-provider KMS drivers, secret lifecycle, tenant boundary isolation, automated rotation workers, and health checks (20/20 passed cleanly).
 
 ### Phase 12.9: Antivirus & Secure Evidence File Upload Protection Pipeline
 - **Status**: Planned ⏳

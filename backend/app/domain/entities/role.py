@@ -170,6 +170,14 @@ PERMISSION_MAP: Dict[str, Role] = {
     "sandbox:read": Role.VIEWER,
     "sandbox:execute": Role.SECURITY_ANALYST,
     "sandbox:manage": Role.ADMIN,
+    # ── Plugin Security Governance (Phase 12.7) ──
+    "plugins:read": Role.VIEWER,
+    "plugins:manage": Role.ADMIN,
+    # ── Enterprise Secrets Vault & KMS Governance (Phase 12.8) ──
+    "secrets:read": Role.SECURITY_ANALYST,
+    "secrets:manage": Role.ADMIN,
+    "secrets:access": Role.ADMIN,
+    "secrets:rotate": Role.ADMIN,
 }
 
 ALL_PERMISSIONS: FrozenSet[str] = frozenset(PERMISSION_MAP.keys())
