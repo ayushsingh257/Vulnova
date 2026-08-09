@@ -42,6 +42,14 @@ class Settings(BaseSettings):
     )
     secret_default_rotation_days: int = 90
 
+    # Antivirus & Evidence Upload Protection Configurations (Phase 12.9)
+    clamav_host: str = "localhost"
+    clamav_port: int = 3310
+    clamav_timeout: int = 10
+    minio_quarantine_bucket: str = "vulnova-quarantine-bucket"
+    minio_production_bucket: str = "vulnova-evidence-bucket"
+    yara_rules_dir: str = "security/yara_rules"
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )

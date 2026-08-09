@@ -63,6 +63,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Added REST API router endpoints under `/api/v1/secrets/*` (`POST /secrets`, `GET /secrets`, `GET /secrets/rotation-status`, `GET /secrets/providers`, `GET /secrets/kms-health`, `GET /secrets/{id}`, `POST /secrets/{id}/access`, `POST /secrets/{id}/rotate`, `DELETE /secrets/{id}`).
   - Added frontend `SecretsVaultService` (`frontend/services/secrets_vault.service.ts`) and `SecretsVaultPanel` React component (`frontend/components/secrets/secrets-vault-panel.tsx`).
   - Added comprehensive test suite in `backend/tests/test_secrets_vault.py` (20/20 passed cleanly).
+- **Era 12 Phase 12.9 — Antivirus & Secure Evidence File Upload Protection Pipeline**:
+  - Implemented dual-bucket storage isolation service (`QuarantineStorageService`) managing transient unverified evidence staging in `vulnova-quarantine-bucket` and promotion to `vulnova-evidence-bucket`.
+  - Implemented API gateway magic byte inspection middleware (`UploadSecurityValidator`) validating PDF (`%PDF`), PNG (`\x89PNG`), JPEG (`\xFF\xD8\xFF`), and PCAP (`\xD4\xC3\xB2\xA1`) headers while enforcing immediate gateway rejection of Windows PE (`MZ`) and Linux ELF (`\x7FELF`) executables.
+  - Implemented async socket client (`ClamAVTCPConnector`) streaming payload chunks over raw TCP socket (`zINSTREAM\x00` protocol) to `clamd` daemon.
+  - Implemented YARA static inspection engine (`YARAEngine`) compiling rules (`security/yara_rules/vulnova_malware_rules.yar`) for PHP webshells (`eval(base64_decode`), disguised executables, embedded SSH/RSA private keys, and test signatures.
+  - Implemented orchestrator service (`EvidenceMalwareService`) managing staging, scanning, clean promotion, and quarantine dashboard telemetry metrics.
+  - Added database ORM models: `EvidenceScanResultModel` (`evidence_scan_results`), `MalwareDetectionEventModel` (`malware_detection_events`), and Alembic migration `0011_create_evidence_malware_tables.py`.
+  - Added REST API router endpoints under `/api/v1/evidence/*` (`POST /upload`, `POST /{id}/scan`, `GET /{id}/security-status`, `POST /{id}/promote`) and `/api/v1/security/quarantine`.
+  - Added frontend `EvidenceMalwareService` (`frontend/services/evidence_malware.service.ts`), `EvidenceSecurityPanel` React component (`frontend/components/evidence/evidence-security-panel.tsx`), and Next.js dashboard route (`/security/quarantine`).
+  - Added comprehensive test suite in `backend/tests/test_evidence_malware_quarantine.py` (26/26 passed cleanly).
 
 ### Planned
 - **Enterprise Security Hardening Roadmap Expansion (Phases 12.5 – 12.9)**:

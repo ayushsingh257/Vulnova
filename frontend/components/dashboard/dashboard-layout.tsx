@@ -244,6 +244,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <span>Multi-Factor Authentication</span>
             </a>
             <a
+              href="/security/quarantine"
+              className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              <ShieldAlert className="h-4 w-4 text-cyan-400" />
+              <span>Evidence Quarantine & Antivirus</span>
+            </a>
+            <a
               href="/settings/secrets"
               className="flex items-center space-x-3 rounded-lg px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
             >

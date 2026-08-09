@@ -19,6 +19,7 @@ from app.api.v1.routers import (
     database_performance,
     disaster_recovery,
     discovery,
+    evidence_malware,
     incidents,
     infrastructure_validation,
     integrations,
@@ -105,3 +106,4 @@ api_v1_router.include_router(target_authorization.router)
 api_v1_router.include_router(ai_confidence.router)
 api_v1_router.include_router(plugin_security.router)
 api_v1_router.include_router(secrets_vault.router)
+api_v1_router.include_router(evidence_malware.router)

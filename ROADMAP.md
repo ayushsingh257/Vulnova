@@ -1802,15 +1802,21 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Zero raw master encryption keys stored in plaintext on host disks; all sensitive credential payloads protected using external KMS envelope encryption with automated 90-day lifecycle rotation governance.
 - **Testing Requirements**: Comprehensive test suite covering envelope encryption roundtrip, tampered ciphertext detection, multi-provider KMS drivers, secret lifecycle, tenant boundary isolation, automated rotation workers, and health checks (20/20 passed cleanly).
 
-### Phase 12.9: Antivirus & Secure Evidence File Upload Protection Pipeline
-- **Status**: Planned ⏳
-- **Objective**: Implement asynchronous ClamAV daemon attachment scanning, YARA static malware detection, and quarantine bucket staging prior to releasing evidence files to production object storage.
+### ✅ Phase 12.9: Antivirus & Secure Evidence File Upload Protection Pipeline
+- **Status**: Completed ✅
+- **Objective**: Implement asynchronous ClamAV daemon attachment scanning, YARA static malware rule inspection, and dual-stage quarantine bucket isolation (`vulnova-quarantine-bucket` -> `vulnova-evidence-bucket`) before releasing evidence attachments to production storage.
 - **Deliverables**:
-  - `EvidenceMalwareScannerService` in `app/infrastructure/storage/malware_scanner.py`.
-  - ClamAV TCP Daemon Connector & YARA Rule Engine Integration.
-  - Quarantine Staging Bucket in MinIO (`vulnova-quarantine-bucket`) with automated purge policy.
-  - File Upload Inspection Middleware enforcing magic byte verification.
+  - `QuarantineStorageService` in `app/infrastructure/storage/quarantine_store.py` managing transient staging in `vulnova-quarantine-bucket` and promotion to `vulnova-evidence-bucket`.
+  - `UploadSecurityValidator` middleware in `app/api/v1/middleware/upload_validation.py` enforcing binary magic byte verification (PDF `%PDF`, PNG `\x89PNG`, JPEG `\xFF\xD8\xFF`, PCAP `\xD4\xC3\xB2\xA1`) and immediate gateway rejection of Windows PE (`MZ`) and Linux ELF (`\x7FELF`) executables.
+  - `ClamAVTCPConnector` & `EvidenceMalwareScannerService` in `app/infrastructure/storage/malware_scanner.py` streaming binary payloads over raw TCP socket (`zINSTREAM`) to `clamd` daemon.
+  - `YARAEngine` in `app/infrastructure/storage/yara_engine.py` compiling static inspection rules (`security/yara_rules/vulnova_malware_rules.yar`) for webshells (`eval(base64_decode`), disguised executables, embedded SSH/RSA private keys, and test signatures.
+  - `EvidenceMalwareService` in `app/infrastructure/storage/evidence_malware_service.py` orchestrating end-to-end evidence staging, scanning, promotion, and telemetry metrics calculation.
+  - Database ORM models: `EvidenceScanResultModel` (`evidence_scan_results`), `MalwareDetectionEventModel` (`malware_detection_events`).
+  - Alembic migration `0011_create_evidence_malware_tables.py`.
+  - REST API Router (`app/api/v1/routers/evidence_malware.py`): `POST /evidence/upload`, `POST /evidence/{id}/scan`, `GET /evidence/{id}/security-status`, `POST /evidence/{id}/promote`, `GET /security/quarantine`.
+  - Frontend `EvidenceMalwareService` (`frontend/services/evidence_malware.service.ts`), `EvidenceSecurityPanel` component (`frontend/components/evidence/evidence-security-panel.tsx`), and page (`frontend/app/(dashboard)/security/quarantine/page.tsx`).
+  - Comprehensive test suite (`backend/tests/test_evidence_malware_quarantine.py`, 26/26 passed cleanly).
 - **Dependencies**: Phase 12.8.
-- **Completion Criteria**: 100% of user-uploaded evidence attachments, PCAP files, and scan logs scanned for malware prior to staging in main storage buckets.
-- **Testing Requirements**: Test suite verifying EICAR test file detection, quarantine isolation, YARA rule matching, and clean file promotion.
+- **Completion Criteria**: 100% of user-uploaded evidence attachments, PCAP files, and scan logs inspected for malware and magic byte header integrity prior to staging in main evidence storage buckets. Fail-closed posture blocks any infected or unverified attachment from promotion.
+- **Testing Requirements**: Comprehensive test suite covering magic byte header verification, executable rejection, YARA rule matching, ClamAV socket client fail-closed posture, quarantine isolation, clean promotion, and REST API router endpoints (26/26 passed cleanly).
 

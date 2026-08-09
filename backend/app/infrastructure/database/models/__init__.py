@@ -48,6 +48,10 @@ from app.infrastructure.database.models.asset_graph import (
     AssetRelationshipModel,
 )
 from app.infrastructure.database.models.audit_log import AuditLogModel
+from app.infrastructure.database.models.evidence_malware import (
+    EvidenceScanResultModel,
+    MalwareDetectionEventModel,
+)
 from app.infrastructure.database.models.incident import (
     EscalationEventModel,
     IncidentModel,
@@ -152,4 +156,6 @@ __all__ = [
     "SecretVaultEntryModel",
     "SecretRotationPolicyModel",
     "SecretAccessPolicyModel",
+    "EvidenceScanResultModel",
+    "MalwareDetectionEventModel",
 ]
