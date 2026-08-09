@@ -274,5 +274,9 @@ class RemediationApprovalHistoryModel(Base):
     )
 
     __table_args__ = (
-        Index("idx_remediation_approval_org_plan", "organization_id", "remediation_plan_id"),
+        Index(
+            "idx_remediation_approval_org_plan",
+            "organization_id",
+            "remediation_plan_id",
+        ),
     )
