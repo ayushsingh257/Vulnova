@@ -54,12 +54,18 @@ from app.infrastructure.database.models.incident import (
 from app.infrastructure.database.models.organization import OrganizationModel
 from app.infrastructure.database.models.refresh_token import RefreshTokenModel
 from app.infrastructure.database.models.risk_snapshot import RiskPostureSnapshotModel
+from app.infrastructure.database.models.scan_approval_request import (
+    ScanApprovalRequestModel,
+)
 from app.infrastructure.database.models.scan_schedule import ScanScheduleModel
 from app.infrastructure.database.models.scan_target import (
     AuthorizationDeclarationModel,
     ScanTargetModel,
 )
 from app.infrastructure.database.models.scanner_sandbox import ScannerSandboxModel
+from app.infrastructure.database.models.target_verification_challenge import (
+    TargetVerificationChallengeModel,
+)
 from app.infrastructure.database.models.trend import (
     AssetChangeEventModel,
     AssetSnapshotModel,
@@ -89,6 +95,8 @@ __all__ = [
     "AssessmentJobModel",
     "SecurityFindingModel",
     "ScannerSandboxModel",
+    "TargetVerificationChallengeModel",
+    "ScanApprovalRequestModel",
     "LLMProviderModel",
     "LLMModelRegistryModel",
     "PromptTemplateModel",

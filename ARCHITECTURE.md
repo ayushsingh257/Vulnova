@@ -2088,7 +2088,7 @@ Phase 12.4 establishes Vulnova's single-use ephemeral container sandbox executio
    - Logs `sandbox_created`, `scanner_started`, `scanner_completed`, `sandbox_destroyed`, and `sandbox_failed` via `AuditLogService` with organization and user context.
 2. **Pre-Scan Target Ownership & Verification (Phase 12.5)**:
    - Automated DNS TXT record (`_vulnova-verify.<domain>`) and HTTP token verifiers ensure zero unauthorized scanning against third-party domain assets.
-   - Enforces 2-step admin approval workflows for production IP ranges and records cryptographically signed `ScanAuthorizationRecord` entries.
+   - Enforces 2-step admin approval workflows for production IP ranges and records immutable audit log entries.
 3. **AI Finding Confidence & Human-in-the-Loop Remediation (Phase 12.6)**:
    - Automated Bayesian/LLM false positive reduction engine reduces analyst alert noise by >80%.
    - Mandatory human approval portal for all AI-generated patch recommendations.
@@ -2101,6 +2101,52 @@ Phase 12.4 establishes Vulnova's single-use ephemeral container sandbox executio
 6. **ClamAV & YARA Attachment Malware Protection (Phase 12.9)**:
    - Asynchronous ClamAV daemon and YARA rule inspection for user-uploaded evidence attachments.
    - Quarantine staging bucket in MinIO (`vulnova-quarantine-bucket`) prior to promoting clean files to production object storage.
+
+---
+
+## 39. Advanced Target Ownership Verification & Scan Authorization Engine Architecture (Phase 12.5)
+
+Vulnova provides an automated target authorization and abuse prevention subsystem (`TargetVerificationService`, `ScanAuthorizationService`, `ScanApprovalService`) that enforces verified target ownership prior to vulnerability assessment execution.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 Target Ownership & Scan Authorization Engine                │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ Pre-Scan Authorization Check
+                                       ▼
+ ┌──────────────────────────────────────────────────────────────────────────┐
+ │                     Target Authorization Pipeline                        │
+ ├──────────────────────────────────────────────────────────────────────────┤
+ │  1. Target Verification Check (is_ownership_verified == True)            │
+ │     ├── DNS TXT Challenge (_vulnova-verify.<domain> == token)            │
+ │     └── HTTP Well-Known (https://<domain>/.well-known/... == token)      │
+ │  2. Abuse Prevention Filter                                              │
+ │     ├── Block RFC1918 Private Subnets (10.0.0.0/8, 172.16.0.0/12, etc.)   │
+ │     ├── Block Localhost / Loopback (127.0.0.0/8)                        │
+ │     └── Block Cloud Metadata Endpoint (169.254.169.254)                  │
+ │  3. Sensitive Target Admin Approval Workflow                             │
+ │     └── Production assets require approved ScanApprovalRequest           │
+ └─────────────────────────────────────┬────────────────────────────────────┘
+                                       │
+                         ┌─────────────┴─────────────┐
+                         ▼                           ▼
+            ┌────────────────────────┐  ┌────────────────────────┐
+            │   Authorized Scan Job   │  │   Scan Blocked (Audit) │
+            │   Dispatched to Sandbox│  │ (scan_blocked.* event) │
+            └────────────────────────┘  └────────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **Automated Domain Verification**:
+   - Generates unique tokens (`vn_verify_<uuid>`) and verifies ownership via DNS TXT records (`_vulnova-verify.<domain>`) or HTTP well-known endpoints (`/.well-known/vulnova-verification.txt`).
+2. **Pre-Scan Pipeline Enforcement**:
+   - Integrated into `AssessmentPolicyEngine`. Rejects scans on unverified targets with descriptive error "Target ownership verification required before scanning".
+3. **Private IP & Cloud Metadata Blocklisting**:
+   - `ScanAuthorizationService` blocks RFC1918 private subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), and cloud metadata (`169.254.169.254`).
+4. **Sensitive Asset Admin Approval Workflow**:
+   - `ScanApprovalService` manages `PENDING_APPROVAL` -> `APPROVED` / `REJECTED` workflows for sensitive production target assets.
+5. **Immutable Security Audit Log Integration**:
+   - Records audit events: `target_verification.created`, `target_verification.success`, `target_verification.failed`, `scan_blocked.unverified_target`, `scan_approval.requested`, `scan_approval.granted`, `scan_approval.rejected`.
 
 
 

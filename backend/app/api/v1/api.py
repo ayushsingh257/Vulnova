@@ -38,6 +38,7 @@ from app.api.v1.routers import (
     security_audit,
     status,
     system_health,
+    target_authorization,
     threat_validation,
     trends,
     triage,
@@ -97,3 +98,4 @@ api_v1_router.include_router(regression_validation.router)
 api_v1_router.include_router(certification_validation.router)
 api_v1_router.include_router(security_audit.router)
 api_v1_router.include_router(scanner_sandbox.router)
+api_v1_router.include_router(target_authorization.router)

@@ -1006,16 +1006,23 @@ Phase 12.4 implements strict isolation and security controls for dynamic assessm
    - Pre-execution target address validation blocks scans targeting private RFC1918 networks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback addresses (`127.0.0.1/8`, `localhost`), and cloud metadata APIs (`169.254.169.254/32`).
 4. **Lifecycle Audit Event Logging**:
    - Generates immutable audit events (`sandbox_created`, `scanner_started`, `scanner_completed`, `sandbox_destroyed`, `sandbox_failed`) via `AuditLogService`.
-2. **Phase 12.5 — Advanced Target Ownership & Authorization**: Automated pre-scan DNS TXT record (`_vulnova-verify.<domain>`) and HTTP token verification, RFC1918 private range blocklisting, and 2-step admin authorization workflows.
-3. **Phase 12.6 — AI Finding Confidence & Human-in-the-Loop Remediation**: Bayesian/LLM false positive reduction engine reducing alert noise by >80% with mandatory human analyst approval gates before patch application.
-4. **Phase 12.7 — Cryptographically Signed & Sandboxed Plugins**: Ed25519 public key signature verification for 3rd-party assessment plugins and capability-manifest sandboxed WASM execution.
-5. **Phase 12.8 — External KMS Vault Integration**: HashiCorp Vault / AWS KMS / GCP KMS driver integration with automated 90-day secret rotation workers.
-6. **Phase 12.9 — ClamAV & YARA Attachment Protection**: Asynchronous ClamAV daemon and YARA rule inspection for uploaded evidence attachments with MinIO quarantine staging buckets.
 
+---
 
+## 🔒 47. Target Ownership Verification & Scan Authorization Security Controls (Phase 12.5)
 
+Phase 12.5 enforces strict target ownership verification and abuse prevention controls prior to scanner execution:
 
-
+1. **Automated Domain Ownership Challenges**:
+   - Requires cryptographic challenge tokens (`vn_verify_<uuid>`) published via DNS TXT records (`_vulnova-verify.<domain>`) or HTTP well-known endpoints (`/.well-known/vulnova-verification.txt`).
+2. **Pre-Scan Pipeline Authorization Gate**:
+   - Scans against unverified target assets (`is_ownership_verified == False`) are strictly blocked by `AssessmentPolicyEngine` and `ScanAuthorizationService`.
+3. **Abuse Prevention & Private Network Blocklisting**:
+   - Blocks target scans against RFC1918 private subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), and cloud metadata APIs (`169.254.169.254`).
+4. **Sensitive Asset Admin Approval Workflow**:
+   - Production target scans require explicit 2-step admin approval (`ScanApprovalService`).
+5. **Immutable Audit Event Logging**:
+   - Logs `target_verification.created`, `target_verification.success`, `target_verification.failed`, `scan_blocked.unverified_target`, `scan_approval.requested`, `scan_approval.granted`, and `scan_approval.rejected` via `AuditLogService`.
 
 
 

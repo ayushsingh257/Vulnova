@@ -103,6 +103,8 @@ class ScanTargetRepository:
         name: Optional[str] = None,
         environment: Optional[str] = None,
         status: Optional[str] = None,
+        is_ownership_verified: Optional[bool] = None,
+        ownership_verification_token: Optional[str] = None,
     ) -> Optional[ScanTargetModel]:
         """Update mutable properties of a registered scan target."""
         values: Dict[str, Any] = {"updated_at": datetime.now(timezone.utc)}
@@ -112,6 +114,10 @@ class ScanTargetRepository:
             values["environment"] = environment.upper()
         if status is not None:
             values["status"] = status.upper()
+        if is_ownership_verified is not None:
+            values["is_ownership_verified"] = is_ownership_verified
+        if ownership_verification_token is not None:
+            values["ownership_verification_token"] = ownership_verification_token
 
         stmt = (
             update(ScanTargetModel)

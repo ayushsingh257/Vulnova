@@ -1,35 +1,61 @@
 "use client";
 
 import * as React from "react";
-import { Play, ShieldCheck, X } from "lucide-react";
+import { AlertTriangle, CheckCircle, Play, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ScansService } from "@/services/scans.service";
+import { TargetAuthorizationService } from "@/services/target_authorization.service";
 
 export function ScanDispatchModal({
   isOpen,
   onClose,
   onScanDispatched,
+  targetId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  isVerified: initialVerified = false,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onScanDispatched?: () => void;
+  targetId?: string;
+  isVerified?: boolean;
 }) {
   const [profile, setProfile] = React.useState("FULL_RECON");
   const [priority, setPriority] = React.useState("DEFAULT");
   const [consent, setConsent] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [isVerified, setIsVerified] = React.useState(initialVerified);
+  const [verifying, setVerifying] = React.useState(false);
+  const [verificationMessage, setVerificationMessage] = React.useState("");
 
   if (!isOpen) return null;
 
+  const handleVerifyOwnership = async () => {
+    setVerifying(true);
+    setVerificationMessage("");
+    try {
+      const res = await TargetAuthorizationService.verifyTarget(targetId, "DNS_TXT");
+      if (res.verified) {
+        setIsVerified(true);
+        setVerificationMessage("✅ Target ownership verified successfully!");
+      } else {
+        setVerificationMessage(`❌ Verification failed: ${res.message}`);
+      }
+    } catch (err: any) {
+      setVerificationMessage(`❌ Verification error: ${err.message || "Failed to query verification"}`);
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!consent) return;
+    if (!consent || !isVerified) return;
 
     setLoading(true);
     try {
       await ScansService.dispatchScan({
-        target_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        target_id: targetId,
         scan_profile: profile,
         priority_queue: priority,
         legal_consent_confirmed: true,
@@ -61,10 +87,48 @@ export function ScanDispatchModal({
             <div className="space-y-1.5">
               <label className="font-semibold text-zinc-300">Target Asset Scope</label>
               <select className="w-full p-2.5 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-200 focus:outline-none focus:border-red-500">
-                <option>Production API Gateway (https://a***.s***.e***.com)</option>
-                <option>Auth Service Staging (https://a***.s***.domain.org)</option>
+                <option>Production API Gateway (example.com)</option>
+                <option>Auth Service Staging (staging.example.com)</option>
               </select>
             </div>
+
+            {/* Target Ownership Verification Banner */}
+            {!isVerified ? (
+              <div className="p-3 rounded-xl border border-yellow-900/60 bg-yellow-950/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-yellow-400 font-bold">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Verification: ❌ Not Verified</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleVerifyOwnership}
+                    disabled={verifying}
+                    className="text-xs border-yellow-700 text-yellow-300 hover:bg-yellow-900/50"
+                  >
+                    {verifying ? "Verifying..." : "Verify Ownership"}
+                  </Button>
+                </div>
+                <p className="text-[11px] text-yellow-200/80">
+                  Target ownership verification required before scanning. Add a DNS TXT record for <code className="text-yellow-100 bg-yellow-900/40 px-1 py-0.5 rounded">_vulnova-verify.&lt;domain&gt;</code> to verify ownership.
+                </p>
+                {verificationMessage && (
+                  <p className="text-[11px] font-semibold text-yellow-300 pt-1">{verificationMessage}</p>
+                )}
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl border border-emerald-900/40 bg-emerald-950/20 flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-emerald-400 font-bold">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Target Ownership: ✅ Verified</span>
+                </div>
+                <span className="text-[10px] text-emerald-300 bg-emerald-900/40 px-2 py-0.5 rounded border border-emerald-800">
+                  Scan Authorized
+                </span>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <label className="font-semibold text-zinc-300">Scan Profile Policy</label>
@@ -104,7 +168,13 @@ export function ScanDispatchModal({
               <Button variant="outline" size="sm" type="button" onClick={onClose}>
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" type="submit" disabled={!consent || loading}>
+              <Button
+                variant="primary"
+                size="sm"
+                type="submit"
+                disabled={!consent || !isVerified || loading}
+                title={!isVerified ? "Target ownership verification required before scanning" : ""}
+              >
                 {loading ? "Dispatching..." : "Launch Scan Execution"}
               </Button>
             </div>

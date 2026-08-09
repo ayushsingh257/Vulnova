@@ -1734,17 +1734,19 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: 100% of dynamic scanner execution runs executed inside isolated transient micro-sandboxes with enforced non-root UID/GID 10001, CPU/Memory limits, RFC1918 network blocklists, and automatic post-scan container destruction.
 - **Testing Requirements**: Test suite verifying security policy bounds, RFC1918 network blocklists, repository CRUD operations, full manager lifecycle, and REST endpoints (6/6 passed cleanly).
 
-### Phase 12.5: Advanced Target Ownership Verification & Scan Authorization Engine
-- **Status**: Planned ⏳
+### ✅ Phase 12.5: Advanced Target Ownership Verification & Scan Authorization Engine
+- **Status**: Completed ✅
 - **Objective**: Implement automated pre-scan domain target ownership verification via DNS TXT records, HTTP token challenges, 2-step admin approval workflows for sensitive IP ranges, and RFC1918 private network blocklists.
 - **Deliverables**:
-  - `TargetOwnershipVerificationService` in `app/domain/services/target_verification/`.
-  - Automated DNS TXT record challenge runner (`_vulnova-verify.<domain>`) and HTTP `.well-known/vulnova-challenge.txt` verifier.
+  - `TargetVerificationService` in `app/infrastructure/target_authorization/verification_service.py`.
+  - `ScanAuthorizationService` in `app/infrastructure/target_authorization/authorization_service.py`.
+  - `ScanApprovalService` in `app/infrastructure/target_authorization/approval_service.py`.
+  - Automated DNS TXT record challenge runner (`_vulnova-verify.<domain>`) and HTTP `.well-known/vulnova-verification.txt` verifier.
   - 2-Step Admin Approval Workflow for out-of-scope or production target ranges.
-  - Scan Authorization Audit Log & Certificate Generator (`ScanAuthorizationRecord`).
+  - REST API Router (`/api/v1/targets/{id}/verify`, `/verification-status`, `/scan-approvals/*`).
 - **Dependencies**: Phase 12.4.
 - **Completion Criteria**: Zero unverified external domains allowed to trigger dynamic active probes without completed TXT/HTTP token verification or explicit 2-step admin override.
-- **Testing Requirements**: Comprehensive unit and integration test suite asserting DNS query resolution, token validation timeouts, and unauthorized target rejection.
+- **Testing Requirements**: Comprehensive unit and integration test suite in `backend/tests/test_target_authorization.py` asserting DNS query resolution, HTTP token verification, token expiration, private IP blocklists, and approval workflows (8/8 passed cleanly).
 
 ### Phase 12.6: AI Finding Confidence Scoring & Human-in-the-Loop Remediation Workflow
 - **Status**: Planned ⏳

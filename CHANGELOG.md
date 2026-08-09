@@ -27,7 +27,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Implemented `ScannerSecurityPolicy` in `app/infrastructure/scanner_sandbox/security_policy.py` enforcing resource bounds and RFC1918 private IP / cloud metadata network blocklists.
   - Implemented `ScannerSandboxManager` in `app/infrastructure/scanner_sandbox/sandbox_manager.py` managing `CREATED` -> `RUNNING` -> `COMPLETED` / `FAILED` -> `DESTROYED` lifecycles and dispatching audit log events (`sandbox_created`, `scanner_started`, `scanner_completed`, `sandbox_destroyed`, `sandbox_failed`).
   - Implemented REST API router endpoints under `/api/v1/sandbox/*` (`POST /run`, `GET /status/{id}`, `GET /active`, `DELETE /{id}`) guarded by RBAC permissions.
-  - Added unit, integration, security policy, and REST API test suite in `backend/tests/test_scanner_sandbox.py`.
+- **Era 12 Phase 12.5 — Advanced Target Ownership Verification & Scan Authorization Engine**:
+  - Implemented domain target ownership verification framework (`app/infrastructure/target_authorization/verification_service.py`) supporting DNS TXT challenge validation (`_vulnova-verify.<domain>`) and HTTP well-known endpoint token validation (`/.well-known/vulnova-verification.txt`).
+  - Implemented pre-scan authorization pipeline (`app/infrastructure/target_authorization/authorization_service.py`) enforcing target ownership verification (`is_ownership_verified == True`), RFC1918 private network blocklists (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), and cloud metadata APIs (`169.254.169.254`).
+  - Implemented admin approval workflow service (`app/infrastructure/target_authorization/approval_service.py`) managing 2-step approval requests (`PENDING_APPROVAL` -> `APPROVED` / `REJECTED`) for sensitive production target assets.
+  - Added `TargetVerificationChallengeModel` (`target_verification_challenges` table), `ScanApprovalRequestModel` (`scan_approval_requests` table), and Alembic migration `0007_create_target_verification_tables.py`.
+  - Added REST API router endpoints under `/api/v1/targets/{id}/verify`, `/targets/{id}/verification-status`, and `/scan-approvals/*`.
+  - Integrated pre-scan ownership verification into `AssessmentPolicyEngine` in `app/application/assessment/assessment_policy_engine.py`.
+  - Added frontend target ownership verification service (`frontend/services/target_authorization.service.ts`) and modal UI handling for unverified target warnings and scan button disarming.
+  - Added unit, integration, DNS/HTTP verification, and approval workflow test suite in `backend/tests/test_target_authorization.py` (8/8 passed cleanly).
 
 ### Planned
 - **Enterprise Security Hardening Roadmap Expansion (Phases 12.5 – 12.9)**:

@@ -750,6 +750,13 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Database ORM & Alembic Migration**: Managed via `ScannerSandboxModel` (`scanner_sandboxes` table) and Alembic migration `0006_create_scanner_sandbox_table.py`.
     - **Immutable Audit Event Logging**: Dispatches audit events (`sandbox_created`, `scanner_started`, `scanner_completed`, `sandbox_destroyed`, `sandbox_failed`) via `AuditLogService` with organization and user context.
     - **REST API Router**: 4 endpoints under `/api/v1/sandbox/*` (`POST /run`, `GET /status/{id}`, `GET /active`, `DELETE /{id}`) guarded by `scan:execute`, `scan:read`, and `admin:manage` permissions.
+61. **Advanced Target Ownership Verification & Scan Authorization Engine Architecture (Phase 12.5)**: Mandatory target ownership verification and pre-scan authorization pipeline:
+    - **Verified Ownership Principle**: Vulnova requires verified ownership before active security assessment execution (`is_ownership_verified == True`). Scans against unverified targets are blocked automatically (`scan_blocked.unverified_target`).
+    - **Automated Verification Framework**: `TargetVerificationService` supports DNS TXT record challenge validation (`_vulnova-verify.<domain>`) and HTTP well-known endpoint token validation (`/.well-known/vulnova-verification.txt`).
+    - **Abuse Prevention & Private Network Blocklists**: `ScanAuthorizationService` blocks scans targeting RFC1918 private IP subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), and cloud metadata APIs (`169.254.169.254`).
+    - **Admin Approval Workflow**: `ScanApprovalService` manages 2-step admin approval workflows (`PENDING_APPROVAL` $\rightarrow$ `APPROVED` / `REJECTED`) for sensitive production target assets.
+    - **Database ORM & Alembic Migration**: Managed via `TargetVerificationChallengeModel` (`target_verification_challenges` table), `ScanApprovalRequestModel` (`scan_approval_requests` table), and Alembic migration `0007_create_target_verification_tables.py`.
+    - **Immutable Audit Trail**: Dispatches audit events (`target_verification.created`, `target_verification.success`, `target_verification.failed`, `scan_blocked.unverified_target`, `scan_approval.requested`, `scan_approval.granted`, `scan_approval.rejected`) via `AuditLogService`.
 
 
 

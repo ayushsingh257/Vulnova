@@ -117,6 +117,31 @@ class AssessmentPolicyEngine:
                 scan_target_id=str(scan_target.id),
             )
 
+        # ── Check 3.5: Target Ownership Verification ──
+        if not scan_target.is_ownership_verified:
+            logger.warning(
+                "assessment_policy.unverified_target_rejected",
+                org_id=str(organization_id),
+                target_id=str(scan_target.id),
+                target_url=normalized_url,
+            )
+            await self.audit_service.record_event(
+                organization_id=organization_id,
+                action="scan_blocked.unverified_target",
+                resource_type="scan_target",
+                resource_id=str(scan_target.id),
+                actor_user_id=declared_by,
+                details={
+                    "reason": "Target ownership verification required before scanning",
+                    "target_url": normalized_url,
+                },
+            )
+            return PolicyValidationResult(
+                is_allowed=False,
+                rejection_reason="Target ownership verification required before scanning. Verify ownership via DNS TXT or HTTP challenge first.",
+                scan_target_id=str(scan_target.id),
+            )
+
         # ── Check 4: SSRF egress safety ──
         is_safe, ssrf_reason = is_safe_target_url(normalized_url)
         if not is_safe:
