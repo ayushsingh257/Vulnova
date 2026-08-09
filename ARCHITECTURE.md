@@ -2148,6 +2148,100 @@ Vulnova provides an automated target authorization and abuse prevention subsyste
 5. **Immutable Security Audit Log Integration**:
    - Records audit events: `target_verification.created`, `target_verification.success`, `target_verification.failed`, `scan_blocked.unverified_target`, `scan_approval.requested`, `scan_approval.granted`, `scan_approval.rejected`.
 
+---
+
+## 📐 AI Assisted Security Decision Governance Architecture (Phase 12.6)
+
+Phase 12.6 introduces multi-dimensional AI-assisted finding confidence scoring and strictly enforced human-in-the-loop remediation approval governance. **AI assists analysts but never autonomously modifies target systems.**
+
+### Finding Confidence Intelligence Pipeline
+
+```
+   ┌─────────────────────────────────────────────────────────────────┐
+   │              FINDING CONFIDENCE INTELLIGENCE ENGINE             │
+   ├─────────────────────────────────────────────────────────────────┤
+   │                                                                 │
+   │   ┌──────────────────┐   ┌──────────────────┐                  │
+   │   │ Evidence Quality  │   │ Scanner Plugin   │                  │
+   │   │ Score (35%)       │   │ Reliability (25%)│                  │
+   │   └────────┬─────────┘   └────────┬─────────┘                  │
+   │            │                      │                              │
+   │   ┌────────▼─────────┐   ┌────────▼─────────┐                  │
+   │   │ Reproduction     │   │ AI Analysis      │                  │
+   │   │ Score (25%)      │   │ Score (15%)      │                  │
+   │   └────────┬─────────┘   └────────┬─────────┘                  │
+   │            │                      │                              │
+   │   ┌────────▼──────────────────────▼─────────┐                  │
+   │   │     COMPOSITE CONFIDENCE SCORE          │                  │
+   │   │   LOW / MEDIUM / HIGH / CONFIRMED       │                  │
+   │   └─────────────────────────────────────────┘                  │
+   └─────────────────────────────────────────────────────────────────┘
+```
+
+### Human-in-the-Loop Remediation Governance Flow
+
+```
+   ┌───────────────┐
+   │ Scanner       │
+   │ Finding       │
+   │ Generated     │
+   └───────┬───────┘
+           │
+   ┌───────▼──────────────┐
+   │ AI Confidence        │
+   │ Analysis Engine      │
+   │ (Advisory Only)      │
+   └───────┬──────────────┘
+           │
+   ┌───────▼──────────────┐
+   │ Automated Safe       │
+   │ Re-Probe             │
+   │ Verification         │
+   │ (Phase 12.4 Sandbox) │
+   │ (Phase 12.5 AuthZ)   │
+   └───────┬──────────────┘
+           │
+   ┌───────▼──────────────┐
+   │ ★ HUMAN ANALYST      │
+   │ REVIEW GATE          │
+   │ ┌──────────────────┐ │
+   │ │ CONFIRM          │ │
+   │ │ FALSE_POSITIVE   │ │
+   │ │ ACCEPT_RISK      │ │
+   │ │ REQUEST_EVIDENCE │ │
+   │ └──────────────────┘ │
+   └───────┬──────────────┘
+           │
+   ┌───────▼──────────────┐
+   │ ★ REMEDIATION        │
+   │ APPROVAL GATE        │
+   │ ┌──────────────────┐ │
+   │ │ AI_RECOMMENDED   │ │
+   │ │       ↓          │ │
+   │ │ ANALYST_REVIEW   │ │
+   │ │       ↓          │ │
+   │ │ APPROVED_FOR_    │ │
+   │ │ IMPLEMENTATION   │ │
+   │ │       ↓          │ │
+   │ │ IMPLEMENTED      │ │
+   │ │       ↓          │ │
+   │ │ VERIFIED         │ │
+   │ └──────────────────┘ │
+   └──────────────────────┘
+```
+
+### Key Architectural Safeguards:
+1. **AI Never Executes Autonomously**:
+   - `RemediationGovernanceService.validate_execution_allowed()` blocks any remediation patch application unless status is `APPROVED_FOR_IMPLEMENTATION`.
+2. **Multi-Factor Confidence Scoring**:
+   - Composite score from evidence quality (35%), scanner plugin reliability (25%), reproduction verification (25%), and AI analysis prediction (15%).
+3. **Safe Re-Probe Verification**:
+   - All verification probes execute through Phase 12.4 ephemeral sandbox containers and Phase 12.5 target ownership authorization checks.
+4. **Immutable Audit Trail**:
+   - Every AI analysis, analyst review, and remediation approval transition generates immutable audit log events via `AuditLogService`.
+5. **Human-Controlled Remediation Lifecycle**:
+   - AI recommendations flow through mandatory `ANALYST_REVIEW` → `APPROVED_FOR_IMPLEMENTATION` gates before any system modifications are permitted.
+
 
 
 

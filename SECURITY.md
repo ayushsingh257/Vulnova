@@ -1024,6 +1024,25 @@ Phase 12.5 enforces strict target ownership verification and abuse prevention co
 5. **Immutable Audit Event Logging**:
    - Logs `target_verification.created`, `target_verification.success`, `target_verification.failed`, `scan_blocked.unverified_target`, `scan_approval.requested`, `scan_approval.granted`, and `scan_approval.rejected` via `AuditLogService`.
 
+---
+
+## 🔒 48. Human-in-the-Loop AI Security Controls & Remediation Governance (Phase 12.6)
+
+Phase 12.6 enforces strict human-in-the-loop security governance for all AI-assisted vulnerability analysis and remediation recommendations:
+
+1. **AI Non-Autonomous Execution Boundary**:
+   - AI Copilot and Finding Confidence Intelligence engines operate in **strictly advisory mode**.
+   - AI is architecturally prohibited from autonomously modifying production target infrastructure, executing code patches, or mutating security configurations without human authorization.
+2. **Mandatory Remediation Approval Gates**:
+   - Remediation plans follow an enforced lifecycle (`AI_RECOMMENDED` $\rightarrow$ `ANALYST_REVIEW` $\rightarrow$ `APPROVED_FOR_IMPLEMENTATION` $\rightarrow$ `IMPLEMENTED` $\rightarrow$ `VERIFIED`).
+   - `RemediationGovernanceService.validate_execution_allowed()` strictly blocks patch execution if status $\ne$ `APPROVED_FOR_IMPLEMENTATION`.
+3. **Multi-Factor Confidence Scoring**:
+   - Dynamic confidence calculated from evidence quality (35%), scanner reliability (25%), automated re-probe reproduction (25%), and AI analysis prediction (15%).
+4. **Sandboxed & Authorized Re-Probe Validation**:
+   - Automated re-probe verification requests are strictly routed through Phase 12.4 container isolation sandboxes and Phase 12.5 target ownership checks.
+5. **Immutable Security Audit Log Integration**:
+   - Every AI analysis, analyst decision review (`CONFIRM`, `FALSE_POSITIVE`, `ACCEPT_RISK`, `REQUEST_MORE_EVIDENCE`), and remediation approval/rejection event is permanently recorded in the immutable audit log with full actor user identity and timestamp.
+
 
 
 

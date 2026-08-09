@@ -17,6 +17,9 @@ from app.infrastructure.database.models.ai_attack_path import (
 from app.infrastructure.database.models.ai_confidence import (
     AIFindingConfidenceAnalysisModel,
     AIFindingSimilarityMatchModel,
+    FindingReviewModel,
+    FindingVerificationAttemptModel,
+    RemediationApprovalHistoryModel,
 )
 from app.infrastructure.database.models.ai_copilot import (
     CopilotContextMemoryModel,
@@ -110,6 +113,9 @@ __all__ = [
     "AIPatchSuggestionModel",
     "AIFindingConfidenceAnalysisModel",
     "AIFindingSimilarityMatchModel",
+    "FindingVerificationAttemptModel",
+    "FindingReviewModel",
+    "RemediationApprovalHistoryModel",
     "SecurityKnowledgeDocumentModel",
     "SecurityKnowledgeChunkModel",
     "RAGSearchLogModel",

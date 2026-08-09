@@ -154,3 +154,125 @@ class AIFindingSimilarityMatchModel(Base):
         Index("idx_ai_sim_org_source", "organization_id", "source_finding_id"),
         Index("idx_ai_sim_score", "similarity_score"),
     )
+
+
+class FindingVerificationAttemptModel(Base):
+    """ORM Model representing automated safe re-probe finding verification attempts."""
+
+    __tablename__ = "finding_verification_attempts"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    finding_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("security_findings.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    verification_status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="UNVERIFIED", index=True
+    )  # 'UNVERIFIED', 'VERIFYING', 'CONFIRMED', 'FALSE_POSITIVE', 'NEEDS_REVIEW'
+    strategy: Mapped[str] = mapped_column(Text, nullable=False)
+    probe_response_status: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    probe_output: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_reproduced: Mapped[bool] = mapped_column(default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
+    )
+
+    __table_args__ = (
+        Index("idx_verify_attempt_org_finding", "organization_id", "finding_id"),
+    )
+
+
+class FindingReviewModel(Base):
+    """ORM Model representing human security analyst decision review audits."""
+
+    __tablename__ = "finding_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    finding_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("security_findings.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    reviewer_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    decision: Mapped[str] = mapped_column(
+        String(50), nullable=False, index=True
+    )  # 'CONFIRM', 'FALSE_POSITIVE', 'ACCEPT_RISK', 'REQUEST_MORE_EVIDENCE'
+    comments: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    evidence_snapshot: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
+    )
+
+    __table_args__ = (
+        Index("idx_finding_review_org_finding", "organization_id", "finding_id"),
+    )
+
+
+class RemediationApprovalHistoryModel(Base):
+    """ORM Model auditing human-in-the-loop remediation recommendation approvals."""
+
+    __tablename__ = "remediation_approval_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    remediation_plan_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("ai_remediation_plans.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    finding_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("security_findings.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    previous_state: Mapped[str] = mapped_column(String(50), nullable=False)
+    new_state: Mapped[str] = mapped_column(
+        String(50), nullable=False, index=True
+    )  # 'AI_RECOMMENDED', 'ANALYST_REVIEW', 'APPROVED_FOR_IMPLEMENTATION', 'IMPLEMENTED', 'VERIFIED'
+    action_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
+    )
+
+    __table_args__ = (
+        Index("idx_remediation_approval_org_plan", "organization_id", "remediation_plan_id"),
+    )

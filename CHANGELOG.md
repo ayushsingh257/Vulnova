@@ -35,7 +35,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Added REST API router endpoints under `/api/v1/targets/{id}/verify`, `/targets/{id}/verification-status`, and `/scan-approvals/*`.
   - Integrated pre-scan ownership verification into `AssessmentPolicyEngine` in `app/application/assessment/assessment_policy_engine.py`.
   - Added frontend target ownership verification service (`frontend/services/target_authorization.service.ts`) and modal UI handling for unverified target warnings and scan button disarming.
-  - Added unit, integration, DNS/HTTP verification, and approval workflow test suite in `backend/tests/test_target_authorization.py` (8/8 passed cleanly).
+- **Era 12 Phase 12.6 — AI Finding Confidence Scoring & Human-in-the-Loop Remediation Workflow**:
+  - Implemented multi-factor finding confidence intelligence engine (`app/infrastructure/ai_confidence/confidence_service.py`) computing composite scores from evidence quality (35%), scanner plugin reliability (25%), automated reproduction success (25%), and AI analysis prediction (15%) mapping to `LOW` / `MEDIUM` / `HIGH` / `CONFIRMED` confidence levels.
+  - Implemented automated safe re-probe verification service (`app/infrastructure/ai_confidence/verification_service.py`) executing non-destructive validation probes through Phase 12.4 container isolation sandboxes and Phase 12.5 target ownership authorization checks.
+  - Implemented human analyst review workflow service (`app/infrastructure/ai_confidence/review_service.py`) supporting `CONFIRM`, `FALSE_POSITIVE`, `ACCEPT_RISK`, and `REQUEST_MORE_EVIDENCE` decision gates.
+  - Implemented remediation approval governance service (`app/infrastructure/ai_confidence/remediation_governance_service.py`) strictly enforcing human-in-the-loop approval gates before any remediation plan execution (`AI_RECOMMENDED` -> `ANALYST_REVIEW` -> `APPROVED_FOR_IMPLEMENTATION` -> `IMPLEMENTED` -> `VERIFIED`). AI is architecturally barred from autonomous execution.
+  - Added database ORM models: `FindingVerificationAttemptModel` (`finding_verification_attempts`), `FindingReviewModel` (`finding_reviews`), `RemediationApprovalHistoryModel` (`remediation_approval_history`), and Alembic migration `0008_create_finding_confidence_and_remediation_tables.py`.
+  - Added REST API endpoints under `/api/v1/findings/{id}/confidence`, `/findings/{id}/verify`, `/findings/{id}/review`, `/remediation/{id}/approve`, and `/remediation/{id}/reject`.
+  - Added frontend `AIConfidenceService` (`frontend/services/ai_confidence.service.ts`) and `FindingConfidencePanel` React component (`frontend/components/vulnerabilities/finding-confidence-panel.tsx`).
+  - Added unit, integration, confidence calculation, analyst review, and remediation governance test suite in `backend/tests/test_ai_confidence_remediation.py` (10/10 passed cleanly).
 
 ### Planned
 - **Enterprise Security Hardening Roadmap Expansion (Phases 12.5 – 12.9)**:

@@ -757,8 +757,14 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Admin Approval Workflow**: `ScanApprovalService` manages 2-step admin approval workflows (`PENDING_APPROVAL` $\rightarrow$ `APPROVED` / `REJECTED`) for sensitive production target assets.
     - **Database ORM & Alembic Migration**: Managed via `TargetVerificationChallengeModel` (`target_verification_challenges` table), `ScanApprovalRequestModel` (`scan_approval_requests` table), and Alembic migration `0007_create_target_verification_tables.py`.
     - **Immutable Audit Trail**: Dispatches audit events (`target_verification.created`, `target_verification.success`, `target_verification.failed`, `scan_blocked.unverified_target`, `scan_approval.requested`, `scan_approval.granted`, `scan_approval.rejected`) via `AuditLogService`.
-
-
+62. **AI Assisted Security Decision Governance & Human-in-the-Loop Remediation Architecture (Phase 12.6)**: Multi-dimensional AI confidence scoring with strict human approval governance:
+    - **Core Engineering Principle**: AI assists vulnerability analysis but human approval controls all security actions. AI must NEVER autonomously modify target systems or execute remediation patches without explicit analyst approval.
+    - **Multi-Factor Confidence Engine**: `FindingConfidenceService` calculates composite confidence scores: `(0.35 × Evidence Quality) + (0.25 × Scanner Plugin Reliability) + (0.25 × Reproduction Score) + (0.15 × AI Analysis Score)` mapping to `LOW` / `MEDIUM` / `HIGH` / `CONFIRMED` confidence levels.
+    - **Automated Safe Re-Probe Verification**: `FindingVerificationService` executes non-destructive verification probes through Phase 12.4 ephemeral sandbox containers and Phase 12.5 target ownership authorization checks (`UNVERIFIED` $\rightarrow$ `VERIFYING` $\rightarrow$ `CONFIRMED` / `FALSE_POSITIVE` / `NEEDS_REVIEW`).
+    - **Human Analyst Review Gate**: `FindingReviewService` manages analyst decision workflows (`CONFIRM`, `FALSE_POSITIVE`, `ACCEPT_RISK`, `REQUEST_MORE_EVIDENCE`) with immutable audit trail.
+    - **Remediation Approval Governance**: `RemediationGovernanceService` enforces strict human approval gates (`AI_RECOMMENDED` $\rightarrow$ `ANALYST_REVIEW` $\rightarrow$ `APPROVED_FOR_IMPLEMENTATION` $\rightarrow$ `IMPLEMENTED` $\rightarrow$ `VERIFIED`). `validate_execution_allowed()` blocks remediation unless `APPROVED_FOR_IMPLEMENTATION`.
+    - **Database ORM & Alembic Migration**: `FindingVerificationAttemptModel` (`finding_verification_attempts`), `FindingReviewModel` (`finding_reviews`), `RemediationApprovalHistoryModel` (`remediation_approval_history`), and migration `0008_create_finding_confidence_and_remediation_tables.py`.
+    - **Immutable Audit Trail**: Dispatches audit events (`finding.verification_attempted`, `finding.reviewed`, `remediation.approved`, `remediation.rejected`) via `AuditLogService` with actor user context.
 
 
 

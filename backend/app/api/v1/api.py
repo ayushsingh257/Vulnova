@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.v1.routers import (
     admin,
     ai,
+    ai_confidence,
     api_keys,
     api_security_validation,
     assessment,
@@ -99,3 +100,4 @@ api_v1_router.include_router(certification_validation.router)
 api_v1_router.include_router(security_audit.router)
 api_v1_router.include_router(scanner_sandbox.router)
 api_v1_router.include_router(target_authorization.router)
+api_v1_router.include_router(ai_confidence.router)

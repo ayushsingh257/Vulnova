@@ -1748,17 +1748,22 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Zero unverified external domains allowed to trigger dynamic active probes without completed TXT/HTTP token verification or explicit 2-step admin override.
 - **Testing Requirements**: Comprehensive unit and integration test suite in `backend/tests/test_target_authorization.py` asserting DNS query resolution, HTTP token verification, token expiration, private IP blocklists, and approval workflows (8/8 passed cleanly).
 
-### Phase 12.6: AI Finding Confidence Scoring & Human-in-the-Loop Remediation Workflow
-- **Status**: Planned ⏳
-- **Objective**: Implement an automated Bayesian/LLM false-positive reduction engine, automated re-probe verification workflows, and mandatory human analyst remediation approval gates.
+### ✅ Phase 12.6: AI Finding Confidence Scoring & Human-in-the-Loop Remediation Workflow
+- **Status**: Completed ✅
+- **Objective**: Implement an automated multi-factor finding confidence scoring engine, automated re-probe verification workflows, human analyst review decision gates, and mandatory human-in-the-loop remediation approval governance.
 - **Deliverables**:
-  - `AIFalsePositiveReductionEngine` in `app/application/ai/false_positive_engine.py`.
-  - Automated Re-Probe Verification Runner attempting non-destructive finding validation.
-  - Human-in-the-Loop Remediation Portal in Next.js (`/remediation/approval`).
-  - Finding Confidence & Reproduction Evidence Scoring DTO updates.
+  - `FindingConfidenceService` in `app/infrastructure/ai_confidence/confidence_service.py` calculating multi-dimensional confidence scores: (0.35 × Evidence Quality) + (0.25 × Scanner Plugin Reliability) + (0.25 × Reproduction Score) + (0.15 × AI Analysis Score) mapping to `LOW` / `MEDIUM` / `HIGH` / `CONFIRMED` levels.
+  - `FindingVerificationService` in `app/infrastructure/ai_confidence/verification_service.py` executing safe non-destructive re-probe verification flows through Phase 12.4 sandbox architecture and Phase 12.5 target authorization checks.
+  - `FindingReviewService` in `app/infrastructure/ai_confidence/review_service.py` managing human analyst decision workflows (`CONFIRM`, `FALSE_POSITIVE`, `ACCEPT_RISK`, `REQUEST_MORE_EVIDENCE`).
+  - `RemediationGovernanceService` in `app/infrastructure/ai_confidence/remediation_governance_service.py` enforcing strict human approval gates for AI-generated remediation plans (`AI_RECOMMENDED` → `ANALYST_REVIEW` → `APPROVED_FOR_IMPLEMENTATION` → `IMPLEMENTED` → `VERIFIED`). AI cannot autonomously execute remediation.
+  - Database ORM models: `FindingVerificationAttemptModel` (`finding_verification_attempts`), `FindingReviewModel` (`finding_reviews`), `RemediationApprovalHistoryModel` (`remediation_approval_history`).
+  - Alembic migration `0008_create_finding_confidence_and_remediation_tables.py`.
+  - REST API Router (`app/api/v1/routers/ai_confidence.py`): `GET /findings/{id}/confidence`, `POST /findings/{id}/verify`, `POST /findings/{id}/review`, `POST /remediation/{id}/approve`, `POST /remediation/{id}/reject`.
+  - Frontend `AIConfidenceService` (`frontend/services/ai_confidence.service.ts`) and `FindingConfidencePanel` React component (`frontend/components/vulnerabilities/finding-confidence-panel.tsx`).
+  - Comprehensive test suite (`backend/tests/test_ai_confidence_remediation.py`, 10/10 passed cleanly).
 - **Dependencies**: Phase 12.5.
-- **Completion Criteria**: Automated confidence scoring reducing analyst triage false-positive alert volume by >80% while strictly enforcing human review before executing any remediation patch.
-- **Testing Requirements**: Unit test suite for Bayesian confidence scoring, mock re-probe runner, and RBAC approval gate testing.
+- **Completion Criteria**: Automated confidence scoring reducing analyst triage false-positive alert volume by >80% while strictly enforcing human review before executing any remediation patch. AI assists vulnerability analysis but human approval controls all security actions.
+- **Testing Requirements**: Unit test suite for confidence scoring, evidence quality evaluation, verification state machines, analyst review workflows, remediation approval/rejection governance, and full integration lifecycle flow (10/10 passed cleanly).
 
 ### Phase 12.7: Cryptographically Signed & Sandboxed Plugin Ecosystem Architecture
 - **Status**: Planned ⏳
