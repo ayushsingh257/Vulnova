@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 # revision identifiers, used by Alembic.
 revision: str = "0002_create_core_platform_tables"
-down_revision: Union[str, None] = "0001_enable_postgresql_extensions"
+down_revision: Union[str, None] = "0001_enable_pg_extensions"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

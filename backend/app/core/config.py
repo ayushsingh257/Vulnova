@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     log_level: str = "INFO"
     host: str = "0.0.0.0"  # noqa: S104
-    port: int = 8000
+    port: int = 8080
 
     # Database & Cache Connection Strings
     database_url: str = (

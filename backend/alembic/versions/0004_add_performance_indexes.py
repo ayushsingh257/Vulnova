@@ -58,7 +58,7 @@ def upgrade() -> None:
     op.create_index(
         "ix_api_keys_org_active",
         "api_keys",
-        ["organization_id", "is_active"],
+        ["organization_id", "key_prefix"],
         unique=False,
     )
 

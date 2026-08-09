@@ -32,14 +32,23 @@ export function SecretsVaultPanel({ token, userRole = "ADMIN" }: SecretsVaultPan
   const [plaintextValue, setPlaintextValue] = useState("");
   const [rotationDays, setRotationDays] = useState(90);
 
+  const getAuthToken = () => {
+    if (token) return token;
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("token") || undefined;
+    }
+    return undefined;
+  };
+
   const loadData = async () => {
     setLoading(true);
     setError(null);
     try {
+      const authToken = getAuthToken();
       const [secList, rotStatus, health] = await Promise.all([
-        SecretsVaultService.listSecrets(undefined, 0, 50, token),
-        SecretsVaultService.getRotationStatus(token),
-        SecretsVaultService.getKmsHealth(token),
+        SecretsVaultService.listSecrets(undefined, 0, 50, authToken),
+        SecretsVaultService.getRotationStatus(authToken),
+        SecretsVaultService.getKmsHealth(authToken),
       ]);
       setSecrets(secList);
       setRotationStatus(rotStatus);
@@ -67,7 +76,7 @@ export function SecretsVaultPanel({ token, userRole = "ADMIN" }: SecretsVaultPan
           plaintext_value: plaintextValue,
           rotation_interval_days: rotationDays,
         },
-        token
+        getAuthToken()
       );
       setShowCreateModal(false);
       setSecretName("");
@@ -81,7 +90,7 @@ export function SecretsVaultPanel({ token, userRole = "ADMIN" }: SecretsVaultPan
   const handleReveal = async (id: string) => {
     setRevealingId(id);
     try {
-      const res = await SecretsVaultService.accessSecretPlaintext(id, token);
+      const res = await SecretsVaultService.accessSecretPlaintext(id, getAuthToken());
       setRevealedSecret(res);
     } catch (err: any) {
       alert(`Access denied: ${err.message}`);
@@ -93,7 +102,7 @@ export function SecretsVaultPanel({ token, userRole = "ADMIN" }: SecretsVaultPan
   const handleRotate = async (id: string) => {
     if (!confirm("Are you sure you want to rotate this secret with a fresh Data Encryption Key (DEK)?")) return;
     try {
-      await SecretsVaultService.rotateSecret(id, { reason: "Admin triggered on-demand rotation" }, token);
+      await SecretsVaultService.rotateSecret(id, { reason: "Admin triggered on-demand rotation" }, getAuthToken());
       await loadData();
     } catch (err: any) {
       alert(`Rotation failed: ${err.message}`);
@@ -103,7 +112,7 @@ export function SecretsVaultPanel({ token, userRole = "ADMIN" }: SecretsVaultPan
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to permanently delete this secret? This action is irreversible.")) return;
     try {
-      await SecretsVaultService.deleteSecret(id, token);
+      await SecretsVaultService.deleteSecret(id, getAuthToken());
       await loadData();
     } catch (err: any) {
       alert(`Delete failed: ${err.message}`);

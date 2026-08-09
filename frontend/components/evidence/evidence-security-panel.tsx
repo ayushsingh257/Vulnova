@@ -25,11 +25,19 @@ export function EvidenceSecurityPanel({
   const [uploadResult, setUploadResult] = useState<EvidenceUploadResponseDTO | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const getAuthToken = () => {
+    if (token) return token;
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("token") || undefined;
+    }
+    return undefined;
+  };
+
   const loadDashboard = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await EvidenceMalwareService.getQuarantineDashboard(token);
+      const data = await EvidenceMalwareService.getQuarantineDashboard(getAuthToken());
       setSummary(data);
     } catch (err: any) {
       setError(err.message || "Failed to load quarantine telemetry.");
@@ -52,7 +60,7 @@ export function EvidenceSecurityPanel({
     setUploadResult(null);
 
     try {
-      const result = await EvidenceMalwareService.uploadEvidence(file, undefined, token);
+      const result = await EvidenceMalwareService.uploadEvidence(file, undefined, getAuthToken());
       setUploadResult(result);
       await loadDashboard();
     } catch (err: any) {
