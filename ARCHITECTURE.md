@@ -2029,6 +2029,79 @@ Phase 12.3 establishes Vulnova's official enterprise v1.0.0 release architecture
 4. **Git Tagging & Pipeline Verification**:
    - Annotated release tag `v1.0.0` pushed to GitHub origin, triggering complete DevSecOps, Monorepo CI, and Security pipeline verification workflows.
 
+---
+
+## 🏗️ 41. Enterprise Security Hardening & Zero-Trust Governance Architecture (Era 12 Planned Extensions)
+
+Following the post-release Enterprise Readiness Gap Analysis (`docs/audits/ERA_12_ENTERPRISE_READINESS_GAP_ANALYSIS.md`), six architectural extensions (Phases 12.4 through 12.9) are designed to achieve complete 10/10 Enterprise Security Certification:
+
+1. **Scanner Ephemeral Micro-Sandboxing (Phase 12.4)**:
+   - Dynamic scanner workers execute inside transient containers with single-use container lifecycles destroyed immediately post-scan.
+   - Outbound Egress Proxy & RFC1918 blocklists prevent unauthorized internal network scanning and cloud metadata access.
+
+---
+
+## 🏗️ 42. Enterprise Scanner Ephemeral Sandbox Architecture (Phase 12.4)
+
+Phase 12.4 establishes Vulnova's single-use ephemeral container sandbox execution infrastructure (`app/infrastructure/scanner_sandbox/`), isolating scanner plugins from shared worker runtimes:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Celery Task Queue / Orchestrator                         │
+│             (Task dispatching, parameters & policy validation)              │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       ScannerSandboxManager Service                         │
+│   (Database tracking in `scanner_sandboxes`, audit events `sandbox_created`)│
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        ScannerSecurityPolicy                                │
+│   (UID/GID 10001 check, CAP_DROP_ALL, read-only rootfs, RFC1918 blocklist)  │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                   EphemeralContainerDriver Sandbox Container                │
+│    `docker run --rm --user 10001 --cpus 1.0 --memory 512m --read-only ...`   │
+└──────────┬───────────────────────────┬───────────────────────────┬──────────┘
+           │                           │                           │
+           ▼                           ▼                           ▼
+┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
+│  Execute Active Scan │    │ Extract Findings JSON│    │ Destroy Container &  │
+│  (Isolated Sandbox)  │    │  (Result Collector)  │    │ Record Audit Log     │
+└──────────────────────┘    └──────────────────────┘    └──────────────────────┘
+```
+
+### Key Architectural Controls:
+1. **Single-Use Ephemeral Lifecycles**:
+   - Every scan job spawns a dedicated container (`CREATED` -> `RUNNING` -> `COMPLETED` / `FAILED`).
+   - Post-scan, the container resource is forcefully destroyed (`DESTROYED`) with zero container reuse across scans.
+2. **Container Security Hardening**:
+   - Enforces non-root execution (`USER appuser`, UID/GID 10001), CPU limit `1.0`, memory limit `512m`, process limit `max_processes = 100`, execution timeout `1800s`, `CAP_DROP_ALL`, `no-new-privileges:true`, and `read_only_rootfs = True`.
+3. **Network Egress Blocklists**:
+   - Target validator (`ScannerSecurityPolicy.validate_target_address`) blocks RFC1918 private networks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback interfaces (`127.0.0.1/8`, `localhost`), and cloud metadata IP (`169.254.169.254/32`).
+4. **Immutable Audit Event Dispatch**:
+   - Logs `sandbox_created`, `scanner_started`, `scanner_completed`, `sandbox_destroyed`, and `sandbox_failed` via `AuditLogService` with organization and user context.
+2. **Pre-Scan Target Ownership & Verification (Phase 12.5)**:
+   - Automated DNS TXT record (`_vulnova-verify.<domain>`) and HTTP token verifiers ensure zero unauthorized scanning against third-party domain assets.
+   - Enforces 2-step admin approval workflows for production IP ranges and records cryptographically signed `ScanAuthorizationRecord` entries.
+3. **AI Finding Confidence & Human-in-the-Loop Remediation (Phase 12.6)**:
+   - Automated Bayesian/LLM false positive reduction engine reduces analyst alert noise by >80%.
+   - Mandatory human approval portal for all AI-generated patch recommendations.
+4. **Ed25519 Signed & Sandboxed Plugin Ecosystem (Phase 12.7)**:
+   - Cryptographic signature verification for 3rd-party assessment plugins before loading into `PluginRegistry`.
+   - Manifest capability permissions (`net:http`, `fs:read`) enforced inside WASM / restricted subprocess sandboxes.
+5. **External KMS Vault & Automated Secret Rotation (Phase 12.8)**:
+   - Native HashiCorp Vault Transit engine, AWS KMS, and GCP KMS integration replacing raw master encryption key files.
+   - Automated 90-day secret rotation worker and envelope re-keying pipeline.
+6. **ClamAV & YARA Attachment Malware Protection (Phase 12.9)**:
+   - Asynchronous ClamAV daemon and YARA rule inspection for user-uploaded evidence attachments.
+   - Quarantine staging bucket in MinIO (`vulnova-quarantine-bucket`) prior to promoting clean files to production object storage.
+
 
 
 

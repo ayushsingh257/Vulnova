@@ -982,6 +982,36 @@ Phase 12.3 establishes Vulnova's final release security verification and complia
 4. **Annotated Release Tag Signing**:
    - Git release tag `v1.0.0` cryptographically asserts release integrity across all DevSecOps, Monorepo CI, and Security Scanning workflows.
 
+---
+
+## 🔒 45. Enterprise Security Hardening & Zero-Trust Governance Strategy (Era 12 Planned Extensions)
+
+Following the post-release Enterprise Readiness Gap Analysis (`docs/audits/ERA_12_ENTERPRISE_READINESS_GAP_ANALYSIS.md`), six planned security phases expand Vulnova's enterprise defense depth to 10/10 certification:
+
+1. **Phase 12.4 — Scanner Ephemeral Micro-Sandboxing**: Ephemeral single-use container lifecycles, non-root execution, CPU/Memory caps, and network blocklists to prevent scanner runtime host compromise.
+
+---
+
+## 🔒 46. Scanner Ephemeral Sandbox Security Controls (Phase 12.4)
+
+Phase 12.4 implements strict isolation and security controls for dynamic assessment scanner execution:
+
+1. **Non-Root & Unprivileged Execution**:
+   - Enforces non-root `appuser` (UID/GID 10001) execution inside ephemeral containers.
+   - Drops all Linux capabilities (`CAP_DROP_ALL`) and prevents privilege escalation via `--security-opt no-new-privileges:true`.
+2. **Read-Only Root Filesystem & Resource Caps**:
+   - Enforces read-only root filesystems (`--read-only`) where supported.
+   - Restricts container CPU allocations (max 1.0 CPU), memory limits (max 512MB), process count (`pids_limit = 100`), and execution timeout (`1800s`).
+3. **Target Address & RFC1918 Network Blocklist**:
+   - Pre-execution target address validation blocks scans targeting private RFC1918 networks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback addresses (`127.0.0.1/8`, `localhost`), and cloud metadata APIs (`169.254.169.254/32`).
+4. **Lifecycle Audit Event Logging**:
+   - Generates immutable audit events (`sandbox_created`, `scanner_started`, `scanner_completed`, `sandbox_destroyed`, `sandbox_failed`) via `AuditLogService`.
+2. **Phase 12.5 — Advanced Target Ownership & Authorization**: Automated pre-scan DNS TXT record (`_vulnova-verify.<domain>`) and HTTP token verification, RFC1918 private range blocklisting, and 2-step admin authorization workflows.
+3. **Phase 12.6 — AI Finding Confidence & Human-in-the-Loop Remediation**: Bayesian/LLM false positive reduction engine reducing alert noise by >80% with mandatory human analyst approval gates before patch application.
+4. **Phase 12.7 — Cryptographically Signed & Sandboxed Plugins**: Ed25519 public key signature verification for 3rd-party assessment plugins and capability-manifest sandboxed WASM execution.
+5. **Phase 12.8 — External KMS Vault Integration**: HashiCorp Vault / AWS KMS / GCP KMS driver integration with automated 90-day secret rotation workers.
+6. **Phase 12.9 — ClamAV & YARA Attachment Protection**: Asynchronous ClamAV daemon and YARA rule inspection for uploaded evidence attachments with MinIO quarantine staging buckets.
+
 
 
 

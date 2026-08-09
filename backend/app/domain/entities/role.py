@@ -163,6 +163,13 @@ PERMISSION_MAP: Dict[str, Role] = {
     "security_audit:read": Role.VIEWER,
     "security_audit:execute": Role.SECURITY_ANALYST,
     "security_audit:manage": Role.ADMIN,
+    # ── Enterprise Scanner Sandbox (Phase 12.4) ──
+    "scan:read": Role.VIEWER,
+    "scan:execute": Role.SECURITY_ANALYST,
+    "scan:manage": Role.ADMIN,
+    "sandbox:read": Role.VIEWER,
+    "sandbox:execute": Role.SECURITY_ANALYST,
+    "sandbox:manage": Role.ADMIN,
 }
 
 ALL_PERMISSIONS: FrozenSet[str] = frozenset(PERMISSION_MAP.keys())

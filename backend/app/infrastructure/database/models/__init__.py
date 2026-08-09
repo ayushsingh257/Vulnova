@@ -59,6 +59,7 @@ from app.infrastructure.database.models.scan_target import (
     AuthorizationDeclarationModel,
     ScanTargetModel,
 )
+from app.infrastructure.database.models.scanner_sandbox import ScannerSandboxModel
 from app.infrastructure.database.models.trend import (
     AssetChangeEventModel,
     AssetSnapshotModel,
@@ -87,6 +88,7 @@ __all__ = [
     "AssetRelationshipModel",
     "AssessmentJobModel",
     "SecurityFindingModel",
+    "ScannerSandboxModel",
     "LLMProviderModel",
     "LLMModelRegistryModel",
     "PromptTemplateModel",

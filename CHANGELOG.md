@@ -18,6 +18,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+- **Era 12 Phase 12.4 — Enterprise Scanner Execution Sandbox & Isolation Architecture**:
+  - Implemented single-use ephemeral container sandbox execution infrastructure (`app/infrastructure/scanner_sandbox/`).
+  - Added `ScannerSandboxModel` DB ORM model (`scanner_sandboxes` table) & Alembic migration `0006_create_scanner_sandbox_table.py`.
+  - Added `ScannerSandboxRepository` (`app/infrastructure/database/repositories/scanner_sandbox_repository.py`).
+  - Implemented `EphemeralContainerDriver` in `app/infrastructure/scanner_sandbox/container_driver.py` enforcing non-root UID/GID 10001 execution, CPU quota 1.0, Memory limit 512m, `CAP_DROP_ALL`, read-only rootfs, and automatic container teardown.
+  - Implemented `ScannerSecurityPolicy` in `app/infrastructure/scanner_sandbox/security_policy.py` enforcing resource bounds and RFC1918 private IP / cloud metadata network blocklists.
+  - Implemented `ScannerSandboxManager` in `app/infrastructure/scanner_sandbox/sandbox_manager.py` managing `CREATED` -> `RUNNING` -> `COMPLETED` / `FAILED` -> `DESTROYED` lifecycles and dispatching audit log events (`sandbox_created`, `scanner_started`, `scanner_completed`, `sandbox_destroyed`, `sandbox_failed`).
+  - Implemented REST API router endpoints under `/api/v1/sandbox/*` (`POST /run`, `GET /status/{id}`, `GET /active`, `DELETE /{id}`) guarded by RBAC permissions.
+  - Added unit, integration, security policy, and REST API test suite in `backend/tests/test_scanner_sandbox.py`.
+
+### Planned
+- **Enterprise Security Hardening Roadmap Expansion (Phases 12.5 – 12.9)**:
+  - Formally established post-v1.0.0 enterprise readiness roadmap following gap audit (`docs/audits/ERA_12_ENTERPRISE_READINESS_GAP_ANALYSIS.md`).
+  - Phase 12.5: Advanced Target Ownership Verification & Scan Authorization Engine.
+  - Phase 12.6: AI Finding Confidence Scoring & Human-in-the-Loop Remediation Workflow.
+  - Phase 12.7: Cryptographically Signed & Sandboxed Plugin Ecosystem Architecture.
+  - Phase 12.8: Enterprise Secrets Vault & KMS Credential Governance Infrastructure.
+  - Phase 12.9: Antivirus & Secure Evidence File Upload Protection Pipeline.
+
 ### Fixed
 - **Reporting Dependencies CI Fix**: Added `jinja2>=3.1.4` and `weasyprint>=62.0` to `backend/requirements.txt` and `backend/pyproject.toml` to ensure fresh CI runner environments resolve Jinja2 template rendering and WeasyPrint PDF compilation modules during Mypy type-checking and pytest execution.
 - **CI Dependency Installation**: Configured `.github/workflows/ci.yml` backend verification step to install directly from the authoritative `backend/requirements.txt` source, ensuring `sqlalchemy`, `asyncpg`, `alembic`, `black`, and all backend dependencies are available during CI execution.

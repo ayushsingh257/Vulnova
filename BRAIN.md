@@ -735,6 +735,21 @@ The following discovery engine architecture decisions were finalized during Phas
     - **Release Notes & Documentation Audit**: `docs/releases/V1.0.0_RELEASE_NOTES.md` documenting overall platform architecture across 12 completed engineering Eras, security highlights, production deployment runbooks, and quick-start guides.
     - **Production Release Validation Suite**: `backend/tests/test_release_validation.py` and `tests/release/release_validation.py` running 5 automated verification gates (`VERSION`, RBAC permissions, 8 domain security audit analyzers, Kubernetes manifest parsing, and FastAPI router routes).
     - **Annotated Release Tagging**: Git annotated tag `v1.0.0` pushed to GitHub origin, triggering CI/CD release verification workflows.
+59. **Enterprise Security Hardening Roadmap & Zero-Trust Governance Strategy (Phases 12.4 – 12.9 Planned)**:
+    - **Audit & Assessment**: `docs/audits/ERA_12_ENTERPRISE_READINESS_GAP_ANALYSIS.md` assessing Vulnova across 8 core security domains (Rating: 7.8/10 Current $\rightarrow$ 10/10 Target).
+    - **Phase 12.4 Scanner Ephemeral Sandboxing**: Micro-sandboxed worker execution with gVisor / nsjail isolation and automatic single-use container destruction.
+    - **Phase 12.5 Target Ownership Verification**: DNS TXT record challenge runner (`_vulnova-verify.<domain>`), HTTP token verifier, and 2-step admin approval workflow for sensitive IP ranges.
+    - **Phase 12.6 AI False-Positive Reduction**: Automated Bayesian/LLM confidence scoring engine and mandatory human approval portal for AI-generated remediation patches.
+    - **Phase 12.7 Cryptographic Plugin Ecosystem**: Ed25519 plugin signature verification and capability-manifest sandboxed execution.
+    - **Phase 12.8 KMS Vault Integration**: HashiCorp Vault / AWS KMS / GCP KMS driver integration with automated 90-day secret rotation.
+    - **Phase 12.9 ClamAV Evidence Protection**: Asynchronous ClamAV daemon and YARA rule inspection for uploaded attachments with MinIO quarantine staging.
+60. **Enterprise Scanner Execution Sandbox & Isolation Architecture (Phase 12.4)**: Single-use ephemeral container sandbox execution infrastructure:
+    - **Single-Use Ephemeral Lifecycles**: Dynamic scanner execution tasks execute inside single-use transient container sandboxes (`CREATED` $\rightarrow$ `RUNNING` $\rightarrow$ `COMPLETED` / `FAILED`). Containers are forcefully destroyed (`DESTROYED`) post-scan with zero container reuse.
+    - **Container Security Controls**: Enforces non-root execution (`USER appuser`, UID/GID 10001), CPU allocation quota `1.0`, memory limit `512m`, process count limit `max_processes = 100`, execution timeout `1800s`, Linux capability drop `CAP_DROP_ALL`, `no-new-privileges:true`, and `read_only_rootfs = True`.
+    - **Network Egress Blocklists**: `ScannerSecurityPolicy.validate_target_address` blocks private RFC1918 networks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback interfaces (`127.0.0.1/8`, `localhost`), and cloud metadata IP (`169.254.169.254/32`).
+    - **Database ORM & Alembic Migration**: Managed via `ScannerSandboxModel` (`scanner_sandboxes` table) and Alembic migration `0006_create_scanner_sandbox_table.py`.
+    - **Immutable Audit Event Logging**: Dispatches audit events (`sandbox_created`, `scanner_started`, `scanner_completed`, `sandbox_destroyed`, `sandbox_failed`) via `AuditLogService` with organization and user context.
+    - **REST API Router**: 4 endpoints under `/api/v1/sandbox/*` (`POST /run`, `GET /status/{id}`, `GET /active`, `DELETE /{id}`) guarded by `scan:execute`, `scan:read`, and `admin:manage` permissions.
 
 
 

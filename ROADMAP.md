@@ -1719,3 +1719,78 @@ This master roadmap outlines the **12 Engineering Eras** and **112 Implementatio
 - **Completion Criteria**: Vulnova enterprise security platform fully audited, verified, tagged `v1.0.0`, and pushed to GitHub main branch.
 - **Testing Requirements**: Executed `python tests/release/release_validation.py` with 100% test pass rate.
 
+### Phase 12.4: Enterprise Scanner Execution Sandbox & Isolation Architecture
+- **Status**: Completed ✅
+- **Objective**: Implement hardened micro-sandboxing, transient per-scan single-use container lifecycles, network security blocklists, and automatic sandbox teardown for dynamic scanner engines.
+- **Deliverables**:
+  - `ScannerSandboxModel` DB ORM model (`scanner_sandboxes` table) & Alembic Migration `0006_create_scanner_sandbox_table.py`.
+  - `ScannerSandboxRepository` (`app/infrastructure/database/repositories/scanner_sandbox_repository.py`).
+  - Ephemeral container orchestration driver (`EphemeralContainerDriver` in `app/infrastructure/scanner_sandbox/container_driver.py`) enforcing non-root UID/GID 10001, CPU quota 1.0, Memory limit 512m, `CAP_DROP_ALL`, read-only rootfs, and automatic container teardown.
+  - Security policy validator (`ScannerSecurityPolicy` in `app/infrastructure/scanner_sandbox/security_policy.py`) enforcing resource limits and RFC1918 private IP / cloud metadata blocklists.
+  - Enterprise sandbox manager service (`ScannerSandboxManager` in `app/infrastructure/scanner_sandbox/sandbox_manager.py`) coordinating `CREATED` -> `RUNNING` -> `COMPLETED` / `FAILED` -> `DESTROYED` lifecycle transitions and dispatching audit log events (`sandbox_created`, `scanner_started`, `scanner_completed`, `sandbox_destroyed`, `sandbox_failed`).
+  - REST API router endpoints (`app/api/v1/routers/scanner_sandbox.py`): `POST /api/v1/sandbox/run`, `GET /api/v1/sandbox/status/{sandbox_id}`, `GET /api/v1/sandbox/active`, `DELETE /api/v1/sandbox/{sandbox_id}` guarded by RBAC permissions.
+  - Comprehensive unit, integration, security policy, and REST API test suite (`backend/tests/test_scanner_sandbox.py`).
+- **Dependencies**: Phase 12.3.
+- **Completion Criteria**: 100% of dynamic scanner execution runs executed inside isolated transient micro-sandboxes with enforced non-root UID/GID 10001, CPU/Memory limits, RFC1918 network blocklists, and automatic post-scan container destruction.
+- **Testing Requirements**: Test suite verifying security policy bounds, RFC1918 network blocklists, repository CRUD operations, full manager lifecycle, and REST endpoints (6/6 passed cleanly).
+
+### Phase 12.5: Advanced Target Ownership Verification & Scan Authorization Engine
+- **Status**: Planned ⏳
+- **Objective**: Implement automated pre-scan domain target ownership verification via DNS TXT records, HTTP token challenges, 2-step admin approval workflows for sensitive IP ranges, and RFC1918 private network blocklists.
+- **Deliverables**:
+  - `TargetOwnershipVerificationService` in `app/domain/services/target_verification/`.
+  - Automated DNS TXT record challenge runner (`_vulnova-verify.<domain>`) and HTTP `.well-known/vulnova-challenge.txt` verifier.
+  - 2-Step Admin Approval Workflow for out-of-scope or production target ranges.
+  - Scan Authorization Audit Log & Certificate Generator (`ScanAuthorizationRecord`).
+- **Dependencies**: Phase 12.4.
+- **Completion Criteria**: Zero unverified external domains allowed to trigger dynamic active probes without completed TXT/HTTP token verification or explicit 2-step admin override.
+- **Testing Requirements**: Comprehensive unit and integration test suite asserting DNS query resolution, token validation timeouts, and unauthorized target rejection.
+
+### Phase 12.6: AI Finding Confidence Scoring & Human-in-the-Loop Remediation Workflow
+- **Status**: Planned ⏳
+- **Objective**: Implement an automated Bayesian/LLM false-positive reduction engine, automated re-probe verification workflows, and mandatory human analyst remediation approval gates.
+- **Deliverables**:
+  - `AIFalsePositiveReductionEngine` in `app/application/ai/false_positive_engine.py`.
+  - Automated Re-Probe Verification Runner attempting non-destructive finding validation.
+  - Human-in-the-Loop Remediation Portal in Next.js (`/remediation/approval`).
+  - Finding Confidence & Reproduction Evidence Scoring DTO updates.
+- **Dependencies**: Phase 12.5.
+- **Completion Criteria**: Automated confidence scoring reducing analyst triage false-positive alert volume by >80% while strictly enforcing human review before executing any remediation patch.
+- **Testing Requirements**: Unit test suite for Bayesian confidence scoring, mock re-probe runner, and RBAC approval gate testing.
+
+### Phase 12.7: Cryptographically Signed & Sandboxed Plugin Ecosystem Architecture
+- **Status**: Planned ⏳
+- **Objective**: Implement Ed25519 cryptographic signature verification for 3rd-party assessment plugins, capability-based permission manifests, and WASM/subprocess plugin sandboxing.
+- **Deliverables**:
+  - `CryptographicPluginSignatureVerifier` in `app/infrastructure/plugins/signature_verifier.py`.
+  - Plugin Capability Manifest (`plugin.manifest.json` defining `net:http`, `fs:read`, `env:none`).
+  - WASM / Restricted Subprocess Plugin Sandbox Execution Environment.
+  - Enterprise Plugin Management Console (`/settings/plugins`).
+- **Dependencies**: Phase 12.6.
+- **Completion Criteria**: 100% of custom and 3rd-party security assessment plugins cryptographically signed by trusted keyrings prior to runtime registration.
+- **Testing Requirements**: Test suite verifying signature validation failures, capability escalation blocks, and WASM memory isolation.
+
+### Phase 12.8: Enterprise Secrets Vault & KMS Credential Governance Infrastructure
+- **Status**: Planned ⏳
+- **Objective**: Integrate external Enterprise Key Management Services (HashiCorp Vault, AWS KMS, GCP KMS) and build automated 90-day secret rotation and master key re-encryption pipelines.
+- **Deliverables**:
+  - `ExternalKMSProvider` abstraction supporting HashiCorp Vault Transit engine, AWS KMS, and GCP KMS.
+  - Automated 90-day Secret Rotation Worker in Celery Beat.
+  - Envelope Encryption Re-Keying Pipeline (`SecretsReKeyingService`).
+  - Key Governance Audit Dashboard (`/settings/security/vault`).
+- **Dependencies**: Phase 12.7.
+- **Completion Criteria**: Zero raw master encryption keys stored on host disks; all DB column encryption keys derived dynamically from external KMS / Vault envelopes.
+- **Testing Requirements**: Integration tests with Vault/KMS mocks verifying key rotation, zero-downtime re-keying, and secret audit logging.
+
+### Phase 12.9: Antivirus & Secure Evidence File Upload Protection Pipeline
+- **Status**: Planned ⏳
+- **Objective**: Implement asynchronous ClamAV daemon attachment scanning, YARA static malware detection, and quarantine bucket staging prior to releasing evidence files to production object storage.
+- **Deliverables**:
+  - `EvidenceMalwareScannerService` in `app/infrastructure/storage/malware_scanner.py`.
+  - ClamAV TCP Daemon Connector & YARA Rule Engine Integration.
+  - Quarantine Staging Bucket in MinIO (`vulnova-quarantine-bucket`) with automated purge policy.
+  - File Upload Inspection Middleware enforcing magic byte verification.
+- **Dependencies**: Phase 12.8.
+- **Completion Criteria**: 100% of user-uploaded evidence attachments, PCAP files, and scan logs scanned for malware prior to staging in main storage buckets.
+- **Testing Requirements**: Test suite verifying EICAR test file detection, quarantine isolation, YARA rule matching, and clean file promotion.
+
