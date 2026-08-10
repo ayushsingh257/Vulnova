@@ -354,72 +354,64 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 7. Technical Architecture Showcase */}
+        {/* 7. Enterprise Security Architecture */}
         <section id="architecture" className="max-w-7xl mx-auto px-6">
           <div className="p-8 sm:p-12 rounded-2xl border border-zinc-800 bg-zinc-900/40 backdrop-blur-xl space-y-10">
             <div className="text-center space-y-3 max-w-3xl mx-auto">
               <span className="px-3.5 py-1.5 rounded-md border border-red-500/30 bg-red-950/40 text-xs font-bold uppercase tracking-widest text-red-400">
-                Enterprise Infrastructure
+                Enterprise Architecture
               </span>
               <h2 className="text-3xl font-extrabold text-white">
-                Powered by Production-Grade Open Stack Architecture
+                Enterprise Security Architecture
               </h2>
               <p className="text-xs sm:text-sm text-zinc-400">
-                Designed for high concurrency, zero data leakage, and seamless cloud deployment.
+                Built for modern security teams with autonomous AI analysis, continuous security intelligence, and enterprise-grade protection workflows.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-xs">
-              <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950 space-y-3">
-                <div className="flex items-center space-x-2 text-red-400 font-bold">
-                  <Code2 className="h-4 w-4" />
-                  <span>Frontend Cockpit</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Card 1: Autonomous Security Intelligence */}
+              <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-950 hover:border-red-500/40 transition-all space-y-3">
+                <div className="p-3 w-fit rounded-lg bg-red-950/60 text-red-400 border border-red-900/50">
+                  <Cpu className="h-5 w-5" />
                 </div>
-                <ul className="text-zinc-400 space-y-1 font-mono text-[11px]">
-                  <li>Next.js 14 (App Router)</li>
-                  <li>React 18 & TypeScript</li>
-                  <li>Tailwind CSS & Lucide</li>
-                  <li>Standalone Build Export</li>
-                </ul>
+                <h3 className="text-base font-bold text-white">Autonomous Security Intelligence</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  AI-powered vulnerability analysis, intelligent risk prioritization, and security reasoning designed to accelerate investigation workflows.
+                </p>
               </div>
 
-              <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950 space-y-3">
-                <div className="flex items-center space-x-2 text-red-400 font-bold">
-                  <Server className="h-4 w-4" />
-                  <span>Backend Control Plane</span>
+              {/* Card 2: Continuous Attack Surface Visibility */}
+              <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-950 hover:border-red-500/40 transition-all space-y-3">
+                <div className="p-3 w-fit rounded-lg bg-red-950/60 text-red-400 border border-red-900/50">
+                  <ShieldAlert className="h-5 w-5" />
                 </div>
-                <ul className="text-zinc-400 space-y-1 font-mono text-[11px]">
-                  <li>FastAPI & AsyncIO</li>
-                  <li>Python 3.13 & Pydantic v2</li>
-                  <li>SQLAlchemy 2.0 (Async)</li>
-                  <li>49 REST Router Modules</li>
-                </ul>
+                <h3 className="text-base font-bold text-white">Continuous Attack Surface Visibility</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Discover assets, identify exposures, correlate vulnerabilities, and maintain complete security visibility across environments.
+                </p>
               </div>
 
-              <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950 space-y-3">
-                <div className="flex items-center space-x-2 text-red-400 font-bold">
-                  <Cpu className="h-4 w-4" />
-                  <span>AI & Vector Intelligence</span>
+              {/* Card 3: Secure Enterprise Operations */}
+              <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-950 hover:border-red-500/40 transition-all space-y-3">
+                <div className="p-3 w-fit rounded-lg bg-red-950/60 text-red-400 border border-red-900/50">
+                  <Lock className="h-5 w-5" />
                 </div>
-                <ul className="text-zinc-400 space-y-1 font-mono text-[11px]">
-                  <li>Multi-Agent LLM Reasoning</li>
-                  <li>RAG Knowledge Engine</li>
-                  <li>Qdrant Vector Storage</li>
-                  <li>Security Knowledge Graphs</li>
-                </ul>
+                <h3 className="text-base font-bold text-white">Secure Enterprise Operations</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Enterprise controls including governance workflows, access management, audit visibility, and security compliance practices.
+                </p>
               </div>
 
-              <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950 space-y-3">
-                <div className="flex items-center space-x-2 text-red-400 font-bold">
-                  <Database className="h-4 w-4" />
-                  <span>Security & Storage</span>
+              {/* Card 4: AI-Powered Security Workflows */}
+              <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-950 hover:border-red-500/40 transition-all space-y-3">
+                <div className="p-3 w-fit rounded-lg bg-red-950/60 text-red-400 border border-red-900/50">
+                  <Workflow className="h-5 w-5" />
                 </div>
-                <ul className="text-zinc-400 space-y-1 font-mono text-[11px]">
-                  <li>PostgreSQL 16 & Redis 7</li>
-                  <li>Celery Worker Cluster</li>
-                  <li>MinIO Evidence Storage</li>
-                  <li>ClamAV TCP & YARA Engine</li>
-                </ul>
+                <h3 className="text-base font-bold text-white">AI-Powered Security Workflows</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Automated investigation assistance, evidence analysis, reporting intelligence, and streamlined security operations.
+                </p>
               </div>
             </div>
           </div>
