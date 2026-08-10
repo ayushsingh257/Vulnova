@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { Loader2, ShieldCheck, FileCheck, Layers, Lock, Award } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import {
   ComplianceOverviewResponse,
   ComplianceControlDTO,
@@ -43,8 +42,7 @@ export default function ComplianceDashboardPage() {
   }, [activeFramework]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8">
+    <div className="space-y-8">
         {/* Page Title Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-800 pb-6">
           <div>
@@ -136,6 +134,5 @@ export default function ComplianceDashboardPage() {
           onClose={() => setSelectedControl(null)}
         />
       </div>
-    </DashboardLayout>
   );
 }

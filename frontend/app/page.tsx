@@ -44,10 +44,15 @@ export default function Home() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-            <a href="/dashboard">
+            <a href="/signup">
               <Button variant="primary" size="lg" className="shadow-red-950/60">
-                <span>Enter Analyst Portal</span>
+                <span>Request Enterprise Access</span>
                 <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </a>
+            <a href="/login">
+              <Button variant="outline" size="lg">
+                <span>Login to SOC Platform</span>
               </Button>
             </a>
             <a href="/trust">

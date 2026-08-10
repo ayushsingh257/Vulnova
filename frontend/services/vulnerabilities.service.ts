@@ -1,5 +1,19 @@
 // Frontend Vulnerabilities API Service Abstraction Module.
 
+export interface VulnerabilityItemDTO {
+  id: string;
+  cve_id?: string;
+  title: string;
+  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO";
+  cvss_score: number;
+  asset_name: string;
+  target_url: string;
+  status: "OPEN" | "REMEDIATED" | "REMEDIATING" | "FALSE_POSITIVE";
+  discovered_at: string;
+  ai_confidence_score: number;
+  ai_recommendation: string;
+}
+
 export interface CVSSDetail {
   version: string;
   base_score: number;
@@ -133,12 +147,37 @@ export interface FindingRemediationResponse {
 }
 
 export class VulnerabilitiesService {
-  private static BASE_URL = "/api/v1/vulnerabilities";
+  private static BASE_URL = "/api/v1/findings";
+
+  public static async listVulnerabilities(
+    severity?: string,
+    search?: string
+  ): Promise<{ items: VulnerabilityItemDTO[]; total: number }> {
+    const params = new URLSearchParams();
+    if (severity) params.append("severity", severity);
+    if (search) params.append("search", search);
+
+    const res = await fetch(`${this.BASE_URL}?${params.toString()}`);
+    if (!res.ok) {
+      throw new Error(`Failed to list vulnerabilities: ${res.statusText}`);
+    }
+    return res.json();
+  }
+
+  public static async remediateVulnerability(findingId: string): Promise<any> {
+    const res = await fetch(`${this.BASE_URL}/${findingId}/remediate`, {
+      method: "POST",
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to remediate vulnerability: ${res.statusText}`);
+    }
+    return res.json();
+  }
 
   public static async getVulnerabilityDetails(
     findingId: string
   ): Promise<VulnerabilityIntelligenceResponse> {
-    const res = await fetch(`${this.BASE_URL}/${findingId}`);
+    const res = await fetch(`/api/v1/vulnerabilities/${findingId}`);
     if (!res.ok) {
       throw new Error(`Failed to fetch vulnerability details: ${res.statusText}`);
     }
@@ -148,7 +187,7 @@ export class VulnerabilitiesService {
   public static async getVulnerabilityEvidence(
     findingId: string
   ): Promise<FindingEvidenceResponse> {
-    const res = await fetch(`${this.BASE_URL}/${findingId}/evidence`);
+    const res = await fetch(`/api/v1/vulnerabilities/${findingId}/evidence`);
     if (!res.ok) {
       throw new Error(`Failed to fetch evidence artifacts: ${res.statusText}`);
     }
@@ -158,7 +197,7 @@ export class VulnerabilitiesService {
   public static async getVulnerabilityAttackPaths(
     findingId: string
   ): Promise<FindingAttackPathsResponse> {
-    const res = await fetch(`${this.BASE_URL}/${findingId}/attack-path`);
+    const res = await fetch(`/api/v1/vulnerabilities/${findingId}/attack-path`);
     if (!res.ok) {
       throw new Error(`Failed to fetch attack path visualization: ${res.statusText}`);
     }
@@ -168,7 +207,7 @@ export class VulnerabilitiesService {
   public static async getVulnerabilityRemediation(
     findingId: string
   ): Promise<FindingRemediationResponse> {
-    const res = await fetch(`${this.BASE_URL}/${findingId}/remediation`);
+    const res = await fetch(`/api/v1/vulnerabilities/${findingId}/remediation`);
     if (!res.ok) {
       throw new Error(`Failed to fetch remediation guidance: ${res.statusText}`);
     }
@@ -178,7 +217,7 @@ export class VulnerabilitiesService {
   public static async requestAIRemediation(
     findingId: string
   ): Promise<FindingRemediationResponse> {
-    const res = await fetch(`${this.BASE_URL}/${findingId}/remediation-ai`, {
+    const res = await fetch(`/api/v1/vulnerabilities/${findingId}/remediation-ai`, {
       method: "POST",
     });
     if (!res.ok) {

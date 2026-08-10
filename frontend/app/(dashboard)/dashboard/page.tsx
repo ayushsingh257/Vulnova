@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { SecurityPostureCard } from "@/components/dashboard/security-posture-card";
 import { ActiveScanMonitor } from "@/components/dashboard/active-scan-monitor";
 import { VulnerabilityChart } from "@/components/dashboard/vulnerability-chart";
@@ -72,41 +71,39 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8">
-        {/* Header CTA Action Bar */}
-        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
-          <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Security Operations Command</h2>
-            <p className="text-xs text-zinc-400">Continuous vulnerability monitoring & threat intelligence posture.</p>
-          </div>
-          <ExecutiveReportExportButton />
+    <div className="space-y-8">
+      {/* Header CTA Action Bar */}
+      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+        <div>
+          <h2 className="text-xl font-bold text-white tracking-tight">Security Operations Command</h2>
+          <p className="text-xs text-zinc-400">Continuous vulnerability monitoring & threat intelligence posture.</p>
         </div>
-
-        {/* Top Section: Security Posture Summary */}
-        <SecurityPostureCard summary={data.posture_summary} />
-
-        {/* Phase 7.3 Section: Historical Trajectory & Velocity */}
-        <HistoricalRiskChart />
-
-        {/* Middle Grid: Active Scan Monitor & Vulnerability Distribution */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ActiveScanMonitor scans={data.active_scans} />
-          <VulnerabilityChart breakdown={data.vulnerability_breakdown} />
-        </div>
-
-        {/* Phase 7.3 Section: Attack Surface Coverage & Threat Advisories */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <AttackSurfaceCoverageWidget />
-          <ThreatAdvisoriesDrawer />
-        </div>
-
-        {/* Bottom Grid: Top Target Assets & Recurring Schedules */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <AssetRiskOverview assets={data.top_vulnerable_assets} />
-          <SchedulesOverview summary={data.schedules_summary} />
-        </div>
+        <ExecutiveReportExportButton />
       </div>
-    </DashboardLayout>
+
+      {/* Top Section: Security Posture Summary */}
+      <SecurityPostureCard summary={data.posture_summary} />
+
+      {/* Phase 7.3 Section: Historical Trajectory & Velocity */}
+      <HistoricalRiskChart />
+
+      {/* Middle Grid: Active Scan Monitor & Vulnerability Distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <ActiveScanMonitor scans={data.active_scans} />
+        <VulnerabilityChart breakdown={data.vulnerability_breakdown} />
+      </div>
+
+      {/* Phase 7.3 Section: Attack Surface Coverage & Threat Advisories */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <AttackSurfaceCoverageWidget />
+        <ThreatAdvisoriesDrawer />
+      </div>
+
+      {/* Bottom Grid: Top Target Assets & Recurring Schedules */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <AssetRiskOverview assets={data.top_vulnerable_assets} />
+        <SchedulesOverview summary={data.schedules_summary} />
+      </div>
+    </div>
   );
 }

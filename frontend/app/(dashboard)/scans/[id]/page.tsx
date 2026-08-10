@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Cpu, Radio, ShieldAlert } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { ScanExecutionTelemetry } from "@/components/scans/scan-execution-telemetry";
 import { ScanActivityTimeline } from "@/components/scans/scan-activity-timeline";
 import { LiveEventConsole } from "@/components/scans/live-event-console";
@@ -71,8 +70,7 @@ export default function ScanDetailPage() {
   }, [loadTelemetry]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Top Navigation & Controls Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-800/80 pb-4">
           <div className="flex items-center space-x-3">
@@ -105,6 +103,5 @@ export default function ScanDetailPage() {
           <LiveEventConsole />
         </div>
       </div>
-    </DashboardLayout>
   );
 }

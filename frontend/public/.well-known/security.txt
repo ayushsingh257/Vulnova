@@ -1,0 +1,7 @@
+Contact: mailto:security@vulnova.com
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://vulnova.com/.well-known/security.txt
+Policy: https://vulnova.com/security
+Encryption: https://vulnova.com/pgp-key.txt
+Hiring: https://vulnova.com/careers

@@ -1,0 +1,18 @@
+# Vulnova Enterprise Security Platform Robots Policy
+User-agent: *
+Allow: /
+Allow: /trust
+Allow: /security
+Allow: /.well-known/security.txt
+
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /scans
+Disallow: /findings
+Disallow: /assets
+Disallow: /schedules
+Disallow: /reports
+Disallow: /settings
+Disallow: /security/quarantine
+
+Sitemap: https://vulnova.com/sitemap.xml
