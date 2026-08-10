@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { PermissionGate } from "@/components/auth/permission-gate";
 import { AdminService, UserAdminItem } from "@/services/admin.service";
 import { UserManagementTable } from "@/components/settings/user-management-table";
@@ -47,9 +46,8 @@ export default function SettingsUsersPage() {
   });
 
   return (
-    <DashboardLayout>
-      <PermissionGate>
-        <div className="space-y-6">
+    <PermissionGate>
+      <div className="space-y-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-zinc-800 pb-4">
             <div>
               <h1 className="text-2xl font-bold text-zinc-100">
@@ -108,8 +106,7 @@ export default function SettingsUsersPage() {
             onClose={() => setIsModalOpen(false)}
             onSuccess={fetchUsers}
           />
-        </div>
-      </PermissionGate>
-    </DashboardLayout>
+      </div>
+    </PermissionGate>
   );
 }

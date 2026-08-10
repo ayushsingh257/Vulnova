@@ -17,7 +17,6 @@ import {
   Lock,
   Radio,
 } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { PermissionGate } from "@/components/auth/permission-gate";
 import { Button } from "@/components/ui/button";
 
@@ -40,9 +39,8 @@ export default function PlatformAdminPage() {
   ];
 
   return (
-    <DashboardLayout>
-      <PermissionGate>
-        <div className="space-y-8">
+    <PermissionGate>
+      <div className="space-y-8">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-800 pb-6">
             <div className="flex items-center space-x-3">
@@ -338,8 +336,7 @@ export default function PlatformAdminPage() {
             </div>
           )}
 
-        </div>
-      </PermissionGate>
-    </DashboardLayout>
+      </div>
+    </PermissionGate>
   );
 }

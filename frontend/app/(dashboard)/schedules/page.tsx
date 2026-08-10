@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { PermissionGate } from "@/components/auth/permission-gate";
 import {
   Calendar,
@@ -104,9 +103,8 @@ export default function SchedulesPage() {
   };
 
   return (
-    <DashboardLayout>
-      <PermissionGate>
-        <div className="space-y-6">
+    <PermissionGate>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-800 pb-4">
         <div>
@@ -285,6 +283,5 @@ export default function SchedulesPage() {
       )}
         </div>
       </PermissionGate>
-    </DashboardLayout>
   );
 }

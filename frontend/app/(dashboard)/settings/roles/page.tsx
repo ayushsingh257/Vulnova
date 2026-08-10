@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { PermissionGate } from "@/components/auth/permission-gate";
 import { AdminService, RolePermissionMatrixResponse } from "@/services/admin.service";
 import { RolePermissionMatrix } from "@/components/settings/role-permission-matrix";
@@ -42,25 +41,23 @@ export default function SettingsRolesPage() {
   }, []);
 
   return (
-    <DashboardLayout>
-      <PermissionGate>
-        <div className="space-y-6">
-          <div className="border-b border-zinc-800 pb-4">
-            <h1 className="text-2xl font-bold text-zinc-100">
-              RBAC Role & Permission Boundary Matrix
-            </h1>
-            <p className="text-xs text-zinc-400 mt-1">
-              Inspect granular resource permission boundaries across OWNER, ADMIN, SECURITY_ANALYST, and VIEWER roles.
-            </p>
-          </div>
-
-          {loading ? (
-            <SkeletonCard />
-          ) : matrix ? (
-            <RolePermissionMatrix matrix={matrix} />
-          ) : null}
+    <PermissionGate>
+      <div className="space-y-6">
+        <div className="border-b border-zinc-800 pb-4">
+          <h1 className="text-2xl font-bold text-zinc-100">
+            RBAC Role & Permission Boundary Matrix
+          </h1>
+          <p className="text-xs text-zinc-400 mt-1">
+            Inspect granular resource permission boundaries across OWNER, ADMIN, SECURITY_ANALYST, and VIEWER roles.
+          </p>
         </div>
-      </PermissionGate>
-    </DashboardLayout>
+
+        {loading ? (
+          <SkeletonCard />
+        ) : matrix ? (
+          <RolePermissionMatrix matrix={matrix} />
+        ) : null}
+      </div>
+    </PermissionGate>
   );
 }

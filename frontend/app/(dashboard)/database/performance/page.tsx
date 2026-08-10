@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { Database, Play, RefreshCw, Loader2, AlertCircle } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { PermissionGate } from "@/components/auth/permission-gate";
 import {
   DatabasePerformanceService,
@@ -72,9 +71,8 @@ export default function DatabasePerformancePage() {
   };
 
   return (
-    <DashboardLayout>
-      <PermissionGate>
-        <div className="space-y-8 max-w-6xl mx-auto">
+    <PermissionGate>
+      <div className="space-y-8 max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-800 pb-6">
             <div className="flex items-center space-x-3">
@@ -165,6 +163,5 @@ export default function DatabasePerformancePage() {
           )}
         </div>
       </PermissionGate>
-    </DashboardLayout>
   );
 }

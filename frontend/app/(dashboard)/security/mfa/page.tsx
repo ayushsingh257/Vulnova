@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { ShieldCheck, RefreshCw } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { MFAService, MFAStatusResponse, MFASetupResponse } from "@/services/mfa.service";
 import { MFAStatusCard } from "@/components/security/MFAStatusCard";
 import { MFASetupWizard } from "@/components/security/MFASetupWizard";
@@ -73,8 +72,7 @@ export default function MFADashboardPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-800 pb-6">
           <div className="flex items-center space-x-3">
@@ -192,6 +190,5 @@ export default function MFADashboardPage() {
           />
         )}
       </div>
-    </DashboardLayout>
   );
 }

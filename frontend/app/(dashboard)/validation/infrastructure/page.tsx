@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { ShieldCheck, RefreshCw } from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import {
   InfrastructureValidationService,
   InfrastructureValidationSuiteResponse,
@@ -24,7 +23,7 @@ export default function InfrastructureValidationPage() {
       const data = await InfrastructureValidationService.getResults();
       setSuiteResult(data);
     } catch (err) {
-      console.error("Failed to fetch infrastructure validation results:", err);
+      console.error("Failed to fetch infrastructure security validation results:", err);
     } finally {
       setLoading(false);
     }
@@ -35,81 +34,63 @@ export default function InfrastructureValidationPage() {
   }, []);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-800 pb-6">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 shadow-md">
-              <ShieldCheck className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-white">
-                Infrastructure & Security Configuration Validation
-              </h1>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Automated infrastructure security assertion engine verifying container, cloud, supply chain, and operational controls
-              </p>
-            </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-800 pb-6">
+        <div className="flex items-center space-x-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 shadow-md">
+            <ShieldCheck className="h-6 w-6" />
           </div>
-
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={fetchResults}
-              className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"
-              title="Refresh Results"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-            <InfrastructureValidationRunButton onRunComplete={setSuiteResult} />
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-white">
+              Infrastructure & Cloud Hardening Validation Suite
+            </h1>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Automated assertion engine inspecting TLS 1.3 parameters, HSTS security headers, SSH configurations, and container hosts
+            </p>
           </div>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12 text-zinc-500 text-sm">
-            Evaluating Infrastructure & Security Configuration assertion suite...
-          </div>
-        ) : suiteResult ? (
-          <>
-            {/* Top Pass Rate Card */}
-            <InfrastructurePassRateCard
-              passRate={suiteResult.overall_pass_rate}
-              overallStatus={suiteResult.overall_status}
-              passedCount={suiteResult.passed_categories}
-              failedCount={suiteResult.failed_categories}
-              warningCount={suiteResult.warning_categories}
-              executedAt={suiteResult.executed_at}
-            />
-
-            {/* Infrastructure Category Assertion Grid */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-                  Infrastructure Control Assertion Results (INFRA1 - INFRA10)
-                </h2>
-                <span className="text-xs font-mono text-zinc-400">
-                  Suite ID: {suiteResult.suite_id.slice(0, 8)}...
-                </span>
-              </div>
-
-              <InfrastructureCategoryGrid
-                categories={suiteResult.category_results}
-                onSelectCategory={setSelectedCategory}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-12 text-zinc-500 text-sm">
-            No infrastructure validation results available. Click run above to execute.
-          </div>
-        )}
-
-        {/* Slide-in Detail Modal */}
-        <InfrastructureTestDetailsModal
-          category={selectedCategory}
-          onClose={() => setSelectedCategory(null)}
-        />
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={fetchResults}
+            className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            title="Refresh Results"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+          <InfrastructureValidationRunButton onRunComplete={setSuiteResult} />
+        </div>
       </div>
-    </DashboardLayout>
+
+      {loading ? (
+        <div className="text-center py-12 text-zinc-500 text-sm">
+          Executing Infrastructure Hardening assertion suite...
+        </div>
+      ) : suiteResult ? (
+        <>
+          {/* Top Pass Rate Card */}
+          <InfrastructurePassRateCard
+            passRate={suiteResult.overall_pass_rate}
+            overallStatus={suiteResult.overall_status}
+            passedCount={suiteResult.passed_categories}
+            failedCount={suiteResult.failed_categories}
+            warningCount={suiteResult.warning_categories}
+          />
+
+          {/* Category Cards Grid */}
+          <InfrastructureCategoryGrid
+            categories={suiteResult.category_results}
+            onSelectCategory={setSelectedCategory}
+          />
+        </>
+      ) : null}
+
+      {/* Slide-in Detail Modal */}
+      <InfrastructureTestDetailsModal
+        category={selectedCategory}
+        onClose={() => setSelectedCategory(null)}
+      />
+    </div>
   );
 }

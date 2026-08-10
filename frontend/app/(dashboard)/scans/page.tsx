@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { PermissionGate } from "@/components/auth/permission-gate";
 import { ScanListTable } from "@/components/scans/scan-list-table";
 import { ScanDispatchModal } from "@/components/scans/scan-dispatch-modal";
@@ -59,9 +58,8 @@ export default function ScansPage() {
   }, [loadScans]);
 
   return (
-    <DashboardLayout>
-      <PermissionGate>
-        <div className="flex flex-col gap-6">
+    <PermissionGate>
+      <div className="flex flex-col gap-6">
           {/* Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 pb-4">
             <div>
@@ -123,8 +121,7 @@ export default function ScansPage() {
             onClose={() => setIsModalOpen(false)}
             onScanDispatched={loadScans}
           />
-        </div>
-      </PermissionGate>
-    </DashboardLayout>
+      </div>
+    </PermissionGate>
   );
 }
