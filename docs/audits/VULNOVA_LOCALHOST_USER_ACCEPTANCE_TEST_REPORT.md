@@ -156,7 +156,7 @@ Chrome DevTools console inspection revealed **2 primary client-side warnings/err
 1. **Next.js Date/Time Hydration Warning**:
    - *Error*: `Text content did not match. Server: "2026-08-10T..." Client: "..."`
    - *Root Cause*: Dates rendered inside SSR components (like dashboard charts and scan lists) are computed using `new Date().toISOString()`, causing a mismatch between server pre-rendering and client hydration.
-   - *Impact*: Red toast error overlay appears in development mode (as captured in [vulnova_dashboard_1786338901417.png](file:///C:/Users/Ayush/.gemini/antigravity-ide/brain/abb94145-5698-47c7-b01c-72b6e3c2784a/vulnova_dashboard_1786338901417.png)).
+   - *Impact*: Red toast error overlay appears in development mode (as captured in `vulnova_dashboard.png`).
 
 2. **Missing `/.well-known/security.txt` Route**:
    - *Error*: `GET http://localhost:3000/.well-known/security.txt 404 (Not Found)`
@@ -182,8 +182,8 @@ Chrome DevTools console inspection revealed **2 primary client-side warnings/err
 - **Failed Items**: 4 missing routes (`/schedules`, `/findings`, `/assets`, `/settings`), 1 missing file (`security.txt`), 8 pages missing sidebar layout wrapper, missing `/login` & `/signup` pages.
 
 ### 2. Screenshots Captured
-- [vulnova_homepage_1786338800827.png](file:///C:/Users/Ayush/.gemini/antigravity-ide/brain/abb94145-5698-47c7-b01c-72b6e3c2784a/vulnova_homepage_1786338800827.png) (Public Landing Page)
-- [vulnova_dashboard_1786338901417.png](file:///C:/Users/Ayush/.gemini/antigravity-ide/brain/abb94145-5698-47c7-b01c-72b6e3c2784a/vulnova_dashboard_1786338901417.png) (SOC Analyst Command Dashboard)
+- `vulnova_homepage.png` (Public Landing Page)
+- `vulnova_dashboard.png` (SOC Analyst Command Dashboard)
 
 ---
 

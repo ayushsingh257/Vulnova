@@ -232,46 +232,48 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </div>
                 </div>
 
-                {/* Role Switcher Demo Tool */}
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-2">
-                    Switch Role (Local Testing)
-                  </p>
-                  <div className="grid grid-cols-2 gap-1 text-[11px] font-mono">
-                    <button
-                      onClick={() => handleSwitchRole("OWNER")}
-                      className={`px-2 py-1 rounded text-left transition-colors ${
-                        user.role === "OWNER" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
-                      }`}
-                    >
-                      👑 OWNER
-                    </button>
-                    <button
-                      onClick={() => handleSwitchRole("ADMIN")}
-                      className={`px-2 py-1 rounded text-left transition-colors ${
-                        user.role === "ADMIN" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
-                      }`}
-                    >
-                      🛡️ ADMIN
-                    </button>
-                    <button
-                      onClick={() => handleSwitchRole("SECURITY_ANALYST")}
-                      className={`px-2 py-1 rounded text-left transition-colors ${
-                        user.role === "SECURITY_ANALYST" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
-                      }`}
-                    >
-                      🔍 ANALYST
-                    </button>
-                    <button
-                      onClick={() => handleSwitchRole("VIEWER")}
-                      className={`px-2 py-1 rounded text-left transition-colors ${
-                        user.role === "VIEWER" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
-                      }`}
-                    >
-                      👁️ VIEWER
-                    </button>
+                {/* Role Switcher Demo Tool (Development Only) */}
+                {process.env.NODE_ENV === "development" && (
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-2">
+                      Switch Role (Local Testing)
+                    </p>
+                    <div className="grid grid-cols-2 gap-1 text-[11px] font-mono">
+                      <button
+                        onClick={() => handleSwitchRole("OWNER")}
+                        className={`px-2 py-1 rounded text-left transition-colors ${
+                          user.role === "OWNER" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
+                        }`}
+                      >
+                        👑 OWNER
+                      </button>
+                      <button
+                        onClick={() => handleSwitchRole("ADMIN")}
+                        className={`px-2 py-1 rounded text-left transition-colors ${
+                          user.role === "ADMIN" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
+                        }`}
+                      >
+                        🛡️ ADMIN
+                      </button>
+                      <button
+                        onClick={() => handleSwitchRole("SECURITY_ANALYST")}
+                        className={`px-2 py-1 rounded text-left transition-colors ${
+                          user.role === "SECURITY_ANALYST" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
+                        }`}
+                      >
+                        🔍 ANALYST
+                      </button>
+                      <button
+                        onClick={() => handleSwitchRole("VIEWER")}
+                        className={`px-2 py-1 rounded text-left transition-colors ${
+                          user.role === "VIEWER" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
+                        }`}
+                      >
+                        👁️ VIEWER
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="pt-2 border-t border-zinc-800 space-y-1">
                   {user.role === "OWNER" && (

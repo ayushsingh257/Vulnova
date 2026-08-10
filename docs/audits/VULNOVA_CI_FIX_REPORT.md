@@ -38,8 +38,8 @@ Port `8080` is the intended control plane application port architecture. No prod
 
 | File Path | Change Description |
 | :--- | :--- |
-| [`backend/tests/test_config.py`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/backend/tests/test_config.py) | Updated `assert settings.port == 8000` to `assert settings.port == 8080`. |
-| [`docs/audits/VULNOVA_CI_FIX_REPORT.md`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/docs/audits/VULNOVA_CI_FIX_REPORT.md) | Created CI pipeline failure RCA & resolution report. |
+| `backend/tests/test_config.py` | Updated `assert settings.port == 8000` to `assert settings.port == 8080`. |
+| `docs/audits/VULNOVA_CI_FIX_REPORT.md` | Created CI pipeline failure RCA & resolution report. |
 
 ---
 

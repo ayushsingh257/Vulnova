@@ -190,14 +190,14 @@ All three GitHub Actions pipelines verified green:
 
 The following documentation files were updated and synchronized to reflect Era 10 completion:
 
-- [ARCHITECTURE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/ARCHITECTURE.md) — Section 30 (Security Control Plane Certification Architecture) & Section 31 (MFA Architecture).
-- [DATABASE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/DATABASE.md) — Section 8.20 (Certification Schema Strategy) & Section 8.21 (MFA Schema & Storage Strategy).
-- [SECURITY.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/SECURITY.md) — Section 34 (Certification Controls) & Section 35 (MFA Controls).
-- [API_SPEC.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/API_SPEC.md) — Section U (Certification Endpoints) & Section V (MFA Endpoints).
-- [BRAIN.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/BRAIN.md) — Architecture Decision Entries 48 & 49.
-- [ROADMAP.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/ROADMAP.md) — Marked Era 10 and all Phases 10.1 through 10.11 **Completed ✅**.
-- [README.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/README.md) — Documented Era 10 capabilities, updated status badge to Era 10 Complete, and updated milestone progression.
-- [CHANGELOG.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/CHANGELOG.md) — Comprehensive release notes entries for Phases 10.10 and 10.11.
+- [`ARCHITECTURE.md`](../../ARCHITECTURE.md) — Section 30 (Security Control Plane Certification Architecture) & Section 31 (MFA Architecture).
+- [`DATABASE.md`](../../DATABASE.md) — Section 8.20 (Certification Schema Strategy) & Section 8.21 (MFA Schema & Storage Strategy).
+- [`SECURITY.md`](../../SECURITY.md) — Section 34 (Certification Controls) & Section 35 (MFA Controls).
+- [`API_SPEC.md`](../../API_SPEC.md) — Section U (Certification Endpoints) & Section V (MFA Endpoints).
+- [`BRAIN.md`](../../BRAIN.md) — Architecture Decision Entries 48 & 49.
+- [`ROADMAP.md`](../../ROADMAP.md) — Marked Era 10 and all Phases 10.1 through 10.11 **Completed ✅**.
+- [`README.md`](../../README.md) — Documented Era 10 capabilities, updated status badge to Era 10 Complete, and updated milestone progression.
+- [`CHANGELOG.md`](../../CHANGELOG.md) — Comprehensive release notes entries for Phases 10.10 and 10.11.
 
 ---
 

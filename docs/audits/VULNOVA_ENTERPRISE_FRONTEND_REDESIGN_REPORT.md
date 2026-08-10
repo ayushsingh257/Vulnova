@@ -94,9 +94,9 @@ Incorporate 6 Core Capability Pillars with dark carbon cards, red border highlig
 
 | File Path | Description |
 | :--- | :--- |
-| [`frontend/components/ui/dot-pattern-1.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/components/ui/dot-pattern-1.tsx) | SVG DotPattern component using `useId` and `cn` for quote background grid. |
-| [`frontend/components/ui/feature-service.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/components/ui/feature-service.tsx) | FeatureServices component adapted to Vulnova black & red enterprise theme. |
-| [`frontend/lib/utils.ts`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/lib/utils.ts) | Classnames helper combining `clsx` and `tailwind-merge`. |
+| `frontend/components/ui/dot-pattern-1.tsx` | SVG DotPattern component using `useId` and `cn` for quote background grid. |
+| `frontend/components/ui/feature-service.tsx` | FeatureServices component adapted to Vulnova black & red enterprise theme. |
+| `frontend/lib/utils.ts` | Classnames helper combining `clsx` and `tailwind-merge`. |
 
 ---
 

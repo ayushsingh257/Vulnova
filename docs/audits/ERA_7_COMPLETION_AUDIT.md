@@ -188,14 +188,14 @@ All 8 mandatory core engineering documentation files have been updated and synch
 
 | Document Name | Synchronization Summary | Status |
 |:---|:---|:---:|
-| [BRAIN.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/BRAIN.md) | Added Entries 26–31 documenting Era 7 phase architectures, safeguards, and control planes. | ✅ |
-| [CHANGELOG.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/CHANGELOG.md) | Recorded all Era 7 phase additions (Phases 7.1 to 7.6) under `[Unreleased] -> Added`. | ✅ |
-| [ROADMAP.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/ROADMAP.md) | Marked Phases 7.1 to 7.6 ✅ Completed and closed Era 7 milestone. | ✅ |
-| [ARCHITECTURE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/ARCHITECTURE.md) | Added Sections 11–14 documenting SOC dashboard, scan portal, vulnerability workspace, and admin control plane. | ✅ |
-| [DATABASE.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/DATABASE.md) | Added Sections 4–7 documenting Redis caches, snapshot tables, scan portal index usage, and table reuse. | ✅ |
-| [SECURITY.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/SECURITY.md) | Added Sections 15–18 detailing trust center controls, executive export rate limits, evidence protection, and admin RBAC. | ✅ |
-| [API_SPEC.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/API_SPEC.md) | Documented dashboard, public trust, vulnerability intelligence, and Section F admin REST API endpoints. | ✅ |
-| [README.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/README.md) | Updated status badge to `Era 7 Complete` and added verified platform capabilities matrix. | ✅ |
+| [`BRAIN.md`](../../BRAIN.md) | Added Entries 26–31 documenting Era 7 phase architectures, safeguards, and control planes. | ✅ |
+| [`CHANGELOG.md`](../../CHANGELOG.md) | Recorded all Era 7 phase additions (Phases 7.1 to 7.6) under `[Unreleased] -> Added`. | ✅ |
+| [`ROADMAP.md`](../../ROADMAP.md) | Marked Phases 7.1 to 7.6 ✅ Completed and closed Era 7 milestone. | ✅ |
+| [`ARCHITECTURE.md`](../../ARCHITECTURE.md) | Added Sections 11–14 documenting SOC dashboard, scan portal, vulnerability workspace, and admin control plane. | ✅ |
+| [`DATABASE.md`](../../DATABASE.md) | Added Sections 4–7 documenting Redis caches, snapshot tables, scan portal index usage, and table reuse. | ✅ |
+| [`SECURITY.md`](../../SECURITY.md) | Added Sections 15–18 detailing trust center controls, executive export rate limits, evidence protection, and admin RBAC. | ✅ |
+| [`API_SPEC.md`](../../API_SPEC.md) | Documented dashboard, public trust, vulnerability intelligence, and Section F admin REST API endpoints. | ✅ |
+| [`README.md`](../../README.md) | Updated status badge to `Era 7 Complete` and added verified platform capabilities matrix. | ✅ |
 
 ---
 

@@ -137,9 +137,14 @@ export function getCurrentUser(): UserProfile {
 
 /**
  * Set active role for local testing and store in localStorage.
+ * Role switching is strictly disabled in production builds (NODE_ENV === 'production').
  */
 export function setCurrentRole(role: UserRole): UserProfile {
   const current = getCurrentUser();
+  if (process.env.NODE_ENV === "production") {
+    console.warn("Role switching is disabled in production mode.");
+    return current;
+  }
   const updated: UserProfile = {
     ...current,
     role,

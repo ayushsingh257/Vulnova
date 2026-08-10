@@ -72,16 +72,16 @@ Vulnova enforces a 4-tier hierarchical Role-Based Access Control (RBAC) model ac
 
 | File Path | Component / Page | Description |
 | :--- | :--- | :--- |
-| [`frontend/lib/auth.ts`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/lib/auth.ts) | Role Engine | Defines `UserRole`, `ROLE_PERMISSIONS`, and `isRouteAllowed()` route authorization rules. |
-| [`frontend/components/auth/permission-gate.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/components/auth/permission-gate.tsx) | Permission Gate | Client-side authorization wrapper rendering **`403 — Access Forbidden`** for unauthorized roles. |
-| [`frontend/components/ui/skeleton.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/components/ui/skeleton.tsx) | UI Skeletons | Reusable `<SkeletonCard>` and `<SkeletonTable>` loaders for instant visual feedback. |
-| [`frontend/app/(dashboard)/admin/page.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/app/(dashboard)/admin/page.tsx) | Platform Admin | Dedicated multi-tenant organization & control plane experience for `OWNER` role. |
-| [`frontend/components/dashboard/dashboard-layout.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/components/dashboard/dashboard-layout.tsx) | Dynamic Layout | Renders permission-filtered navigation and interactive Role Switcher dropdown. |
-| [`frontend/app/(dashboard)/settings/users/page.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/app/(dashboard)/settings/users/page.tsx) | User Settings | Protected with `<PermissionGate>` and `<DashboardLayout>`. |
-| [`frontend/app/(dashboard)/settings/roles/page.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/app/(dashboard)/settings/roles/page.tsx) | Role Matrix | Protected with `<PermissionGate>` and `<DashboardLayout>`. |
-| [`frontend/app/(dashboard)/settings/secrets/page.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/app/(dashboard)/settings/secrets/page.tsx) | Secrets Vault | Protected with `<PermissionGate>` and `<DashboardLayout>`. |
-| [`frontend/app/(dashboard)/database/performance/page.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/app/(dashboard)/database/performance/page.tsx) | DB Performance | Protected with `<PermissionGate>` and `<DashboardLayout>`. |
-| [`frontend/services/owasp_validation.service.ts`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/services/owasp_validation.service.ts) | Service Fallback | Added robust fallback test result payload for zero broken UI screens. |
+| `frontend/lib/auth.ts` | Role Engine | Defines `UserRole`, `ROLE_PERMISSIONS`, and `isRouteAllowed()` route authorization rules. |
+| `frontend/components/auth/permission-gate.tsx` | Permission Gate | Client-side authorization wrapper rendering **`403 — Access Forbidden`** for unauthorized roles. |
+| `frontend/components/ui/skeleton.tsx` | UI Skeletons | Reusable `<SkeletonCard>` and `<SkeletonTable>` loaders for instant visual feedback. |
+| `frontend/app/(dashboard)/admin/page.tsx` | Platform Admin | Dedicated multi-tenant organization & control plane experience for `OWNER` role. |
+| `frontend/components/dashboard/dashboard-layout.tsx` | Dynamic Layout | Renders permission-filtered navigation and interactive Role Switcher dropdown. |
+| `frontend/app/(dashboard)/settings/users/page.tsx` | User Settings | Protected with `<PermissionGate>` and `<DashboardLayout>`. |
+| `frontend/app/(dashboard)/settings/roles/page.tsx` | Role Matrix | Protected with `<PermissionGate>` and `<DashboardLayout>`. |
+| `frontend/app/(dashboard)/settings/secrets/page.tsx` | Secrets Vault | Protected with `<PermissionGate>` and `<DashboardLayout>`. |
+| `frontend/app/(dashboard)/database/performance/page.tsx` | DB Performance | Protected with `<PermissionGate>` and `<DashboardLayout>`. |
+| `frontend/services/owasp_validation.service.ts` | Service Fallback | Added robust fallback test result payload for zero broken UI screens. |
 
 ---
 

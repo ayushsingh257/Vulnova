@@ -67,8 +67,8 @@ Replaced with a product-focused enterprise section:
 
 | File Path | Change Type | Summary |
 | :--- | :--- | :--- |
-| [`frontend/app/page.tsx`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/frontend/app/page.tsx) | Modified | Replaced tech stack disclosure section with Enterprise Security Architecture capability cards. |
-| [`docs/audits/VULNOVA_PUBLIC_WEBSITE_CONTENT_REFINEMENT_REPORT.md`](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/docs/audits/VULNOVA_PUBLIC_WEBSITE_CONTENT_REFINEMENT_REPORT.md) | Created | Official content refinement report. |
+| `frontend/app/page.tsx` | Modified | Replaced tech stack disclosure section with Enterprise Security Architecture capability cards. |
+| `docs/audits/VULNOVA_PUBLIC_WEBSITE_CONTENT_REFINEMENT_REPORT.md` | Created | Official content refinement report. |
 
 ---
 

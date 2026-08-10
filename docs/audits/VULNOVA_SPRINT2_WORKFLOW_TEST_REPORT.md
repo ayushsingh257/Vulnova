@@ -4,7 +4,7 @@
 **Environment**: Localhost Production Simulation (`http://localhost:3000` & `http://localhost:8080`)  
 **Assumed Roles**: Enterprise QA Engineer, SOC Platform Tester, Security Operations Specialist  
 **Testing Methodology**: Full-Stack User Journey Tracing (User Action $\rightarrow$ Frontend Request $\rightarrow$ Backend API $\rightarrow$ Database State Change $\rightarrow$ UI Update $\rightarrow$ Error Handling Verification).  
-**Pre-Condition Status**: 🟢 **BOOT ISSUE RESOLVED & VERIFIED** (See [VULNOVA_SPRINT2_BOOT_RCA.md](file:///c:/Users/Ayush/OneDrive/Desktop/Projects/Vulnova/docs/audits/VULNOVA_SPRINT2_BOOT_RCA.md))
+**Pre-Condition Status**: 🟢 **BOOT ISSUE RESOLVED & VERIFIED** (See [VULNOVA_SPRINT2_BOOT_RCA.md](./VULNOVA_SPRINT2_BOOT_RCA.md))
 
 ---
 
