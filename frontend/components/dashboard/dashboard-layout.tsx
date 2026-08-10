@@ -26,9 +26,14 @@ import {
   ChevronDown,
   Menu,
   X,
-  Home,
   ChevronRight,
+  Building2,
+  Lock,
+  Users,
+  Shield,
+  Eye,
 } from "lucide-react";
+import { getCurrentUser, setCurrentRole, UserRole, UserProfile } from "@/lib/auth";
 
 export interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -37,9 +42,20 @@ export interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [user, setUser] = React.useState<UserProfile>({
+    email: "analyst@enterprise-corp.com",
+    role: "SECURITY_ANALYST",
+    organization: "Acme Corp Enterprise",
+    organizationId: "org-acme-001",
+    permissions: [],
+  });
   const [userDropdownOpen, setUserDropdownOpen] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    setUser(getCurrentUser());
+  }, []);
 
   // Close dropdown on click outside
   React.useEffect(() => {
@@ -59,6 +75,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
     setUserDropdownOpen(false);
     router.push("/login");
+  };
+
+  const handleSwitchRole = (newRole: UserRole) => {
+    const updated = setCurrentRole(newRole);
+    setUser(updated);
+    setUserDropdownOpen(false);
+    router.refresh();
   };
 
   const isActive = (path: string) => {
@@ -82,47 +105,57 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return crumbs;
   };
 
-  const navGroups = [
+  // Define full navigation items with role requirements
+  const allNavGroups = [
     {
-      title: "Operations Control",
+      title: "SOC Operations",
       items: [
-        { label: "SOC Dashboard", href: "/dashboard", icon: Activity },
-        { label: "Active Scans", href: "/scans", icon: Radio },
-        { label: "Scan Schedules", href: "/schedules", icon: Calendar },
-        { label: "Integrations", href: "/integrations", icon: Link2 },
-        { label: "Notifications", href: "/notifications", icon: Bell },
+        { label: "SOC Dashboard", href: "/dashboard", icon: Activity, roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Active Scans", href: "/scans", icon: Radio, roles: ["OWNER", "ADMIN", "SECURITY_ANALYST"] },
+        { label: "Scan Schedules", href: "/schedules", icon: Calendar, roles: ["OWNER", "ADMIN", "SECURITY_ANALYST"] },
+        { label: "Notifications", href: "/notifications", icon: Bell, roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
       ],
     },
     {
-      title: "Intelligence & Assets",
+      title: "Security Intelligence & Assets",
       items: [
-        { label: "Vulnerabilities", href: "/findings", icon: ShieldAlert },
-        { label: "Asset Inventory", href: "/assets", icon: Layers },
-        { label: "Executive Reports", href: "/reports", icon: FileText },
-        { label: "Compliance Frameworks", href: "/compliance", icon: ShieldCheck },
-        { label: "OWASP Validation", href: "/validation/owasp", icon: ShieldCheck, color: "text-purple-400" },
-        { label: "API Security Validation", href: "/validation/api-security", icon: Server, color: "text-blue-400" },
-        { label: "Infrastructure Validation", href: "/validation/infrastructure", icon: ShieldCheck, color: "text-emerald-400" },
-        { label: "Penetration Testing", href: "/validation/pentest", icon: ShieldAlert, color: "text-red-400" },
-        { label: "Dependency Security (SCA)", href: "/validation/sca", icon: PackageCheck, color: "text-blue-400" },
-        { label: "Container Security", href: "/validation/container", icon: Boxes, color: "text-cyan-400" },
-        { label: "Secrets & Cryptography", href: "/validation/secrets", icon: KeyRound, color: "text-purple-400" },
-        { label: "Threat Model & STRIDE", href: "/validation/threat", icon: ShieldCheck, color: "text-orange-400" },
-        { label: "Automated Regression", href: "/validation/regression", icon: ShieldAlert, color: "text-teal-400" },
-        { label: "Security Certification", href: "/validation/certification", icon: Award, color: "text-amber-400" },
+        { label: "Findings & Vulnerabilities", href: "/findings", icon: ShieldAlert, roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Asset Inventory", href: "/assets", icon: Layers, roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Executive Reports", href: "/reports", icon: FileText, roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Compliance Frameworks", href: "/compliance", icon: ShieldCheck, roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "OWASP Validation", href: "/validation/owasp", icon: ShieldCheck, color: "text-purple-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "API Security", href: "/validation/api-security", icon: Server, color: "text-blue-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Infrastructure Validation", href: "/validation/infrastructure", icon: ShieldCheck, color: "text-emerald-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Penetration Testing", href: "/validation/pentest", icon: ShieldAlert, color: "text-red-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST"] },
+        { label: "Dependency Security (SCA)", href: "/validation/sca", icon: PackageCheck, color: "text-blue-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Container Security", href: "/validation/container", icon: Boxes, color: "text-cyan-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Secrets Audit", href: "/validation/secrets", icon: KeyRound, color: "text-purple-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Threat Model & STRIDE", href: "/validation/threat", icon: ShieldCheck, color: "text-orange-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Automated Regression", href: "/validation/regression", icon: ShieldAlert, color: "text-teal-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
+        { label: "Security Certification", href: "/validation/certification", icon: Award, color: "text-amber-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST", "VIEWER"] },
       ],
     },
     {
-      title: "Admin & Infrastructure",
+      title: "Admin & Governance",
       items: [
-        { label: "Database Performance", href: "/database/performance", icon: Database, color: "text-cyan-400" },
-        { label: "Multi-Factor Auth", href: "/security/mfa", icon: KeyRound, color: "text-amber-400" },
-        { label: "Evidence Quarantine", href: "/security/quarantine", icon: ShieldAlert, color: "text-cyan-400" },
-        { label: "Enterprise Secrets Vault", href: "/settings/secrets", icon: KeyRound, color: "text-emerald-400" },
-        { label: "Settings", href: "/settings", icon: Settings },
+        { label: "Platform Control Plane", href: "/admin", icon: Building2, color: "text-red-400", roles: ["OWNER"] },
+        { label: "User Management", href: "/settings/users", icon: Users, color: "text-zinc-300", roles: ["OWNER", "ADMIN"] },
+        { label: "Integrations", href: "/integrations", icon: Link2, roles: ["OWNER", "ADMIN"] },
+        { label: "Multi-Factor Auth", href: "/security/mfa", icon: KeyRound, color: "text-amber-400", roles: ["OWNER", "ADMIN"] },
+        { label: "Evidence Quarantine", href: "/security/quarantine", icon: ShieldAlert, color: "text-cyan-400", roles: ["OWNER", "ADMIN", "SECURITY_ANALYST"] },
+        { label: "Enterprise Secrets Vault", href: "/settings/secrets", icon: KeyRound, color: "text-emerald-400", roles: ["OWNER", "ADMIN"] },
+        { label: "Settings", href: "/settings", icon: Settings, roles: ["OWNER", "ADMIN"] },
       ],
     },
   ];
+
+  // Filter navigation items dynamically based on active user role
+  const filteredNavGroups = allNavGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.roles.includes(user.role)),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-red-500/30 flex flex-col">
@@ -142,8 +175,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
             <div>
               <span className="text-lg font-extrabold tracking-wider text-white">VULNOVA</span>
-              <span className="ml-2 rounded-full border border-red-500/30 bg-red-950/40 px-2 py-0.5 text-[10px] font-semibold text-red-400">
-                SOC ENTERPRISE
+              <span className="ml-2 rounded-full border border-red-500/30 bg-red-950/40 px-2 py-0.5 text-[10px] font-semibold text-red-400 font-mono">
+                {user.role}
               </span>
             </div>
           </Link>
@@ -171,56 +204,102 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-zinc-950" />
           </Link>
 
-          {/* User Profile Dropdown Menu */}
+          {/* User Profile & Role Switcher Dropdown */}
           <div className="relative border-l border-zinc-800 pl-4" ref={dropdownRef}>
             <button
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
               className="flex items-center space-x-3 p-1 rounded-lg hover:bg-zinc-900 transition-colors focus:outline-none"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 font-bold text-xs">
-                SA
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-950 border border-red-800/60 text-red-400 font-bold text-xs">
+                {user.role.substring(0, 2)}
               </div>
               <div className="hidden md:block text-left text-xs">
                 <div className="font-semibold text-zinc-200 flex items-center">
-                  <span>Security Analyst</span>
+                  <span>{user.email.split("@")[0]}</span>
                   <ChevronDown className="ml-1 h-3 w-3 text-zinc-400" />
                 </div>
-                <div className="text-[10px] text-zinc-400">Acme Corp Enterprise</div>
+                <div className="text-[10px] text-zinc-400">{user.organization}</div>
               </div>
             </button>
 
             {userDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                <div className="px-3 py-2 border-b border-zinc-800 mb-1">
-                  <p className="text-xs font-semibold text-zinc-200">Security Analyst</p>
-                  <p className="text-[11px] text-zinc-400 font-mono">analyst@acme-corp.com</p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-800/40 text-[10px] font-bold">
-                    ROLE: ADMIN
-                  </span>
+              <div className="absolute right-0 mt-2 w-64 rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl p-3 z-50 animate-in fade-in slide-in-from-top-2 space-y-3">
+                <div className="px-2 py-1.5 border-b border-zinc-800">
+                  <p className="text-xs font-semibold text-zinc-200">{user.email}</p>
+                  <p className="text-[10px] text-zinc-400 font-mono mt-0.5">{user.organization}</p>
+                  <div className="mt-1.5 inline-block px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-800/40 text-[10px] font-bold font-mono">
+                    ACTIVE ROLE: {user.role}
+                  </div>
                 </div>
-                <Link
-                  href="/settings/organization"
-                  onClick={() => setUserDropdownOpen(false)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
-                >
-                  <User className="h-4 w-4 text-zinc-400" />
-                  <span>Profile & Account</span>
-                </Link>
-                <Link
-                  href="/settings"
-                  onClick={() => setUserDropdownOpen(false)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
-                >
-                  <Settings className="h-4 w-4 text-zinc-400" />
-                  <span>Enterprise Settings</span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-xs text-red-400 hover:bg-red-950/50 transition-colors border-t border-zinc-800 mt-1"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign Out</span>
-                </button>
+
+                {/* Role Switcher Demo Tool */}
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-2">
+                    Switch Role (Local Testing)
+                  </p>
+                  <div className="grid grid-cols-2 gap-1 text-[11px] font-mono">
+                    <button
+                      onClick={() => handleSwitchRole("OWNER")}
+                      className={`px-2 py-1 rounded text-left transition-colors ${
+                        user.role === "OWNER" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
+                      }`}
+                    >
+                      👑 OWNER
+                    </button>
+                    <button
+                      onClick={() => handleSwitchRole("ADMIN")}
+                      className={`px-2 py-1 rounded text-left transition-colors ${
+                        user.role === "ADMIN" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
+                      }`}
+                    >
+                      🛡️ ADMIN
+                    </button>
+                    <button
+                      onClick={() => handleSwitchRole("SECURITY_ANALYST")}
+                      className={`px-2 py-1 rounded text-left transition-colors ${
+                        user.role === "SECURITY_ANALYST" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
+                      }`}
+                    >
+                      🔍 ANALYST
+                    </button>
+                    <button
+                      onClick={() => handleSwitchRole("VIEWER")}
+                      className={`px-2 py-1 rounded text-left transition-colors ${
+                        user.role === "VIEWER" ? "bg-red-950 text-red-400 font-bold border border-red-800/60" : "hover:bg-zinc-800 text-zinc-300"
+                      }`}
+                    >
+                      👁️ VIEWER
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-zinc-800 space-y-1">
+                  {user.role === "OWNER" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center space-x-2 px-2 py-1.5 rounded-lg text-xs text-red-400 hover:bg-red-950/50 transition-colors font-bold"
+                    >
+                      <Building2 className="h-4 w-4" />
+                      <span>Platform Control Plane</span>
+                    </Link>
+                  )}
+                  <Link
+                    href="/settings"
+                    onClick={() => setUserDropdownOpen(false)}
+                    className="flex items-center space-x-2 px-2 py-1.5 rounded-lg text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
+                  >
+                    <Settings className="h-4 w-4 text-zinc-400" />
+                    <span>Workspace Settings</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center space-x-2 px-2 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -229,13 +308,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Main Container */}
       <div className="flex flex-1">
-        {/* Sidebar Navigation (Desktop & Mobile) */}
+        {/* Sidebar Navigation (Dynamically Role-Filtered) */}
         <aside
           className={`${
             mobileMenuOpen ? "block" : "hidden"
           } lg:block w-64 flex-col border-r border-zinc-800/80 bg-zinc-950/60 p-4 space-y-6 min-h-[calc(100vh-57px)] shrink-0`}
         >
-          {navGroups.map((group, idx) => (
+          {filteredNavGroups.map((group, idx) => (
             <div key={idx} className="space-y-1">
               <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-2">
                 {group.title}
@@ -289,7 +368,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Footer */}
       <footer className="border-t border-zinc-800/80 bg-zinc-950/80 px-6 py-4 text-center text-xs text-zinc-500 flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto">
         <div className="flex items-center space-x-2">
-          <span>Vulnova Enterprise Security Platform v1.0.0</span>
+          <span>Vulnova Enterprise Security Platform v1.0.1</span>
           <span className="text-zinc-700">•</span>
           <span className="text-emerald-500 font-mono">SOC 2 TYPE II CERTIFIED</span>
         </div>
