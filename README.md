@@ -42,6 +42,42 @@ Traditional Dynamic Application Security Testing (DAST) scanners suffer from fun
 
 ---
 
+## 👥 2.1 Enterprise User Role Model & Access Governance
+
+Vulnova enforces a strict hierarchical Role-Based Access Control (RBAC) model across all backend APIs and frontend routes:
+
+```
+                  ┌────────────────────────┐
+                  │      👑 OWNER          │  Platform-Level Administrator (Platform Control Plane, Tenant Management)
+                  └───────────┬────────────┘
+                              │
+                  ┌───────────▼────────────┐
+                  │      🛡️ ADMIN          │  Organization Administrator (User Management, Org Settings, Integrations)
+                  └───────────┬────────────┘
+                              │
+                  ┌───────────▼────────────┐
+                  │   🔍 SECURITY_ANALYST  │  SOC Operator (Findings, Assets, Scans, Schedules, Reports, Validation)
+                  └───────────┬────────────┘
+                              │
+                  ┌───────────▼────────────┐
+                  │      👁️ VIEWER         │  Read-Only Security Auditor (Dashboard, Findings View, Reports View)
+                  └────────────────────────┘
+```
+
+### Role Capabilities & Boundaries Matrix
+
+| Role | Access Scope | Key Capabilities | Restricted Boundaries |
+|---|---|---|---|
+| **👑 OWNER** | Platform-Wide | Tenant creation & organization governance, global platform settings, database telemetry, platform audit logs (`/admin`). | None. Highest authority. |
+| **🛡️ ADMIN** | Organization-Wide | Team user lifecycle (invites, role assignments), organization settings, API keys, Jira/GitHub integrations, MFA configuration. | Cannot access `/admin` platform control plane. |
+| **🔍 SECURITY_ANALYST** | SOC Operations | Dispatch scans, schedule assessments, triage findings, trigger AI remediation, access all 10 security validation suites, generate executive reports. | Cannot manage organization users, secrets vault, or platform admin. |
+| **👁️ VIEWER** | Read-Only | View SOC dashboard, browse vulnerability findings, view asset inventory, review executive reports & compliance postures. | Read-only. Cannot dispatch scans, modify settings, or triage findings. |
+
+> [!NOTE]
+> **Production Access Security**: In production deployments (`NODE_ENV=production`), role authority is strictly derived from verified backend database records and signed JWT tokens. Client-side role switching is completely disabled and stripped from the production build.
+
+---
+
 ## 🚀 3. Core Capabilities
 
 ### 🔐 Enterprise Identity & Access Management
@@ -422,10 +458,10 @@ pytest tests/ -v
 | Gate / Metric | Result | Details |
 |---|---|---|
 | **Backend Integration Tests** | ✅ **733 / 733 Passed** | 100% pass rate across 79 test modules |
-| **Frontend Route Health** | ✅ **41 / 41 Verified** | All public, dashboard, and validation routes verified |
+| **Frontend Route Health** | ✅ **42 / 42 Verified** | All public, dashboard, settings, and validation routes verified |
 | **Frontend Type Checking** | ✅ **0 Errors** | `tsc --noEmit` passed clean |
 | **Frontend ESLint** | ✅ **0 Errors** | `next lint` passed clean |
-| **Production Build** | ✅ **Successful** | Next.js standalone static pages generated (41/41) |
+| **Production Build** | ✅ **Successful** | Next.js standalone static pages generated (42/42) |
 | **CI/CD Pipeline** | ✅ **GitHub Actions Green** | All automated monorepo workflows passing |
 | **Security Audit** | ✅ **Completed** | Full-stack OWASP Top 10 & penetration review complete |
 
