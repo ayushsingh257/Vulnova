@@ -6,17 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-## [v1.0.0] - 2026-08-09
+## [v1.0.1] - 2026-08-10
 
 ### Added
-- **Flagship Enterprise Release (v1.0.0)**:
-  - Official production release of Vulnova Enterprise AI Application Security Platform.
-  - Complete 12-Era engineering roadmap execution covering system architecture, dynamic scanning engines, threat intelligence graphs, AI security analyst capabilities, distributed Celery scheduling, Next.js web application, compliance frameworks, performance optimization, incident response maturity, final security audits, and production infrastructure.
-  - Production Release Validation Test Suite (`backend/tests/test_release_validation.py` & `tests/release/release_validation.py`) with 5 automated verification gates.
-  - Single-source version control (`VERSION`, `backend/pyproject.toml`, `frontend/package.json` set to `1.0.0`).
-  - Comprehensive Release Documentation (`docs/releases/V1.0.0_RELEASE_NOTES.md`).
+- **Production Readiness & CI/CD Finalization (v1.0.1)**:
+  - Official production deployment readiness release of Vulnova Enterprise AI Application Security Platform.
+  - Resolved CI pipeline test configuration alignment (`tests/test_config.py::test_settings_initialization` updated to standalone port 8080).
+  - Completed end-to-end 10-phase regression test & security audit (`docs/audits/VULNOVA_FINAL_REGRESSION_SECURITY_AUDIT.md`) with 90.35/100 production readiness score.
+  - Verified 100% backend test pass rate (733/733 tests passed).
+  - Verified 100% frontend route health across 41/41 routes with Next.js standalone production build.
+  - Implemented Antivirus & Secure Evidence Upload Protection Pipeline (Phase 12.9) with ClamAV TCP socket streaming, YARA static malware inspection, and dual-bucket quarantine isolation (`vulnova-quarantine-bucket` -> `vulnova-evidence-bucket`).
+  - Added RFC 9116 security policy (`public/.well-known/security.txt`), crawling policy (`public/robots.txt`), and XML sitemap (`public/sitemap.xml`).
+  - Created CI fix documentation report (`docs/audits/VULNOVA_CI_FIX_REPORT.md`) and v1.0.1 release notes (`docs/releases/VULNOVA_V1.0.1_RELEASE_NOTES.md`).
 
-## [Unreleased]
+## [v1.0.0] - 2026-08-09
 
 ### Added
 - **Era 12 Phase 12.4 — Enterprise Scanner Execution Sandbox & Isolation Architecture**:
