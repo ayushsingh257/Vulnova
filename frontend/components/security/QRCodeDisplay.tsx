@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { Copy, Check, QrCode } from "lucide-react";
 
 interface QRCodeDisplayProps {
@@ -30,9 +31,12 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
 
       {/* QR Code Image */}
       <div className="p-3 bg-white rounded-xl shadow-lg border border-zinc-200">
-        <img
+        <Image
           src={qrCodeBase64}
           alt="MFA QR Code"
+          width={176}
+          height={176}
+          unoptimized
           className="h-44 w-44 object-contain"
         />
       </div>

@@ -32,15 +32,15 @@ export function SecretsVaultPanel({ token, userRole = "ADMIN" }: SecretsVaultPan
   const [plaintextValue, setPlaintextValue] = useState("");
   const [rotationDays, setRotationDays] = useState(90);
 
-  const getAuthToken = () => {
+  const getAuthToken = React.useCallback(() => {
     if (token) return token;
     if (typeof window !== "undefined") {
       return localStorage.getItem("token") || undefined;
     }
     return undefined;
-  };
+  }, [token]);
 
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -58,11 +58,11 @@ export function SecretsVaultPanel({ token, userRole = "ADMIN" }: SecretsVaultPan
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAuthToken]);
 
   useEffect(() => {
     loadData();
-  }, [token]);
+  }, [loadData]);
 
   const handleCreateSecret = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -25,15 +25,15 @@ export function EvidenceSecurityPanel({
   const [uploadResult, setUploadResult] = useState<EvidenceUploadResponseDTO | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const getAuthToken = () => {
+  const getAuthToken = React.useCallback(() => {
     if (token) return token;
     if (typeof window !== "undefined") {
       return localStorage.getItem("token") || undefined;
     }
     return undefined;
-  };
+  }, [token]);
 
-  const loadDashboard = async () => {
+  const loadDashboard = React.useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -44,11 +44,11 @@ export function EvidenceSecurityPanel({
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAuthToken]);
 
   useEffect(() => {
     loadDashboard();
-  }, [token]);
+  }, [loadDashboard]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
