@@ -19,7 +19,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Set database URL dynamically from Pydantic settings
-config.set_main_option("sqlalchemy.url", settings.database_url)
+config.set_main_option("sqlalchemy.url", settings.effective_database_url)
 
 target_metadata = Base.metadata
 
@@ -57,10 +57,31 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_async_migrations() -> None:
     """Run migrations in 'online' mode using async engine."""
+    db_url = settings.effective_database_url
+    connect_args = {}
+    if ":6543" in db_url or "pooler.supabase.com" in db_url or "pgbouncer" in db_url:
+        connect_args["statement_cache_size"] = 0
+        connect_args["prepared_statement_cache_size"] = 0
+    is_remote = any(
+        host_indicator in db_url
+        for host_indicator in (
+            "supabase.co",
+            "supabase.com",
+            "pooler.supabase",
+            ".amazonaws.com",
+            ".azure.com",
+        )
+    )
+    if settings.db_ssl_mode == "require" or (
+        is_remote and settings.db_ssl_mode != "disable"
+    ):
+        connect_args["ssl"] = "require"
+
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args if connect_args else None,
     )
 
     async with connectable.connect() as connection:

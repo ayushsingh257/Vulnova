@@ -31,7 +31,25 @@ Vulnova's production deployment supports both single-host Docker Compose and mul
 
 ---
 
-## 2. Docker Compose Production Deployment
+## 2. Production Database Architecture & Supabase Integration
+
+Vulnova supports **Supabase-Managed PostgreSQL** as the primary zero-ops database provider in production:
+- **Transaction Pooling (Port 6543)**: Ideal for containerized, horizontally autoscaled backend and Celery workers with transaction-level connection reuse (`statement_cache_size=0`).
+- **Session Pooling / Direct (Port 5432)**: For Alembic migrations, database maintenance, and long-running sessions.
+- **Reproducible Schema & Migrations**: Initialize any clean Supabase instance using `alembic upgrade head` from `backend/`.
+
+### Supabase Connection Configuration:
+```bash
+# In .env.production:
+SUPABASE_DATABASE_URL=postgresql+asyncpg://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
+DB_SSL_MODE=require
+DB_POOL_SIZE=20
+DB_MAX_OVERFLOW=10
+```
+
+---
+
+## 3. Docker Compose Production Deployment
 
 ### Quick Start
 Single-command production deployment:
@@ -39,7 +57,7 @@ Single-command production deployment:
 # 1. Copy environment template
 cp .env.production.example .env.production
 
-# 2. Configure production secrets in .env.production
+# 2. Configure production secrets in .env.production (including SUPABASE_DATABASE_URL)
 nano .env.production
 
 # 3. Validate Compose file syntax

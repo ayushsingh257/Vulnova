@@ -1,4 +1,4 @@
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator, Dict
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
@@ -10,22 +10,55 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.config import settings
 
-# Production-Grade SQLAlchemy 2.0 Async Engine with Optimized Connection Pooling
-# Rationale:
-# - pool_size=20: Allocates baseline pool of persistent connections for low-latency request handling.
-# - max_overflow=10: Permits burst capacity during high-concurrency traffic spikes (total max 30).
-# - pool_timeout=30: Enforces a 30s timeout before raising PoolTimeoutException during saturation.
-# - pool_recycle=1800: Recycles connections every 30 mins to prevent stale PostgreSQL socket drops.
-# - pool_pre_ping=True: Executes lightweight test ping before checkout to recover broken connections.
+
+def _build_engine_kwargs() -> Dict[str, Any]:
+    """Build production-grade connection arguments for SQLAlchemy 2.0 AsyncEngine."""
+    db_url = settings.effective_database_url
+    connect_args: Dict[str, Any] = {}
+
+    # Supabase Transaction Pooler (Port 6543 / PgBouncer / Supavisor) compatibility:
+    # Transaction poolers do not support named prepared statements across pooled sessions.
+    # Disabling statement cache allows seamless operation with Supabase port 6543.
+    if ":6543" in db_url or "pooler.supabase.com" in db_url or "pgbouncer" in db_url:
+        connect_args["statement_cache_size"] = 0
+        connect_args["prepared_statement_cache_size"] = 0
+
+    # Handle SSL configuration for remote cloud endpoints (e.g. Supabase Managed PostgreSQL)
+    is_remote = any(
+        host_indicator in db_url
+        for host_indicator in (
+            "supabase.co",
+            "supabase.com",
+            "pooler.supabase",
+            ".amazonaws.com",
+            ".azure.com",
+        )
+    )
+    if settings.db_ssl_mode == "require" or (
+        is_remote and settings.db_ssl_mode != "disable"
+    ):
+        connect_args["ssl"] = "require"
+
+    engine_kwargs: Dict[str, Any] = {
+        "echo": False,
+        "future": True,
+        "pool_size": settings.db_pool_size,
+        "max_overflow": settings.db_max_overflow,
+        "pool_timeout": settings.db_pool_timeout,
+        "pool_recycle": settings.db_pool_recycle,
+        "pool_pre_ping": settings.db_pool_pre_ping,
+    }
+
+    if connect_args:
+        engine_kwargs["connect_args"] = connect_args
+
+    return engine_kwargs
+
+
+# Production-Grade SQLAlchemy 2.0 Async Engine with Supabase Managed PostgreSQL Support
 async_engine: AsyncEngine = create_async_engine(
-    settings.database_url,
-    echo=False,
-    future=True,
-    pool_size=20,
-    max_overflow=10,
-    pool_timeout=30,
-    pool_recycle=1800,
-    pool_pre_ping=True,
+    settings.effective_database_url,
+    **_build_engine_kwargs(),
 )
 
 # Async Session Factory

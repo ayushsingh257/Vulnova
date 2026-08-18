@@ -14,10 +14,25 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"  # noqa: S104
     port: int = 8080
 
-    # Database & Cache Connection Strings
+    # Database & Cache Connection Strings (Supports Local & Supabase-Managed PostgreSQL)
     database_url: str = (
         "postgresql+asyncpg://vulnova_admin:vulnova_secure_password@localhost:5432/vulnova_db"
     )
+    supabase_database_url: str = ""
+    supabase_db_host: str = ""
+    supabase_db_port: int = 5432
+    supabase_db_name: str = "postgres"
+    supabase_db_user: str = "postgres"
+    supabase_db_password: str = ""
+
+    # Database Connection Pool & SSL Settings
+    db_pool_size: int = 20
+    db_max_overflow: int = 10
+    db_pool_timeout: int = 30
+    db_pool_recycle: int = 1800
+    db_pool_pre_ping: bool = True
+    db_ssl_mode: str = "prefer"  # "require", "prefer", "disable"
+
     redis_url: str = "redis://localhost:6379/0"
 
     # Security & JWT Token Configurations
@@ -53,6 +68,38 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
+
+    @property
+    def effective_database_url(self) -> str:
+        """Return the active PostgreSQL connection URL, prioritizing Supabase configurations and ensuring asyncpg driver."""
+        url = self.supabase_database_url.strip()
+        if (
+            not url
+            and self.supabase_db_host.strip()
+            and self.supabase_db_password.strip()
+        ):
+            url = (
+                f"postgresql+asyncpg://{self.supabase_db_user}:{self.supabase_db_password}"
+                f"@{self.supabase_db_host}:{self.supabase_db_port}/{self.supabase_db_name}"
+            )
+        if not url:
+            url = self.database_url.strip()
+
+        # Normalize URL scheme for SQLAlchemy 2.0 async engine
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgresql://") and not url.startswith(
+            "postgresql+asyncpg://"
+        ):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+        return url
+
+    @property
+    def is_supabase(self) -> bool:
+        """Return True if the current database URL points to a Supabase-managed instance."""
+        url = self.effective_database_url.lower()
+        return "supabase.co" in url or "supabase.com" in url or "pooler.supabase" in url
 
     @property
     def is_development(self) -> bool:

@@ -38,11 +38,9 @@ Thumbs.db
 
 # Environment variables & secrets
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
 !.env.example
+!.env.production.example
 !backend/.env.example
 !frontend/.env.example
 

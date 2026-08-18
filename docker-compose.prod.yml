@@ -122,7 +122,8 @@ services:
     environment:
       ENVIRONMENT: production
       DEBUG: "False"
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vulnova_admin}:${POSTGRES_PASSWORD:-vulnova_prod_secure_password_change_me}@postgres:5432/${POSTGRES_DB:-vulnova_db}
+      DATABASE_URL: ${SUPABASE_DATABASE_URL:-${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-vulnova_admin}:${POSTGRES_PASSWORD:-vulnova_prod_secure_password_change_me}@postgres:5432/${POSTGRES_DB:-vulnova_db}}}
+      SUPABASE_DATABASE_URL: ${SUPABASE_DATABASE_URL:-}
       REDIS_URL: redis://:${REDIS_PASSWORD:-vulnova_redis_prod_password_change_me}@redis:6379/0
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-vulnova_minio_admin}
@@ -161,7 +162,8 @@ services:
         condition: service_healthy
     environment:
       ENVIRONMENT: production
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vulnova_admin}:${POSTGRES_PASSWORD:-vulnova_prod_secure_password_change_me}@postgres:5432/${POSTGRES_DB:-vulnova_db}
+      DATABASE_URL: ${SUPABASE_DATABASE_URL:-${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-vulnova_admin}:${POSTGRES_PASSWORD:-vulnova_prod_secure_password_change_me}@postgres:5432/${POSTGRES_DB:-vulnova_db}}}
+      SUPABASE_DATABASE_URL: ${SUPABASE_DATABASE_URL:-}
       REDIS_URL: redis://:${REDIS_PASSWORD:-vulnova_redis_prod_password_change_me}@redis:6379/0
       JWT_SECRET: ${JWT_SECRET:-vulnova_prod_jwt_secret_key_32_characters_minimum_required}
     networks:
@@ -187,7 +189,8 @@ services:
         condition: service_healthy
     environment:
       ENVIRONMENT: production
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vulnova_admin}:${POSTGRES_PASSWORD:-vulnova_prod_secure_password_change_me}@postgres:5432/${POSTGRES_DB:-vulnova_db}
+      DATABASE_URL: ${SUPABASE_DATABASE_URL:-${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-vulnova_admin}:${POSTGRES_PASSWORD:-vulnova_prod_secure_password_change_me}@postgres:5432/${POSTGRES_DB:-vulnova_db}}}
+      SUPABASE_DATABASE_URL: ${SUPABASE_DATABASE_URL:-}
       REDIS_URL: redis://:${REDIS_PASSWORD:-vulnova_redis_prod_password_change_me}@redis:6379/0
       JWT_SECRET: ${JWT_SECRET:-vulnova_prod_jwt_secret_key_32_characters_minimum_required}
     networks:

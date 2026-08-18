@@ -6,9 +6,10 @@ This document defines the PostgreSQL relational database schema, enterprise scan
 
 ## 🗄️ 1. Database Topology Overview
 
-Vulnova leverages **PostgreSQL 16+** with the **`pgvector`** extension as a unified data storage layer:
+Vulnova leverages **PostgreSQL 16+** (with native support for **Supabase-Managed PostgreSQL**) and the **`pgvector`** extension as a unified data storage layer:
 
 - **Relational Data**: Tenant organizations, user credentials, scan profiles, targets, findings, vulnerability history, decoupled evidence records, and audit events.
+- **Supabase-Managed PostgreSQL**: Zero-ops managed PostgreSQL provider supporting direct/session pooler connections (Port 5432) and transaction poolers (Supavisor/PgBouncer on Port 6543 with `statement_cache_size=0`).
 - **Vector Embeddings**: Security knowledge base (CWEs, OWASP Cheat Sheets, advisories) and finding similarity embeddings for RAG retrieval.
 - **Redis 7 Cache**: Distributed task queue broker (Celery), WebSocket state, API rate-limiting token buckets, and session cache.
 
